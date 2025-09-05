@@ -16,13 +16,14 @@ import {
     useIonRouter
   } from '@ionic/react';
   
-  import { homeOutline, logOutOutline, rocketOutline } from 'ionicons/icons';
+  import {homeOutline, logOutOutline, rocketOutline, settingsOutline} from 'ionicons/icons';
   import { Redirect, Route } from 'react-router';
   import Home from './Home';
   import About from './About'; 
   import { supabase } from '../utils/supabaseClient';
   import { useState } from 'react';
-  
+ 
+
   const Menu: React.FC = () => {
     
       const navigation = useIonRouter();
@@ -33,6 +34,7 @@ import {
      const path = [
       { name: 'Home', url: '/MARBF-CooperativePH/app/Home', icon: homeOutline },
       { name: 'About', url: '/MARBF-CooperativePH/app/About', icon: rocketOutline },
+      {name:'Profile', url: '/MARBF-CooperativePH/app/profile', icon: settingsOutline},
     ]
 
     const handleLogout = async () => {
@@ -67,7 +69,7 @@ import {
                 </IonMenuToggle>
               ))}
   
-              <IonButton routerLink="MARBF-CooperativePH" routerDirection="back" expand="full">
+              <IonButton routerLink="/MARBF-CooperativePH" routerDirection="back" expand="full">
                 <IonIcon icon={logOutOutline} slot="start"></IonIcon>Logout
               </IonButton>
             </IonContent>
@@ -75,8 +77,10 @@ import {
           <IonRouterOutlet id="main">
             <Route exact path="/MARBF-CooperativePH/app/Home" component={Home} />
             <Route exact path="/MARBF-CooperativePH/app/About" component={About} />
+    
             <Route exact path="/MARBF-CooperativePH/app">
               <Redirect to="/MARBF-CooperativePH/app/Home" />
+            
             </Route>
           </IonRouterOutlet>
 
