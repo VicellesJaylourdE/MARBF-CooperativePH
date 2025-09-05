@@ -21,9 +21,9 @@ import SignUp from './Register';
   const Home: React.FC = () => {
 
     const tabs = [
-      {name:'Feed', tab:'feed',url: '/MARBF-Cooperative01/app/home/feed', icon: bookOutline},
-      {name:'Favorites',tab:'favorites', url: '/MARBF-Cooperative01/app/home/favorites', icon: star},
-      {name:'About me',tab:'About Me', url: '/MARBF-Cooperative01/app/home/about_me', icon: person},
+      {name:'Feed', tab:'feed',url: '/MARBF-CooperativePH/app/home/feed', icon: bookOutline},
+      {name:'Favorites',tab:'favorites', url: '/MARBF-CooperativePH/app/home/favorites', icon: star},
+      {name:'About me',tab:'About Me', url: '/MARBF-CooperativePH/app/home/about_me', icon: person},
     ]
     
     return (
