@@ -8,6 +8,7 @@ import {
   IonCol,
   IonToolbar,
   IonTitle,
+  IonMenuButton,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 
@@ -16,8 +17,9 @@ const LandingPage: React.FC = () => {
 
   return (
     <IonPage>
-      {/* ✅ Navbar */}
+      {/* ✅ Navbar with Responsive Menu */}
       <IonToolbar color="light">
+        {/* Left Section: Menu Button + Logo */}
         <div
           style={{
             display: "flex",
@@ -26,25 +28,34 @@ const LandingPage: React.FC = () => {
             padding: "0 1rem",
           }}
         >
-          <IonTitle style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-            🚜 Coop PaBOOKid
-          </IonTitle>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {/* Mobile menu button (hidden on desktop) */}
+            <div className="ion-hide-md-up">
+              <IonMenuButton slot="start" autoHide={false} />
+            </div>
 
-          {/* Navbar Buttons */}
-          <div>
+            <IonTitle
+              style={{
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+                marginLeft: "0.5rem",
+              }}
+            >
+              🚜 Coop PaBOOKid
+            </IonTitle>
+          </div>
+
+          {/* Right Section: Desktop Navbar Buttons */}
+          <div className="ion-hide-sm-down">
             <IonButton fill="clear" onClick={() => history.push("/booking")}>
               Booking
             </IonButton>
-
             <IonButton fill="clear" onClick={() => history.push("/about")}>
               About Us
             </IonButton>
-
             <IonButton fill="clear" onClick={() => history.push("/contact")}>
               Contact
             </IonButton>
-
-            {/* Auth Buttons */}
             <IonButton fill="clear" onClick={() => history.push("/login")}>
               Sign In
             </IonButton>
@@ -55,8 +66,9 @@ const LandingPage: React.FC = () => {
         </div>
       </IonToolbar>
 
-      {/* Hero Section */}
+      {/* ✅ Content */}
       <IonContent className="ion-padding" fullscreen>
+        {/* Hero Section */}
         <div
           style={{
             textAlign: "center",
@@ -73,6 +85,7 @@ const LandingPage: React.FC = () => {
             Beneficiaries Farmers Cooperative with our comprehensive digital
             booking system.
           </p>
+
           <div style={{ marginTop: "1.5rem" }}>
             <IonButton onClick={() => history.push("/booking")} color="success">
               Start Booking
@@ -87,7 +100,7 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Feature Section */}
+        {/* Features Section */}
         <IonGrid className="ion-margin-top">
           <IonRow className="ion-text-center">
             <IonCol size="12">
@@ -146,7 +159,7 @@ const LandingPage: React.FC = () => {
           </IonRow>
         </IonGrid>
 
-        {/* ✅ About Us Section */}
+        {/* About Us Section */}
         <div
           style={{
             backgroundColor: "#fff",
@@ -154,7 +167,13 @@ const LandingPage: React.FC = () => {
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: "bold", fontSize: "1.8rem", color: "#2f6627" }}>
+          <h2
+            style={{
+              fontWeight: "bold",
+              fontSize: "1.8rem",
+              color: "#2f6627",
+            }}
+          >
             About Us
           </h2>
           <p
