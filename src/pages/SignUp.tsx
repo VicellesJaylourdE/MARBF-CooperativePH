@@ -120,7 +120,7 @@ const SignUp: React.FC = () => {
                 <IonButton onClick={handleOpenVerificationModal} expand="full" shape='round' style={{ marginTop: '15px' }}>
                     Register
                 </IonButton>
-                <IonButton routerLink="/it35-lab" expand="full" fill="clear" shape='round'>
+                <IonButton routerLink="/MARBF-CooperativePH" expand="full" fill="clear" shape='round'>
                     Already have an account?
                 </IonButton>
 
@@ -157,7 +157,7 @@ const SignUp: React.FC = () => {
                             <p>Your account has been created successfully.</p>
                             <p>Please check your email address.</p>
                         </IonText>
-                        <IonButton routerLink="/it35-lab" routerDirection="back" color="primary">
+                        <IonButton routerLink="/MARBF-CooperativePH" routerDirection="back" color="primary">
                             Go to Login
                         </IonButton>
                     </IonContent>
