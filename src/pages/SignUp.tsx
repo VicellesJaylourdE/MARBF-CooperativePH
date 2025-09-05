@@ -55,7 +55,7 @@ const SignUp: React.FC = () => {
     setTimeout(() => {
       setLoading(false);
       setShowToast(true);
-      navigation.push('/it35-lab', 'forward');
+      navigation.push('/MARBF-CooperativePH', 'forward');
     }, 1500);
   };
 
