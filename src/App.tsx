@@ -82,7 +82,7 @@ const App: React.FC = () => (
             <Route exact path="/learnmore" component={LearnMore} />
 
             {/* Main app (with tabs) */}
-            <Route path="/MARBF-Cooperative01/app" component={Menu} />
+            <Route path="/MARBF-CooperativePH/app" component={Menu} />
 
             {/* Redirect unknown paths */}
             <Redirect to="/" />
