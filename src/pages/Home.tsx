@@ -17,19 +17,15 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { bookOutline, person, search, star } from 'ionicons/icons';
 import { Route, Redirect } from 'react-router';
-import Favorites from './home-tabs/Favorites';
-import Feed from './home-tabs/Feed';
-import Search from './home-tabs/Search';
-import About_me from './home-tabs/About_me';
-import Article from '../components/Article';
+
 import SignUp from './SignUp';
   const Home: React.FC = () => {
 
     const tabs = [
-      {name:'Feed', tab:'feed',url: '/it35-lab/app/home/feed', icon: bookOutline},
-      {name:'Search', tab:'search', url: '/it35-lab/app/home/search', icon: search},
-      {name:'Favorites',tab:'favorites', url: '/it35-lab/app/home/favorites', icon: star},
-      {name:'About me',tab:'About Me', url: '/it35-lab/app/home/about_me', icon: person},
+      {name:'Feed', tab:'feed',url: '/MARBF-CooperativePH/app/home/feed', icon: bookOutline},
+      {name:'Search', tab:'search', url: '/MARBF-CooperativePH/app/home/search', icon: search},
+      {name:'Favorites',tab:'favorites', url: '/MARBF-CooperativePH/app/home/favorites', icon: star},
+      {name:'About me',tab:'About Me', url: '/MARBF-CooperativePH/app/home/about_me', icon: person},
     ]
     
     return (
@@ -47,16 +43,10 @@ import SignUp from './SignUp';
           </IonTabBar>
         <IonRouterOutlet>
 
-          <Route exact path="/it35-lab/app/home/feed" render={Feed} />
-          <Route exact path="/it35-lab/app/home/SignUp" component={SignUp} />
-          <Route exact path="/it35-lab/app/home/feed/article/:id" component={Article} />
-          <Route exact path="/it35-lab/app/home/search" render={Search} />
-          <Route exact path="/it35-lab/app/home/favorites" render={Favorites} />
-          <Route exact path="/it35-lab/app/home/About_me" render={About_me} />
-          
+    
 
-          <Route exact path="/it35-lab/app/home">
-            <Redirect to="/it35-lab/app/home/feed" />
+          <Route exact path="/MARBF-CooperativePH/app/home">
+            <Redirect to="/MARBF-CooperativePH/app/home/feed" />
           </Route>
 
         </IonRouterOutlet>
