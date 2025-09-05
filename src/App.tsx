@@ -33,7 +33,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 import Login from './pages/Login';
-
+import Menu from './pages/Menu';
 import SignUp from './pages/SignUp';
 setupIonicReact();
 
@@ -42,7 +42,7 @@ const App: React.FC = () => (
     <IonReactRouter>
       <IonRouterOutlet>
       <Route exact path="/MARBF-CooperativePH" component={Login} />
- 
+      <Route path="/MARBF-CooperativePH/app" component={Menu} />
       <Route exact path="/MARBF-CooperativePH/app/home/signup" component={SignUp} />
       <Redirect exact from="/" to="/MARBF-CooperativePH" />
       </IonRouterOutlet>
