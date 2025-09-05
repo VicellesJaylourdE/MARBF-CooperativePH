@@ -1,29 +1,52 @@
 import { 
+    IonAlert,
     IonButton, 
     IonContent, 
     IonHeader, 
     IonIcon, 
     IonItem, 
-    IonMenu, 
-  
+    IonMenu,  
     IonMenuToggle, 
     IonPage, 
     IonRouterOutlet, 
     IonSplitPane, 
     IonTitle, 
-    IonToolbar 
+    IonToast, 
+    IonToolbar, 
+    useIonRouter
   } from '@ionic/react';
   
   import { homeOutline, logOutOutline, rocketOutline } from 'ionicons/icons';
   import { Redirect, Route } from 'react-router';
   import Home from './Home';
-  
+  import About from './About'; 
+  import { supabase } from '../utils/supabaseClient';
+  import { useState } from 'react';
   
   const Menu: React.FC = () => {
-    const path = [
-      { name: 'Home', url: '/MARBF-CooperativePH/app/Home', icon: homeOutline },
-      { name: 'About', url: '/MARBF-CooperativePH/app/About', icon: rocketOutline },
-    ];
+    
+      const navigation = useIonRouter();
+     const [showAlert, setShowAlert] = useState(false);
+     const [errorMessage, setErrorMessage] = useState('');
+     const [showToast, setShowToast] = useState(false);
+     
+     const path = [
+      { name: 'Home', url: '/it35-lab/app/Home', icon: homeOutline },
+      { name: 'About', url: '/it35-lab/app/About', icon: rocketOutline },
+    ]
+
+    const handleLogout = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (!error) {
+          setShowToast(true);
+          setTimeout(() => {
+              navigation.push('/it35-lab', 'back', 'replace'); 
+          }, 300); 
+      } else {
+          setErrorMessage(error.message);
+          setShowAlert(true);
+      }
+  };
   
     return (
       <IonPage>
@@ -44,18 +67,38 @@ import {
                 </IonMenuToggle>
               ))}
   
-              <IonButton routerLink="/MARBF-CooperativePH" routerDirection="back" expand="full">
+              <IonButton routerLink="/it35-lab" routerDirection="back" expand="full">
                 <IonIcon icon={logOutOutline} slot="start"></IonIcon>Logout
               </IonButton>
             </IonContent>
           </IonMenu>
           <IonRouterOutlet id="main">
-            <Route exact path="/MARBF-CooperativePH/app/Home" component={Home} />
-         
-            <Route exact path="/MARBF-CooperativePH/app">
-              <Redirect to="/MARBF-CooperativePH/app/Home" />
+            <Route exact path="/it35-lab/app/Home" component={Home} />
+            <Route exact path="/it35-lab/app/About" component={About} />
+            <Route exact path="/it35-lab/app">
+              <Redirect to="/it35-lab/app/Home" />
             </Route>
           </IonRouterOutlet>
+
+           {/* IonAlert for displaying login errors */}
+           <IonAlert
+                     isOpen={showAlert}
+                     onDidDismiss={() => setShowAlert(false)}
+                     header="Logout Failed"
+                     message={errorMessage}
+                     buttons={['OK']}
+                 />
+                 
+                 {/* IonToast for success message */}
+                 <IonToast
+                     isOpen={showToast}
+                     onDidDismiss={() => setShowToast(false)}
+                     message="Logout Successful"
+                     duration={1500}
+                     position="top"
+                     color="primary"
+                 />
+ 
         </IonSplitPane>
       </IonPage>
     );
