@@ -295,7 +295,7 @@ const Register: React.FC = () => {
                     </IonContent>
                 </IonModal>
 
-                {/* Error Alert */}
+          
                 <AlertBox message={alertMessage} isOpen={showAlert} onClose={() => setShowAlert(false)} />
             </IonContent>
         </IonPage>

@@ -12,7 +12,7 @@ const LearnMore: React.FC = () => {
 
   return (
     <IonPage>
-      {/* Top Toolbar */}
+
       <IonToolbar color="light">
         <div
           style={{
@@ -32,9 +32,9 @@ const LearnMore: React.FC = () => {
         </div>
       </IonToolbar>
 
-      {/* Content */}
+ 
       <IonContent className="ion-padding" fullscreen>
-        {/* Hero Section */}
+    
         <div
           style={{
             textAlign: "center",
@@ -52,7 +52,7 @@ const LearnMore: React.FC = () => {
           </p>
         </div>
 
-        {/* Mission and Vision */}
+
         <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
           <h2 style={{ fontWeight: "bold", marginBottom: "1rem" }}>🌱 Our Mission</h2>
           <p style={{ maxWidth: "700px", margin: "0 auto", color: "#555" }}>
@@ -68,7 +68,7 @@ const LearnMore: React.FC = () => {
           </p>
         </div>
 
-        {/* Core Values Section */}
+
         <div
           style={{
             backgroundColor: "#eef6ed",
@@ -110,7 +110,7 @@ const LearnMore: React.FC = () => {
           </div>
         </div>
 
-        {/* Call To Action */}
+    
         <div
           style={{
             backgroundColor: "#2f6627",

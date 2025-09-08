@@ -28,7 +28,7 @@ const SideMenu: React.FC = () => {
       className="ion-hide-sm-up"
       type="overlay"
     >
-      {/* ✅ Header */}
+
       <IonHeader>
         <IonToolbar color="success">
           <IonTitle
@@ -43,7 +43,7 @@ const SideMenu: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      {/* ✅ Menu Content */}
+
       <IonContent>
         <IonList lines="full" style={{ marginTop: "0.5rem" }}>
           <IonMenuToggle autoHide={true}>
@@ -78,7 +78,7 @@ const SideMenu: React.FC = () => {
           </IonMenuToggle>
         </IonList>
 
-        {/* ✅ Footer */}
+     
         <div
           style={{
             textAlign: "center",

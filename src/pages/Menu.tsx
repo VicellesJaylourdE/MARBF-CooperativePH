@@ -84,7 +84,6 @@ import {
             </Route>
           </IonRouterOutlet>
 
-           {/* IonAlert for displaying login errors */}
            <IonAlert
                      isOpen={showAlert}
                      onDidDismiss={() => setShowAlert(false)}
@@ -93,7 +92,7 @@ import {
                      buttons={['OK']}
                  />
                  
-                 {/* IonToast for success message */}
+            
                  <IonToast
                      isOpen={showToast}
                      onDidDismiss={() => setShowToast(false)}

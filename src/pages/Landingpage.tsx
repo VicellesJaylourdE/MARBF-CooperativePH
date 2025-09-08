@@ -17,9 +17,8 @@ const LandingPage: React.FC = () => {
 
   return (
     <IonPage>
-      {/* ✅ Navbar with Responsive Menu */}
+
       <IonToolbar color="light">
-        {/* Left Section: Menu Button + Logo */}
         <div
           style={{
             display: "flex",
@@ -29,7 +28,7 @@ const LandingPage: React.FC = () => {
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-            {/* Mobile menu button (hidden on desktop) */}
+         
             <div className="ion-hide-md-up">
               <IonMenuButton slot="start" autoHide={false} />
             </div>
@@ -45,7 +44,6 @@ const LandingPage: React.FC = () => {
             </IonTitle>
           </div>
 
-          {/* Right Section: Desktop Navbar Buttons */}
           <div className="ion-hide-sm-down">
             <IonButton fill="clear" onClick={() => history.push("/booking")}>
               Booking
@@ -66,9 +64,9 @@ const LandingPage: React.FC = () => {
         </div>
       </IonToolbar>
 
-      {/* ✅ Content */}
+
       <IonContent className="ion-padding" fullscreen>
-        {/* Hero Section */}
+
         <div
           style={{
             textAlign: "center",
@@ -100,7 +98,7 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Features Section */}
+
         <IonGrid className="ion-margin-top">
           <IonRow className="ion-text-center">
             <IonCol size="12">
@@ -159,7 +157,7 @@ const LandingPage: React.FC = () => {
           </IonRow>
         </IonGrid>
 
-        {/* About Us Section */}
+
         <div
           style={{
             backgroundColor: "#fff",
@@ -192,7 +190,6 @@ const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        {/* CTA Section */}
         <div
           style={{
             backgroundColor: "#2f6627",
