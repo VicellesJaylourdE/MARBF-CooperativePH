@@ -36,12 +36,15 @@ const LandingPage: React.FC = () => {
                 fontSize: "1.2rem",
               }}
             >
-              🚜 Coop PaBOOKid
+              MARBF Cooperative.
             </IonTitle>
           </div>
 
           {/* ✅ Desktop nav buttons */}
           <div className="ion-hide-sm-down">
+            <IonButton fill="clear" onClick={() => history.push("/login")}>
+              Home
+            </IonButton>
             <IonButton fill="clear" onClick={() => history.push("/booking")}>
               Booking
             </IonButton>
@@ -51,7 +54,7 @@ const LandingPage: React.FC = () => {
             <IonButton fill="clear" onClick={() => history.push("/contact")}>
               Contact
             </IonButton>
-            <IonButton color="success" onClick={() => history.push("/login")}>
+            <IonButton color="warning" onClick={() => history.push("/login")}>
               Sign In
             </IonButton>
           </div>
@@ -73,7 +76,7 @@ const LandingPage: React.FC = () => {
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
             Modern Equipment Booking for{" "}
-            <span style={{ color: "#2f6627" }}>Agricultural Cooperatives</span>
+            <span style={{ color: "#FCB53B" }}>Agricultural Cooperatives</span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#666" }}>
             Streamline equipment rentals for the Mantibugao Agrarian Reform
@@ -82,14 +85,14 @@ const LandingPage: React.FC = () => {
           </p>
 
           <div style={{ marginTop: "1.5rem" }}>
-            <IonButton onClick={() => history.push("/booking")} color="success">
+            <IonButton onClick={() => history.push("/Login")} color="warning">
               Start Booking
             </IonButton>
             <IonButton
               fill="outline"
               style={{ marginLeft: "1rem" }}
               onClick={() => history.push("/learnmore")}
-              color="success"
+              color="warning"
             >
               Learn More
             </IonButton>
@@ -211,49 +214,32 @@ const LandingPage: React.FC = () => {
             }}
           >
             {/* Logo + Slogan */}
-            <div style={{ flex: "1 1 200px", margin: "1rem" }}>
-              <h2 style={{ fontWeight: "bold" }}>🚜 Coop PaBOOKid</h2>
+            <div style={{ flex: " 1 1 100px", margin: "1rem" }}>
+              <h2 style={{ fontWeight: "bold" }}>MARBF Cooperative.</h2>
               <p>Modernizing Equipment Rentals for Farmers</p>
               <div
                 style={{
                   display: "flex",
-                  gap: "0.5rem",
-                  marginTop: "0.5rem",
+                  gap: "0.3rem",
+                  marginTop: "0.3rem",
+               
                 }}
               >
-                <IonButton fill="clear" size="small">
-                  FB
-                </IonButton>
-                <IonButton fill="clear" size="small">
-                  IG
-                </IonButton>
-                <IonButton fill="clear" size="small">
-                  X
-                </IonButton>
-                <IonButton fill="clear" size="small">
-                  in
-                </IonButton>
+              
               </div>
             </div>
 
             {/* About Us */}
-            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
+            <div style={{ flex: "1 1 100px", margin: "1rem"  }}>
               <h4 className="about-title">ABOUT US</h4>
               <p className="about-text">Mantibugao, Bukidnon</p>
               <p className="about-text">Philippines</p>
             </div>
 
-            {/* Legal Stuff */}
-            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
-              <h4>LEGAL STUFF</h4>
-              <p>Terms of Service</p>
-              <p>Privacy Policy</p>
-              <p>Refund Policy</p>
-              <p>FAQ</p>
-            </div>
+           
 
             {/* Support */}
-            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
+            <div style={{ flex: "1 1 100px", margin: "1rem" }}>
               <h4>CUSTOMER SUPPORT</h4>
               <p>Email: coopbookid@mail.com</p>
               <p>Phone: +63 912 345 6789</p>
@@ -268,7 +254,7 @@ const LandingPage: React.FC = () => {
               textAlign: "center",
             }}
           >
-            © 2025 Coop PaBOOKid. All Rights Reserved.
+            © 2025 MARBF Cooperative. All Rights Reserved.
           </div>
         </div>
       </IonContent>

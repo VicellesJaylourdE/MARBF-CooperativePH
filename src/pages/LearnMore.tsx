@@ -10,12 +10,9 @@ import { useHistory } from "react-router-dom";
 const LearnMore: React.FC = () => {
   const history = useHistory();
 
-  // Simple color detection based on toolbar background
-  const toolbarBg = "#f8f8f8"; // light by default
-  const isLight = () => {
-    // basic check if color is light (you can enhance with theme later)
-    return toolbarBg === "#f8f8f8" || toolbarBg === "#ffffff";
-  };
+  // Detect system dark mode gamit prefers-color-scheme
+  const isDark = window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   return (
     <IonPage>
@@ -27,17 +24,17 @@ const LearnMore: React.FC = () => {
             padding: "0 1rem",
           }}
         >
-          {/* 🚜 Coop PaBOOKid clickable, dynamic color */}
+          {/* 🚜 MARBF Cooperative dynamic color */}
           <IonButton
             fill="clear"
             style={{
               fontWeight: "bold",
-              fontSize: "1.2rem",
-              color: isLight() ? "black" : "white",
+              fontSize: "1.05rem",
+              color: isDark ? "white" : "black",
             }}
             onClick={() => history.push("/")}
           >
-            🚜 Coop PaBOOKid
+            🚜 MARBF Cooperative.
           </IonButton>
         </div>
       </IonToolbar>
@@ -51,7 +48,7 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
-            About <span style={{ color: "#2f6627" }}>Coop PaBOOKid</span>
+            About <span style={{ color: "#FCB53B" }}>MARBF Cooperative</span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#555" }}>
             A digital initiative by the Mantibugao Agrarian Reform Beneficiaries
@@ -118,7 +115,7 @@ const LearnMore: React.FC = () => {
 
         <div
           style={{
-            backgroundColor: "#2f6627",
+            backgroundColor: "#FCB53B",
             color: "#fff",
             padding: "4rem 1rem",
             textAlign: "center",
@@ -128,7 +125,7 @@ const LearnMore: React.FC = () => {
             Join Our Journey Towards Smarter Farming 🚀
           </h2>
           <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
-            Coop PaBOOKid is not just a system — it’s a movement to uplift
+            MARBF Cooperative. is not just a system — it’s a movement to uplift
             farmers and cooperatives with digital innovation.
           </p>
           <IonButton
@@ -156,9 +153,8 @@ const LearnMore: React.FC = () => {
             borderTop: "1px solid #ccc",
           }}
         >
-          <strong>Coop PaBOOKid</strong>
           <small style={{ color: "#666" }}>
-            © 2025 Mantibugao Agrarian Reform Beneficiaries Farmers Cooperative.
+            © 2025 MARBF Cooperative.
             All rights reserved.
           </small>
         </div>
