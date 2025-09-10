@@ -10,9 +10,15 @@ import { useHistory } from "react-router-dom";
 const LearnMore: React.FC = () => {
   const history = useHistory();
 
+  // Simple color detection based on toolbar background
+  const toolbarBg = "#f8f8f8"; // light by default
+  const isLight = () => {
+    // basic check if color is light (you can enhance with theme later)
+    return toolbarBg === "#f8f8f8" || toolbarBg === "#ffffff";
+  };
+
   return (
     <IonPage>
-
       <IonToolbar color="light">
         <div
           style={{
@@ -21,10 +27,14 @@ const LearnMore: React.FC = () => {
             padding: "0 1rem",
           }}
         >
-          {/* 🚜 Coop PaBOOKid clickable, white text */}
+          {/* 🚜 Coop PaBOOKid clickable, dynamic color */}
           <IonButton
             fill="clear"
-            style={{ fontWeight: "bold", fontSize: "1.2rem", color: "white" }}
+            style={{
+              fontWeight: "bold",
+              fontSize: "1.2rem",
+              color: isLight() ? "black" : "white",
+            }}
             onClick={() => history.push("/")}
           >
             🚜 Coop PaBOOKid
@@ -32,9 +42,7 @@ const LearnMore: React.FC = () => {
         </div>
       </IonToolbar>
 
- 
       <IonContent className="ion-padding" fullscreen>
-    
         <div
           style={{
             textAlign: "center",
@@ -52,7 +60,6 @@ const LearnMore: React.FC = () => {
           </p>
         </div>
 
-
         <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
           <h2 style={{ fontWeight: "bold", marginBottom: "1rem" }}>🌱 Our Mission</h2>
           <p style={{ maxWidth: "700px", margin: "0 auto", color: "#555" }}>
@@ -67,7 +74,6 @@ const LearnMore: React.FC = () => {
             technology bridges the gap between tradition and innovation.
           </p>
         </div>
-
 
         <div
           style={{
@@ -110,7 +116,6 @@ const LearnMore: React.FC = () => {
           </div>
         </div>
 
-    
         <div
           style={{
             backgroundColor: "#2f6627",
