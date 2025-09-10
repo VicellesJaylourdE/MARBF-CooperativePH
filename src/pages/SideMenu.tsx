@@ -85,7 +85,7 @@ const SideMenu: React.FC = () => {
             padding: "1rem",
             fontSize: "0.8rem",
             color: "#666",
-            borderTop: "1px solid #ddd",
+            borderTop: "1px solid #ffdbdbff",
             marginTop: "auto",
           }}
         >

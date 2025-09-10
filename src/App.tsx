@@ -41,9 +41,9 @@ setupIonicReact();
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      {/* ✅ SplitPane para sa side menu */}
+   
       <IonSplitPane contentId="main">
-        {/* ✅ Side Menu (mobile only) */}
+    
         <IonMenu contentId="main" type="overlay" className="ion-hide-md-up">
           <IonHeader>
             <IonToolbar>
@@ -68,23 +68,22 @@ const App: React.FC = () => (
           </IonContent>
         </IonMenu>
 
-        {/* ✅ Main content */}
+        
         <IonRouterOutlet id="main">
           <Switch>
-            {/* Landing page */}
+           
             <Route exact path="/" component={LandingPage} />
 
-            {/* Auth */}
+         
             <Route exact path="/login" component={Login} />
             <Route exact path="/register" component={Register} />
 
-            {/* Learn More */}
+          
             <Route exact path="/learnmore" component={LearnMore} />
 
-            {/* Main app (with tabs) */}
             <Route path="/MARBF-CooperativePH/app" component={Menu} />
 
-            {/* Redirect unknown paths */}
+   
             <Redirect to="/" />
           </Switch>
         </IonRouterOutlet>

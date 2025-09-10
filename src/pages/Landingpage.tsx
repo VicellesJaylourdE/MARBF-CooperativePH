@@ -17,7 +17,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <IonPage>
-
+      {/* ✅ Navbar */}
       <IonToolbar color="light">
         <div
           style={{
@@ -28,7 +28,6 @@ const LandingPage: React.FC = () => {
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-         
             <div className="ion-hide-md-up">
               <IonMenuButton slot="start" autoHide={false} />
             </div>
@@ -64,14 +63,12 @@ const LandingPage: React.FC = () => {
         </div>
       </IonToolbar>
 
-
+      {/* ✅ Content */}
       <IonContent className="ion-padding" fullscreen>
-
         <div
           style={{
             textAlign: "center",
             padding: "2rem 1rem",
-            backgroundColor: "#f5f0e6",
           }}
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
@@ -92,12 +89,12 @@ const LandingPage: React.FC = () => {
               fill="outline"
               style={{ marginLeft: "1rem" }}
               onClick={() => history.push("/learnmore")}
+              color="success"
             >
               Learn More
             </IonButton>
           </div>
         </div>
-
 
         <IonGrid className="ion-margin-top">
           <IonRow className="ion-text-center">
@@ -115,7 +112,7 @@ const LandingPage: React.FC = () => {
           <IonRow>
             {[
               {
-                title: "Equipment Management",
+                title: "Equipment",
                 desc: "Track inventory, availability status, and maintenance.",
                 icon: "🚜",
               },
@@ -138,7 +135,7 @@ const LandingPage: React.FC = () => {
               <IonCol size="12" sizeMd="3" key={index}>
                 <div
                   style={{
-                    border: "1px solid #ccc",
+                    border: "1.50px solid #FCB53B",
                     borderRadius: "12px",
                     padding: "1.5rem",
                     margin: "1rem 0",
@@ -157,42 +154,9 @@ const LandingPage: React.FC = () => {
           </IonRow>
         </IonGrid>
 
-
         <div
           style={{
-            backgroundColor: "#fff",
-            padding: "3rem 1rem",
-            textAlign: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontWeight: "bold",
-              fontSize: "1.8rem",
-              color: "#2f6627",
-            }}
-          >
-            About Us
-          </h2>
-          <p
-            style={{
-              maxWidth: "700px",
-              margin: "1rem auto",
-              fontSize: "1rem",
-              color: "#444",
-            }}
-          >
-            Coop PaBOOKid is a digital platform designed to help the Mantibugao
-            Agrarian Reform Beneficiaries Farmers Cooperative streamline
-            equipment rentals and improve operational efficiency. Our mission is
-            to empower farmers through technology, making modern equipment
-            accessible and easy to manage.
-          </p>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "#2f6627",
+            backgroundColor: "#FCB53B",
             color: "#fff",
             padding: "4rem 1rem",
             textAlign: "center",
@@ -225,30 +189,67 @@ const LandingPage: React.FC = () => {
           </IonButton>
         </div>
 
-        {/* Footer */}
+        {/* ✅ Footer */}
         <div
           style={{
-            backgroundColor: "#fff",
-            padding: "1rem",
+            backgroundColor: "var(--ion-background-color)",
+            color: "var(--ion-text-color)",
+            padding: "2rem 1rem",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            borderTop: "1px solid #ccc",
+            borderTop: "1px solid #FCB53B",
           }}
         >
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              marginBottom: "0.5rem",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              maxWidth: "1000px",
+              width: "100%",
             }}
           >
-            <strong>Coop PaBOOKid</strong>
+            {/* Logo + Slogan */}
+            <div style={{ flex: "1 1 200px", margin: "1rem" }}>
+              <h2 style={{ fontWeight: "bold" }}>🚜 Coop PaBOOKid</h2>
+              <p>Modernizing Equipment Rentals for Farmers</p>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <IonButton fill="clear" size="small">FB</IonButton>
+                <IonButton fill="clear" size="small">IG</IonButton>
+                <IonButton fill="clear" size="small">X</IonButton>
+                <IonButton fill="clear" size="small">in</IonButton>
+              </div>
+            </div>
+
+            {/* About Us */}
+            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
+              <h4>ABOUT US</h4>
+              <p>Mantibugao, Bukidnon</p>
+              <p>Philippines</p>
+            </div>
+
+            {/* Legal Stuff */}
+            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
+              <h4>LEGAL STUFF</h4>
+              <p>Terms of Service</p>
+              <p>Privacy Policy</p>
+              <p>Refund Policy</p>
+              <p>FAQ</p>
+            </div>
+
+            {/* Support */}
+            <div style={{ flex: "1 1 150px", margin: "1rem" }}>
+              <h4>CUSTOMER SUPPORT</h4>
+              <p>Email: coopbookid@mail.com</p>
+              <p>Phone: +63 912 345 6789</p>
+            </div>
           </div>
-          <small style={{ color: "#666" }}>
-            © 2025 Mantibugao Agrarian Reform Beneficiaries Farmers Cooperative.
-            All rights reserved.
-          </small>
+
+          {/* Bottom Line */}
+          <div style={{ marginTop: "1rem", fontSize: "0.9rem", textAlign: "center" }}>
+            © 2025 Coop PaBOOKid. All Rights Reserved.
+          </div>
         </div>
       </IonContent>
     </IonPage>
