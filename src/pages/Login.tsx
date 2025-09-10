@@ -1,18 +1,15 @@
-
-import { 
+import { useState } from 'react';
+import {
   IonAlert,
-  IonAvatar,
   IonButton,
-  IonContent, 
-  IonIcon, 
-  IonInput, 
-  IonInputPasswordToggle,  
-  IonPage,  
-  IonToast,  
+  IonContent,
+  IonInput,
+  IonInputPasswordToggle,
+  IonPage,
+  IonToast,
   useIonRouter
 } from '@ionic/react';
-import { logoIonic } from 'ionicons/icons';
-import { useState } from 'react';
+
 import { supabase } from '../utils/supabaseClient';
 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({ message, isOpen, onClose }) => {
@@ -44,84 +41,131 @@ const Login: React.FC = () => {
       return;
     }
 
-    setShowToast(true); 
+    setShowToast(true);
     setTimeout(() => {
       navigation.push('/MARBF-CooperativePH/app', 'forward', 'replace');
     }, 300);
   };
-  
+
   return (
     <IonPage>
-      <IonContent className='ion-padding'>
-        <div style={{
-          display: 'flex',
-          flexDirection:'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop:'25%'
-        }}>
-          <IonAvatar
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '150px',
-              height: '150px',
-              borderRadius: '50%', 
-              overflow: 'hidden' 
-            }}
-          >
-            <IonIcon 
-              icon={logoIonic}
-              color='primary'
-              style={{ fontSize: '120px', color: '#6c757d' }} 
+      <IonContent className="ion-padding">
+        <div className="login-container">
+          <div className="login-card">
+            <h1 className="login-title">USER LOGIN</h1>
+            <p className="login-subtitle">Please login or sign up to continue</p>
+
+            <IonInput
+              placeholder="Your Email"
+              type="email"
+              fill="outline"
+              className="input-field"
+              value={email}
+              onIonChange={(e) => setEmail(e.detail.value!)}
             />
-          </IonAvatar>
-          <h1 style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>USER LOGIN</h1>
-          <IonInput
-            label="Email" 
-            labelPlacement="floating" 
-            fill="outline"
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onIonChange={e => setEmail(e.detail.value!)}
-          />
-          <IonInput style={{ marginTop:'10px' }}      
-            fill="outline"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onIonChange={e => setPassword(e.detail.value!)}
-          >
-            <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
-          </IonInput>
+
+            <IonInput
+              placeholder="Your Password"
+              type="password"
+              fill="outline"
+              className="input-field"
+              value={password}
+              onIonChange={(e) => setPassword(e.detail.value!)}
+            >
+              <IonInputPasswordToggle slot="end" />
+            </IonInput>
+
+            <IonButton
+              onClick={doLogin}
+              expand="block"
+              fill="solid"
+              className="login-btn"
+            >
+              Sign In
+            </IonButton>
+
+        
+            <IonButton
+              routerLink="/"
+              expand="block"
+              fill="clear"
+              className="register-btn"
+            >
+              Don&apos;t have an account?
+            </IonButton>
+          </div>
         </div>
-        <IonButton onClick={doLogin} expand="full" shape='round'>
-          Login
-        </IonButton>
 
-        <IonButton routerLink="/MARBF-CooperativePH/app/home/signup" expand="full" fill="clear" shape='round'>
-          Don't have an account?
-        </IonButton>
-
-        {/* Reusable AlertBox Component */}
         <AlertBox message={alertMessage} isOpen={showAlert} onClose={() => setShowAlert(false)} />
 
-        {/* IonToast for success message */}
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
           message="Login successful! Redirecting..."
           duration={1500}
           position="top"
-          color="primary"
+          color="success"
         />
       </IonContent>
+
+      {/* Styles */}
+      <style>
+        {`
+          .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+          }
+
+          .login-card {
+            width: 360px;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .login-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: black;
+            margin-bottom: 8px;
+          }
+
+          .login-subtitle {
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+          }
+
+          .input-field {
+            width: 100%;
+            margin-bottom: 12px;
+            --highlight-color-focused: #9ACD32;
+            --border-color: #9ACD32;
+            --color: black;
+          }
+
+          .login-btn {
+            --background: #9ACD32;
+            --color: black;
+            width: 100%;
+            margin-top: 10px;
+          }
+
+          .register-btn {
+            --color: green;
+            margin-top: 8px;
+            font-weight: bold;
+            text-transform: none;
+          }
+        `}
+      </style>
     </IonPage>
   );
 };

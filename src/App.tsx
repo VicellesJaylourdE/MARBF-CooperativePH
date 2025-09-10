@@ -1,51 +1,53 @@
-import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
+import { Redirect, Route, Switch } from "react-router-dom";
+import {
+  IonApp,
+  IonRouterOutlet,
+  setupIonicReact,
+  IonSplitPane,
+} from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
 
+/* Ionic CSS imports */
+import "@ionic/react/css/core.css";
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
+import "@ionic/react/css/padding.css";
+import "@ionic/react/css/float-elements.css";
+import "@ionic/react/css/text-alignment.css";
+import "@ionic/react/css/text-transformation.css";
+import "@ionic/react/css/flex-utils.css";
+import "@ionic/react/css/display.css";
+import "@ionic/react/css/palettes/dark.system.css";
 
-/* Core CSS required for Ionic components to work properly */
-import '@ionic/react/css/core.css';
+import "./theme/variables.css";
 
-/* Basic CSS for apps built with Ionic */
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
+import Login from "./pages/Login";
+import Menu from "./pages/Menu";
+import Register from "./pages/Register";
+import LandingPage from "./pages/Landingpage";
+import LearnMore from "./pages/LearnMore";
+import RightSideMenu from "./pages/Rightsidemenu"; // ✅ import menu
 
-/* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
-
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* import '@ionic/react/css/palettes/dark.always.css'; */
-/* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
-
-/* Theme variables */
-import './theme/variables.css';
-import Login from './pages/Login';
-import Menu from './pages/Menu';
-import SignUp from './pages/SignUp';
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      <IonRouterOutlet>
-      <Route exact path="/MARBF-CooperativePH" component={Login} />
-      <Route path="/MARBF-CooperativePH/app" component={Menu} />
-      <Route exact path="/MARBF-CooperativePH/app/home/signup" component={SignUp} />
-      <Redirect exact from="/" to="/MARBF-CooperativePH" />
-      </IonRouterOutlet>
+      <IonSplitPane contentId="main">
+        <RightSideMenu />
+        <IonRouterOutlet id="main">
+          <Switch>
+            <Route exact path="/" component={LandingPage} />
+            
+            <Route exact path="/login" component={Login} />
+            <Route exact path="/register" component={Register} />
+            <Route exact path="/learnmore" component={LearnMore} />
+            <Route path="/MARBF-CooperativePH/app" component={Menu} />
+            <Redirect to="/" />
+          </Switch>
+        </IonRouterOutlet>
+      </IonSplitPane>
     </IonReactRouter>
   </IonApp>
 );

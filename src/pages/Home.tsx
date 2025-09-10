@@ -17,13 +17,11 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { bookOutline, person, search, star } from 'ionicons/icons';
 import { Route, Redirect } from 'react-router';
-
-import SignUp from './SignUp';
+import SignUp from './Register';
   const Home: React.FC = () => {
 
     const tabs = [
       {name:'Feed', tab:'feed',url: '/MARBF-CooperativePH/app/home/feed', icon: bookOutline},
-      {name:'Search', tab:'search', url: '/MARBF-CooperativePH/app/home/search', icon: search},
       {name:'Favorites',tab:'favorites', url: '/MARBF-CooperativePH/app/home/favorites', icon: star},
       {name:'About me',tab:'About Me', url: '/MARBF-CooperativePH/app/home/about_me', icon: person},
     ]
@@ -43,7 +41,7 @@ import SignUp from './SignUp';
           </IonTabBar>
         <IonRouterOutlet>
 
-          
+        
 
           <Route exact path="/MARBF-CooperativePH/app/home">
             <Redirect to="/MARBF-CooperativePH/app/home/feed" />
