@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   IonPage,
   IonContent,
@@ -15,6 +15,14 @@ import "./LandingPage.css"; // ✅ Import CSS para sa responsive About Us
 
 const LandingPage: React.FC = () => {
   const history = useHistory();
+
+  // 🔑 Ref para sa CUSTOMER SUPPORT section
+  const supportRef = useRef<HTMLDivElement>(null);
+
+  // 🔑 Scroll function
+  const scrollToSupport = () => {
+    supportRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <IonPage>
@@ -42,16 +50,29 @@ const LandingPage: React.FC = () => {
 
           {/* ✅ Desktop nav buttons */}
           <div className="ion-hide-sm-down">
-            <IonButton fill="clear" onClick={() => history.push("/login")}>
+            <IonButton
+              fill="clear"
+              onClick={() => history.push("/login")}
+              color="warning"
+            >
               Home
             </IonButton>
-            <IonButton fill="clear" onClick={() => history.push("/booking")}>
+            <IonButton
+              fill="clear"
+              onClick={() => history.push("/booking")}
+              color="warning"
+            >
               Booking
             </IonButton>
-            <IonButton fill="clear" onClick={() => history.push("/about")}>
+            <IonButton
+              fill="clear"
+              onClick={() => history.push("/learnmore")}
+              color="warning"
+            >
               About Us
             </IonButton>
-            <IonButton fill="clear" onClick={() => history.push("/contact")}>
+            {/* 🔑 Gi-ilisan: scrollToSupport() instead of history.push */}
+            <IonButton fill="clear" onClick={scrollToSupport} color="warning">
               Contact
             </IonButton>
             <IonButton color="warning" onClick={() => history.push("/login")}>
@@ -76,7 +97,9 @@ const LandingPage: React.FC = () => {
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
             Modern Equipment Booking for{" "}
-            <span style={{ color: "#FCB53B" }}>Agricultural Cooperatives</span>
+            <span style={{ color: "#FCB53B" }}>
+              Agricultural Cooperatives
+            </span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#666" }}>
             Streamline equipment rentals for the Mantibugao Agrarian Reform
@@ -175,8 +198,9 @@ const LandingPage: React.FC = () => {
               fontSize: "1rem",
             }}
           >
-            Join the Mantibugao Agrarian Reform Beneficiaries Farmers Cooperative
-            in embracing digital transformation for better agricultural outcomes.
+            Join the Mantibugao Agrarian Reform Beneficiaries Farmers
+            Cooperative in embracing digital transformation for better
+            agricultural outcomes.
           </p>
           <IonButton
             style={{
@@ -222,24 +246,19 @@ const LandingPage: React.FC = () => {
                   display: "flex",
                   gap: "0.3rem",
                   marginTop: "0.3rem",
-               
                 }}
-              >
-              
-              </div>
+              ></div>
             </div>
 
             {/* About Us */}
-            <div style={{ flex: "1 1 100px", margin: "1rem"  }}>
+            <div style={{ flex: "1 1 100px", margin: "1rem" }}>
               <h4 className="about-title">ABOUT US</h4>
               <p className="about-text">Mantibugao, Bukidnon</p>
               <p className="about-text">Philippines</p>
             </div>
 
-           
-
-            {/* Support */}
-            <div style={{ flex: "1 1 100px", margin: "1rem" }}>
+            {/* Support → 🔑 Gi-butangan ug ref */}
+            <div ref={supportRef} style={{ flex: "1 1 100px", margin: "1rem" }}>
               <h4>CUSTOMER SUPPORT</h4>
               <p>Email: coopbookid@mail.com</p>
               <p>Phone: +63 912 345 6789</p>
