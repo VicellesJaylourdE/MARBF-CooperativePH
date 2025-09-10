@@ -11,6 +11,7 @@ import {
   IonMenuButton,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
+import "./LandingPage.css"; // ✅ Import CSS para sa responsive About Us
 
 const LandingPage: React.FC = () => {
   const history = useHistory();
@@ -27,22 +28,19 @@ const LandingPage: React.FC = () => {
             padding: "0 1rem",
           }}
         >
+          {/* 🚜 Logo + Title */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <div className="ion-hide-md-up">
-              <IonMenuButton slot="start" autoHide={false} />
-            </div>
-
             <IonTitle
               style={{
                 fontWeight: "bold",
                 fontSize: "1.2rem",
-                marginLeft: "0.5rem",
               }}
             >
               🚜 Coop PaBOOKid
             </IonTitle>
           </div>
 
+          {/* ✅ Desktop nav buttons */}
           <div className="ion-hide-sm-down">
             <IonButton fill="clear" onClick={() => history.push("/booking")}>
               Booking
@@ -53,12 +51,14 @@ const LandingPage: React.FC = () => {
             <IonButton fill="clear" onClick={() => history.push("/contact")}>
               Contact
             </IonButton>
-            <IonButton fill="clear" onClick={() => history.push("/login")}>
+            <IonButton color="success" onClick={() => history.push("/login")}>
               Sign In
             </IonButton>
-            <IonButton color="success" onClick={() => history.push("/register")}>
-              Get Started
-            </IonButton>
+          </div>
+
+          {/* ✅ Mobile menu button (naka-right side na) */}
+          <div className="ion-hide-md-up">
+            <IonMenuButton slot="end" autoHide={false} />
           </div>
         </div>
       </IonToolbar>
@@ -214,19 +214,33 @@ const LandingPage: React.FC = () => {
             <div style={{ flex: "1 1 200px", margin: "1rem" }}>
               <h2 style={{ fontWeight: "bold" }}>🚜 Coop PaBOOKid</h2>
               <p>Modernizing Equipment Rentals for Farmers</p>
-              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <IonButton fill="clear" size="small">FB</IonButton>
-                <IonButton fill="clear" size="small">IG</IonButton>
-                <IonButton fill="clear" size="small">X</IonButton>
-                <IonButton fill="clear" size="small">in</IonButton>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  marginTop: "0.5rem",
+                }}
+              >
+                <IonButton fill="clear" size="small">
+                  FB
+                </IonButton>
+                <IonButton fill="clear" size="small">
+                  IG
+                </IonButton>
+                <IonButton fill="clear" size="small">
+                  X
+                </IonButton>
+                <IonButton fill="clear" size="small">
+                  in
+                </IonButton>
               </div>
             </div>
 
             {/* About Us */}
             <div style={{ flex: "1 1 150px", margin: "1rem" }}>
-              <h4>ABOUT US</h4>
-              <p>Mantibugao, Bukidnon</p>
-              <p>Philippines</p>
+              <h4 className="about-title">ABOUT US</h4>
+              <p className="about-text">Mantibugao, Bukidnon</p>
+              <p className="about-text">Philippines</p>
             </div>
 
             {/* Legal Stuff */}
@@ -247,7 +261,13 @@ const LandingPage: React.FC = () => {
           </div>
 
           {/* Bottom Line */}
-          <div style={{ marginTop: "1rem", fontSize: "0.9rem", textAlign: "center" }}>
+          <div
+            style={{
+              marginTop: "1rem",
+              fontSize: "0.9rem",
+              textAlign: "center",
+            }}
+          >
             © 2025 Coop PaBOOKid. All Rights Reserved.
           </div>
         </div>

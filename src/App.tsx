@@ -1,89 +1,51 @@
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from "react-router-dom";
 import {
   IonApp,
   IonRouterOutlet,
   setupIonicReact,
   IonSplitPane,
-  IonMenu,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-} from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
+} from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
 
 /* Ionic CSS imports */
-import '@ionic/react/css/core.css';
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
-import '@ionic/react/css/palettes/dark.system.css';
+import "@ionic/react/css/core.css";
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
+import "@ionic/react/css/padding.css";
+import "@ionic/react/css/float-elements.css";
+import "@ionic/react/css/text-alignment.css";
+import "@ionic/react/css/text-transformation.css";
+import "@ionic/react/css/flex-utils.css";
+import "@ionic/react/css/display.css";
+import "@ionic/react/css/palettes/dark.system.css";
 
-import './theme/variables.css';
+import "./theme/variables.css";
 
-import Login from './pages/Login';
-import Menu from './pages/Menu';
-import Register from './pages/Register';
-import LandingPage from './pages/Landingpage';
-import LearnMore from './pages/LearnMore';
+import Login from "./pages/Login";
+import Menu from "./pages/Menu";
+import Register from "./pages/Register";
+import LandingPage from "./pages/Landingpage";
+import LearnMore from "./pages/LearnMore";
+import RightSideMenu from "./pages/Rightsidemenu"; // ✅ import menu
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-   
       <IonSplitPane contentId="main">
-    
-        <IonMenu contentId="main" type="overlay" className="ion-hide-md-up">
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle>Menu</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent>
-            <IonList>
-              <IonItem routerLink="/booking">
-                <IonLabel>Booking</IonLabel>
-              </IonItem>
-              <IonItem routerLink="/about">
-                <IonLabel>About Us</IonLabel>
-              </IonItem>
-              <IonItem routerLink="/contact">
-                <IonLabel>Contact</IonLabel>
-              </IonItem>
-              <IonItem routerLink="/login">
-                <IonLabel>Sign In</IonLabel>
-              </IonItem>
-            </IonList>
-          </IonContent>
-        </IonMenu>
+        {/* ✅ Right Side Menu */}
+        <RightSideMenu />
 
-        
+        {/* ✅ Router Outlet */}
         <IonRouterOutlet id="main">
           <Switch>
-           
             <Route exact path="/" component={LandingPage} />
-
-         
             <Route exact path="/login" component={Login} />
             <Route exact path="/register" component={Register} />
-
-          
             <Route exact path="/learnmore" component={LearnMore} />
-
             <Route path="/MARBF-CooperativePH/app" component={Menu} />
-
-   
             <Redirect to="/" />
           </Switch>
         </IonRouterOutlet>
