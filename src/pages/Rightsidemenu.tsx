@@ -39,31 +39,13 @@ const RightSideMenu: React.FC = () => {
       <IonContent>
         <IonList lines="none" style={{ marginTop: "1rem" }}>
           {/* Home */}
-          <IonItem
-            button
-            routerLink="/"
-            detail={false}
-            style={{
-              margin: "0.5rem",
-              background: "#f9f9f9",
-          
-            }}
-          >
+          <IonItem button routerLink="/booking" detail={false}>
             <IonIcon icon={homeOutline} slot="start" color="warning" />
             <IonLabel style={{ fontWeight: 500 }}>Home</IonLabel>
           </IonItem>
 
           {/* Booking */}
-          <IonItem
-            button
-            routerLink="/booking"
-            detail={false}
-            style={{
-              margin: "0.5rem",
-              background: "#f9f9f9",
-          
-            }}
-          >
+          <IonItem button routerLink="/booking" detail={false}>
             <IonIcon icon={calendarOutline} slot="start" color="warning" />
             <IonLabel style={{ fontWeight: 500 }}>Booking</IonLabel>
           </IonItem>
@@ -71,31 +53,27 @@ const RightSideMenu: React.FC = () => {
           {/* About Us */}
           <IonItem
             button
-            routerLink="/learnmore"
             detail={false}
-            style={{
-              margin: "0.5rem",
-              background: "#f9f9f9",
-           
+            onClick={() => {
+              const support = document.getElementById("support");
+              if (support) {
+                support.scrollIntoView({ behavior: "smooth" });
+              }
             }}
           >
-            <IonIcon
-              icon={informationCircleOutline}
-              slot="start"
-              color="warning"
-            />
-            <IonLabel style={{ fontWeight: 500 }}>About Us</IonLabel>
+            <IonIcon icon={callOutline} slot="start" color="warning" />
+            <IonLabel style={{ fontWeight: 500 }}>about us</IonLabel>
           </IonItem>
 
-          {/* Contact */}
+          {/* Contact → scroll sa CUSTOMER SUPPORT */}
           <IonItem
             button
-            routerLink="/contact"
             detail={false}
-            style={{
-              margin: "0.5rem",
-              background: "#f9f9f9",
-           
+            onClick={() => {
+              const support = document.getElementById("support");
+              if (support) {
+                support.scrollIntoView({ behavior: "smooth" });
+              }
             }}
           >
             <IonIcon icon={callOutline} slot="start" color="warning" />
@@ -103,20 +81,9 @@ const RightSideMenu: React.FC = () => {
           </IonItem>
 
           {/* Sign In */}
-          <IonItem
-            button
-            routerLink="/login"
-            detail={false}
-            style={{
-              margin: "0.5rem",
-              background: "#FCB53B",
-             
-            }}
-          >
+          <IonItem button routerLink="/login" detail={false}>
             <IonIcon icon={logInOutline} slot="start" color="warning" />
-            <IonLabel style={{ fontWeight: 500, color: "white" }}>
-              Sign In
-            </IonLabel>
+            <IonLabel style={{ fontWeight: 500 }}>Sign In</IonLabel>
           </IonItem>
         </IonList>
 

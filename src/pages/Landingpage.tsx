@@ -25,7 +25,7 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage id="main"> {/* ✅ importante para mo–link sa IonMenu */}
       {/* ✅ Navbar */}
       <IonToolbar color="light">
         <div
@@ -64,11 +64,8 @@ const LandingPage: React.FC = () => {
             >
               Booking
             </IonButton>
-            <IonButton
-              fill="clear"
-              onClick={() => history.push("/learnmore")}
-              color="warning"
-            >
+  <IonButton fill="clear" onClick={scrollToSupport} color="warning">
+            
               About Us
             </IonButton>
             {/* 🔑 Gi-ilisan: scrollToSupport() instead of history.push */}
@@ -241,24 +238,24 @@ const LandingPage: React.FC = () => {
             <div style={{ flex: " 1 1 100px", margin: "1rem" }}>
               <h2 style={{ fontWeight: "bold" }}>MARBF Cooperative.</h2>
               <p>Modernizing Equipment Rentals for Farmers</p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.3rem",
-                  marginTop: "0.3rem",
-                }}
-              ></div>
             </div>
 
             {/* About Us */}
-            <div style={{ flex: "1 1 100px", margin: "1rem" }}>
+            <div  ref={supportRef}
+              id="support"
+              style={{ flex: "1 1 100px", margin: "1rem" }}
+            >
               <h4 className="about-title">ABOUT US</h4>
               <p className="about-text">Mantibugao, Bukidnon</p>
               <p className="about-text">Philippines</p>
             </div>
 
-            {/* Support → 🔑 Gi-butangan ug ref */}
-            <div ref={supportRef} style={{ flex: "1 1 100px", margin: "1rem" }}>
+            {/* Support → 🔑 Gi-butangan ug id */}
+            <div
+              ref={supportRef}
+              id="support"
+              style={{ flex: "1 1 100px", margin: "1rem" }}
+            >
               <h4>CUSTOMER SUPPORT</h4>
               <p>Email: coopbookid@mail.com</p>
               <p>Phone: +63 912 345 6789</p>
