@@ -10,7 +10,7 @@ import { useHistory } from "react-router-dom";
 const LearnMore: React.FC = () => {
   const history = useHistory();
 
-  // Detect system dark mode gamit prefers-color-scheme
+  
   const isDark = window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -24,7 +24,7 @@ const LearnMore: React.FC = () => {
             padding: "0 1rem",
           }}
         >
-          {/* 🚜 MARBF Cooperative dynamic color */}
+     
           <IonButton
             fill="clear"
             style={{
@@ -142,7 +142,6 @@ const LearnMore: React.FC = () => {
           </IonButton>
         </div>
 
-        {/* Footer */}
         <div
           style={{
             backgroundColor: "#fff",

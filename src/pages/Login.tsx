@@ -108,7 +108,6 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
-      {/* Styles */}
       <style>
         {`
           .login-container {

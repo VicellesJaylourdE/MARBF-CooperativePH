@@ -252,8 +252,6 @@ const Register: React.FC = () => {
                         Already have an account?
                     </IonButton>
                 </div>
-
-                {/* Verification Modal */}
                 <IonModal isOpen={showVerificationModal} onDidDismiss={() => setShowVerificationModal(false)}>
                     <IonContent className="ion-padding">
                         <IonCard style={{ marginTop: '20%' }}>
@@ -278,7 +276,6 @@ const Register: React.FC = () => {
                     </IonContent>
                 </IonModal>
 
-                {/* Success Modal */}
                 <IonModal isOpen={showSuccessModal} onDidDismiss={() => setShowSuccessModal(false)}>
                     <IonContent className="ion-padding" style={{ textAlign: 'center', marginTop: '25%' }}>
                         <IonCard>
