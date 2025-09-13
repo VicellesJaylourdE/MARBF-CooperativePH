@@ -27,7 +27,7 @@ const RightSideMenu: React.FC = () => {
       className="ion-hide-md-up custom-right-menu"
     >
       <IonHeader>
-        <IonToolbar color="warning">
+        <IonToolbar color="light">
           <IonTitle style={{ fontWeight: "bold", color: "white" }}>
             Coop PaBOOKid
           </IonTitle>
@@ -58,7 +58,7 @@ const RightSideMenu: React.FC = () => {
             }}
           >
             <IonIcon icon={callOutline} slot="start" color="warning" />
-            <IonLabel style={{ fontWeight: 500 }}>about us</IonLabel>
+            <IonLabel style={{ fontWeight: 500 }}>About us</IonLabel>
           </IonItem>
 
           <IonItem

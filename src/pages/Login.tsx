@@ -9,7 +9,6 @@ import {
   IonToast,
   useIonRouter
 } from '@ionic/react';
-
 import { supabase } from '../utils/supabaseClient';
 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({ message, isOpen, onClose }) => {
@@ -33,7 +32,7 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
 
   const doLogin = async () => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setAlertMessage(error.message);
@@ -41,9 +40,35 @@ const Login: React.FC = () => {
       return;
     }
 
+    const user = data.user;
+    if (!user) {
+      setAlertMessage("User not found.");
+      setShowAlert(true);
+      return;
+    }
+
+    // Fetch role from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('user_email', email)
+      .single();
+
+    if (userError || !userData) {
+      setAlertMessage("Unable to fetch user role.");
+      setShowAlert(true);
+      return;
+    }
+
     setShowToast(true);
+
+    // Redirect based on role
     setTimeout(() => {
-      navigation.push('/MARBF-CooperativePH/app', 'forward', 'replace');
+     if (userData.role === 'admin') {
+  navigation.push('/admin-dashboard', 'forward', 'replace');
+} else {
+  navigation.push('/user-dashboard', 'forward', 'replace');
+}
     }, 300);
   };
 
@@ -75,22 +100,11 @@ const Login: React.FC = () => {
               <IonInputPasswordToggle slot="end" />
             </IonInput>
 
-            <IonButton
-              onClick={doLogin}
-              expand="block"
-              fill="solid"
-              className="login-btn"
-            >
+            <IonButton onClick={doLogin} expand="block" fill="solid" className="login-btn">
               Sign In
             </IonButton>
 
-        
-            <IonButton
-              routerLink="/"
-              expand="block"
-              fill="clear"
-              className="register-btn"
-            >
+            <IonButton routerLink="/" expand="block" fill="clear" className="register-btn">
               Don&apos;t have an account?
             </IonButton>
           </div>
@@ -116,7 +130,6 @@ const Login: React.FC = () => {
             align-items: center;
             height: 100%;
           }
-
           .login-card {
             width: 360px;
             padding: 25px;
@@ -127,21 +140,18 @@ const Login: React.FC = () => {
             flex-direction: column;
             align-items: center;
           }
-
           .login-title {
             font-size: 22px;
             font-weight: bold;
             color: black;
             margin-bottom: 8px;
           }
-
           .login-subtitle {
             font-size: 14px;
             color: #333;
             text-align: center;
             margin-bottom: 20px;
           }
-
           .input-field {
             width: 100%;
             margin-bottom: 12px;
@@ -149,14 +159,12 @@ const Login: React.FC = () => {
             --border-color: #9ACD32;
             --color: black;
           }
-
           .login-btn {
             --background: #9ACD32;
             --color: black;
             width: 100%;
             margin-top: 10px;
           }
-
           .register-btn {
             --color: green;
             margin-top: 8px;

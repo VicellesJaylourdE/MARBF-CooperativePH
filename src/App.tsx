@@ -27,7 +27,11 @@ import Menu from "./pages/Menu";
 import Register from "./pages/Register";
 import LandingPage from "./pages/Landingpage";
 import LearnMore from "./pages/LearnMore";
-import RightSideMenu from "./pages/Rightsidemenu"; // ✅ import menu
+import RightSideMenu from "./pages/Rightsidemenu";
+
+/* 🆕 Import dashboards */
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
 
 setupIonicReact();
 
@@ -39,11 +43,16 @@ const App: React.FC = () => (
         <IonRouterOutlet id="main">
           <Switch>
             <Route exact path="/" component={LandingPage} />
-            
+
             <Route exact path="/login" component={Login} />
             <Route exact path="/register" component={Register} />
             <Route exact path="/learnmore" component={LearnMore} />
             <Route path="/MARBF-CooperativePH/app" component={Menu} />
+
+           
+            <Route exact path="/admin-dashboard" component={AdminDashboard} />
+            <Route exact path="/user-dashboard" component={UserDashboard} />
+
             <Redirect to="/" />
           </Switch>
         </IonRouterOutlet>

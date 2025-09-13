@@ -69,7 +69,7 @@ import {
                 </IonMenuToggle>
               ))}
   
-              <IonButton routerLink="/MARBF-CooperativePH" routerDirection="back" expand="full">
+              <IonButton routerLink="/" routerDirection="back" expand="full">
                 <IonIcon icon={logOutOutline} slot="start"></IonIcon>Logout
               </IonButton>
             </IonContent>
