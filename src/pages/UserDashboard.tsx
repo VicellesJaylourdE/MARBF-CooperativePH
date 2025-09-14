@@ -32,19 +32,20 @@ import {
 } from "ionicons/icons";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Calendar } from "@ionic-native/calendar";
+import { supabase } from '../utils/supabaseClient'; 
 import "../theme/UserDashboard.css";
 
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
   const [searchText, setSearchText] = useState("");
 
-  // Stats
+ 
   const [totalEquipment, setTotalEquipment] = useState(6);
   const [availableNow, setAvailableNow] = useState(6);
   const [pendingBookings, setPendingBookings] = useState(3);
   const [activeRentals, setActiveRentals] = useState(0);
 
-  // Equipment List (dummy for now)
+ 
   const [equipment, setEquipment] = useState([
     { id: 1, name: "Tractor A", category: "Tractor", available: true },
     { id: 2, name: "Harvester B", category: "Harvester", available: true },
@@ -52,7 +53,7 @@ const UserDashboard: React.FC = () => {
   ]);
 
   useEffect(() => {
-    // Setup Push Notifications
+ 
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {
         PushNotifications.register();
@@ -67,16 +68,29 @@ const UserDashboard: React.FC = () => {
       console.error("Push registration error: ", error);
     });
 
-    PushNotifications.addListener("pushNotificationReceived", (notification) => {
-      alert(`New Notification: ${notification.title}\n${notification.body}`);
-    });
+    PushNotifications.addListener(
+      "pushNotificationReceived",
+      (notification) => {
+        alert(`New Notification: ${notification.title}\n${notification.body}`);
+      }
+    );
   }, []);
 
-  // Book equipment + add to calendar
+ 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout error:", error.message);
+    } else {
+      window.location.href = "/"; 
+    }
+  };
+
+ 
   const handleBooking = (eqName: string) => {
     alert(`Booked ${eqName}!`);
 
-    // Add calendar event (example: 1-hour booking today)
+   
     const startDate = new Date();
     const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
 
@@ -95,7 +109,7 @@ const UserDashboard: React.FC = () => {
 
   return (
     <IonPage>
-      {/* Header */}
+  
       <IonHeader>
         <IonToolbar color="light">
           <IonTitle className="logo">
@@ -110,16 +124,16 @@ const UserDashboard: React.FC = () => {
             <IonButton>
               <IonIcon icon={personCircleOutline} />
             </IonButton>
-            <IonButton color="warning">
+            <IonButton color="warning" onClick={handleLogout}>
               <IonIcon icon={logOutOutline} />
             </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
 
-      {/* Content */}
+   
       <IonContent fullscreen>
-        {/* Hero Section */}
+      
         <div className="hero-section">
           <div className="hero-overlay">
             <h1 className="welcome-text">Welcome to Coop PaBOOKid</h1>
@@ -134,7 +148,7 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
+     
         <IonGrid className="stats-grid">
           <IonRow>
             <IonCol size="6" sizeMd="3">
@@ -182,7 +196,7 @@ const UserDashboard: React.FC = () => {
           </IonRow>
         </IonGrid>
 
-        {/* Tabs */}
+     
         <IonSegment
           value={segment}
           onIonChange={(e) => setSegment(String(e.detail.value))}
@@ -198,7 +212,7 @@ const UserDashboard: React.FC = () => {
           </IonSegmentButton>
         </IonSegment>
 
-        {/* Equipment Catalog Section */}
+   
         {segment === "catalog" && (
           <div className="equipment-section">
             <h2 className="equipment-title">
@@ -209,14 +223,14 @@ const UserDashboard: React.FC = () => {
               Browse and book agricultural equipment for your farming needs
             </p>
 
-            {/* Search */}
+           
             <IonSearchbar
               value={searchText}
               onIonInput={(e) => setSearchText(e.detail.value!)}
               placeholder="Search equipment by name, category, or description..."
             />
 
-            {/* Equipment Grid */}
+      
             <IonGrid>
               <IonRow>
                 {equipment
@@ -251,7 +265,7 @@ const UserDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* My Bookings Section */}
+      
         {segment === "bookings" && (
           <div className="equipment-section">
             <h2 className="equipment-title">My Bookings</h2>
@@ -259,7 +273,7 @@ const UserDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Calendar Section */}
+     
         {segment === "calendar" && (
           <div className="equipment-section">
             <h2 className="equipment-title">
