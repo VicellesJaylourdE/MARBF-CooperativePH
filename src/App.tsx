@@ -33,30 +33,36 @@ import RightSideMenu from "./pages/Rightsidemenu";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 
+/* 🆕 Import AuthProvider */
+import { AuthProvider } from "./hooks/useAuth";
+
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      <IonSplitPane contentId="main">
-        <RightSideMenu />
-        <IonRouterOutlet id="main">
-          <Switch>
-            <Route exact path="/" component={LandingPage} />
+      {/* Wrap everything inside AuthProvider */}
+      <AuthProvider>
+        <IonSplitPane contentId="main">
+          {/* 👉 RightSideMenu will only appear if you want it globally */}
+          <RightSideMenu />
+          <IonRouterOutlet id="main">
+            <Switch>
+              <Route exact path="/" component={LandingPage} />
 
-            <Route exact path="/login" component={Login} />
-            <Route exact path="/register" component={Register} />
-            <Route exact path="/learnmore" component={LearnMore} />
-            <Route path="/MARBF-CooperativePH/app" component={Menu} />
+              <Route exact path="/login" component={Login} />
+              <Route exact path="/register" component={Register} />
+              <Route exact path="/learnmore" component={LearnMore} />
+              <Route path="/MARBF-CooperativePH/app" component={Menu} />
 
-           
-            <Route exact path="/admin-dashboard" component={AdminDashboard} />
-            <Route exact path="/user-dashboard" component={UserDashboard} />
+              <Route exact path="/admin-dashboard" component={AdminDashboard} />
+              <Route exact path="/user-dashboard" component={UserDashboard} />
 
-            <Redirect to="/" />
-          </Switch>
-        </IonRouterOutlet>
-      </IonSplitPane>
+              <Redirect to="/" />
+            </Switch>
+          </IonRouterOutlet>
+        </IonSplitPane>
+      </AuthProvider>
     </IonReactRouter>
   </IonApp>
 );
