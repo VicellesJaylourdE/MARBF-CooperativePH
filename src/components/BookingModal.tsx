@@ -49,7 +49,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       isOpen={isOpen}
       onDidDismiss={onClose}
       backdropDismiss={false}
-      className="booking-modal-card" // ✅ use className instead of cssClass
+      className="booking-modal-card" 
     >
       <IonHeader>
         <IonToolbar>
