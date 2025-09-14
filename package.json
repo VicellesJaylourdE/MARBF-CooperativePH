@@ -14,6 +14,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/push-notifications": "^7.0.3",
+    "@ionic-native/calendar": "^5.36.0",
     "@ionic/react": "^8.5.0",
     "@ionic/react-router": "^8.5.0",
     "@supabase/supabase-js": "^2.57.0",

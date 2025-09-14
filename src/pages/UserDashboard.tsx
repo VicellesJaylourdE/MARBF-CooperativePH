@@ -28,7 +28,10 @@ import {
   timeOutline,
   calendarOutline,
   cogOutline,
+  notificationsOutline,
 } from "ionicons/icons";
+import { PushNotifications } from "@capacitor/push-notifications";
+import { Calendar } from "@ionic-native/calendar";
 import "../theme/UserDashboard.css";
 
 const UserDashboard: React.FC = () => {
@@ -49,8 +52,46 @@ const UserDashboard: React.FC = () => {
   ]);
 
   useEffect(() => {
-    // TODO: Fetch data from Supabase later
+    // Setup Push Notifications
+    PushNotifications.requestPermissions().then((result) => {
+      if (result.receive === "granted") {
+        PushNotifications.register();
+      }
+    });
+
+    PushNotifications.addListener("registration", (token) => {
+      console.log("Push registration success, token: " + token.value);
+    });
+
+    PushNotifications.addListener("registrationError", (error) => {
+      console.error("Push registration error: ", error);
+    });
+
+    PushNotifications.addListener("pushNotificationReceived", (notification) => {
+      alert(`New Notification: ${notification.title}\n${notification.body}`);
+    });
   }, []);
+
+  // Book equipment + add to calendar
+  const handleBooking = (eqName: string) => {
+    alert(`Booked ${eqName}!`);
+
+    // Add calendar event (example: 1-hour booking today)
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    Calendar.createEvent(
+      `Rental: ${eqName}`,
+      "Farm Coop",
+      "Equipment rental booking",
+      startDate,
+      endDate
+    )
+      .then(() => {
+        console.log("Event created in calendar");
+      })
+      .catch((err) => console.error("Calendar error: ", err));
+  };
 
   return (
     <IonPage>
@@ -152,6 +193,9 @@ const UserDashboard: React.FC = () => {
           <IonSegmentButton value="bookings">
             <IonLabel>My Bookings</IonLabel>
           </IonSegmentButton>
+          <IonSegmentButton value="calendar">
+            <IonLabel>Calendar</IonLabel>
+          </IonSegmentButton>
         </IonSegment>
 
         {/* Equipment Catalog Section */}
@@ -190,7 +234,12 @@ const UserDashboard: React.FC = () => {
                           <IonIcon icon={cogOutline} className="equip-icon" />
                           <h3>{eq.name}</h3>
                           <p>{eq.category}</p>
-                          <IonButton expand="block" size="small" color="success">
+                          <IonButton
+                            expand="block"
+                            size="small"
+                            color="success"
+                            onClick={() => handleBooking(eq.name)}
+                          >
                             Book Now
                           </IonButton>
                         </IonCardContent>
@@ -207,7 +256,25 @@ const UserDashboard: React.FC = () => {
           <div className="equipment-section">
             <h2 className="equipment-title">My Bookings</h2>
             <p className="equipment-sub">View and manage your bookings here.</p>
-            {/* TODO: Show user bookings */}
+          </div>
+        )}
+
+        {/* Calendar Section */}
+        {segment === "calendar" && (
+          <div className="equipment-section">
+            <h2 className="equipment-title">
+              <IonIcon icon={calendarOutline} style={{ marginRight: "6px" }} />
+              My Calendar
+            </h2>
+            <p className="equipment-sub">
+              View your rental bookings in your device calendar.
+            </p>
+            <IonCard>
+              <IonCardContent>
+                <IonIcon icon={notificationsOutline} /> Calendar events are
+                automatically added when you book equipment.
+              </IonCardContent>
+            </IonCard>
           </div>
         )}
       </IonContent>
