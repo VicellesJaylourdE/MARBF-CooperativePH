@@ -1,36 +1,53 @@
-import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon } from "@ionic/react";
-import { contractOutline, settingsOutline, personCircleOutline, logOutOutline } from "ionicons/icons";
+import React from "react";
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonIcon,
+} from "@ionic/react";
+import {
+  contractOutline,
+  settingsOutline,
+  personCircleOutline,
+  logOutOutline,
+} from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
 
 const HeaderBar: React.FC = () => {
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Logout error:", error.message);
-    } else {
-      window.location.href = "/";
-    }
-  };
-
   return (
     <IonHeader>
       <IonToolbar color="light">
+      
         <IonTitle className="logo">
           <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
           Coop PaBOOKid
         </IonTitle>
-        <IonButtons slot="end">
-          <IonButton>Jay</IonButton>
-          <IonButton>
+
+    
+        <div style={{ position: "absolute", right: "1rem", top: "0.5rem" }}>
+          <IonButton routerLink="/settings" fill="clear">
             <IonIcon icon={settingsOutline} />
           </IonButton>
-          <IonButton>
+
+          <IonButton routerLink="/profile" fill="clear">
             <IonIcon icon={personCircleOutline} />
           </IonButton>
-          <IonButton color="warning" onClick={handleLogout}>
+
+          <IonButton
+            fill="clear"
+            onClick={async () => {
+              const { error } = await supabase.auth.signOut();
+              if (error) {
+                console.error("Logout error:", error.message);
+              } else {
+                window.location.href = "/MARBF-CooperativePH";
+              }
+            }}
+          >
             <IonIcon icon={logOutOutline} />
           </IonButton>
-        </IonButtons>
+        </div>
       </IonToolbar>
     </IonHeader>
   );
