@@ -1,0 +1,7 @@
+.booking-modal-card {
+  --width: 90%;
+  --height: auto;
+  --border-radius: 16px;
+  --max-width: 500px;
+  --backdrop-opacity: 0.4;
+}

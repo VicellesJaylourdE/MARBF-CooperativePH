@@ -4,9 +4,10 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import HeaderBar from "../components/HeaderBar";
 import StatsGrid from "../components/StatsGrid";
 import EquipmentCatalog from "../components/EquipmentCatalog";
-import Bookings from "../components/Bookings";
+import Bookings from "../components/BookingModal";
 import CalendarView from "../components/CalendarView";
 import "../theme/UserDashboard.css";
+import BookingModal from "../components/BookingModal";
 
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
@@ -50,7 +51,11 @@ const UserDashboard: React.FC = () => {
         </IonSegment>
 
         {segment === "catalog" && <EquipmentCatalog />}
-        {segment === "bookings" && <Bookings />}
+        {segment === "BookingModal" && <BookingModal isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSubmit={function (booking: { startDate: string; endDate: string; notes: string; }): void {
+          throw new Error("Function not implemented.");
+        } } equipmentName={""} />}
         {segment === "calendar" && <CalendarView />}
       </IonContent>
     </IonPage>
