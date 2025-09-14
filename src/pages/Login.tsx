@@ -9,22 +9,12 @@ import {
   IonToast,
   useIonRouter
 } from '@ionic/react';
-import { supabase } from '../utils/supabaseClient';
-
-const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({ message, isOpen, onClose }) => {
-  return (
-    <IonAlert
-      isOpen={isOpen}
-      onDidDismiss={onClose}
-      header="Notification"
-      message={message}
-      buttons={['OK']}
-    />
-  );
-};
+import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
+  const { login, role } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -32,43 +22,22 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
 
   const doLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await login(email, password);
 
     if (error) {
-      setAlertMessage(error.message);
-      setShowAlert(true);
-      return;
-    }
-
-    const user = data.user;
-    if (!user) {
-      setAlertMessage("User not found.");
-      setShowAlert(true);
-      return;
-    }
-
-   
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('user_email', email)
-      .single();
-
-    if (userError || !userData) {
-      setAlertMessage("Unable to fetch user role.");
+      setAlertMessage(error);
       setShowAlert(true);
       return;
     }
 
     setShowToast(true);
 
-   
     setTimeout(() => {
-     if (userData.role === 'admin') {
-  navigation.push('/admin-dashboard', 'forward', 'replace');
-} else {
-  navigation.push('/user-dashboard', 'forward', 'replace');
-}
+      if (role === 'admin') {
+        navigation.push('/admin-dashboard', 'forward', 'replace');
+      } else {
+        navigation.push('/user-dashboard', 'forward', 'replace');
+      }
     }, 300);
   };
 
@@ -104,13 +73,19 @@ const Login: React.FC = () => {
               Sign In
             </IonButton>
 
-            <IonButton routerLink="/" expand="block" fill="clear" className="register-btn">
+            <IonButton routerLink="/register" expand="block" fill="clear" className="register-btn">
               Don&apos;t have an account?
             </IonButton>
           </div>
         </div>
 
-        <AlertBox message={alertMessage} isOpen={showAlert} onClose={() => setShowAlert(false)} />
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header="Notification"
+          message={alertMessage}
+          buttons={['OK']}
+        />
 
         <IonToast
           isOpen={showToast}
@@ -121,58 +96,6 @@ const Login: React.FC = () => {
           color="success"
         />
       </IonContent>
-
-      <style>
-        {`
-          .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-          }
-          .login-card {
-            width: 360px;
-            padding: 25px;
-            background: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .login-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: black;
-            margin-bottom: 8px;
-          }
-          .login-subtitle {
-            font-size: 14px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-          }
-          .input-field {
-            width: 100%;
-            margin-bottom: 12px;
-            --highlight-color-focused: #9ACD32;
-            --border-color: #9ACD32;
-            --color: black;
-          }
-          .login-btn {
-            --background: #9ACD32;
-            --color: black;
-            width: 100%;
-            margin-top: 10px;
-          }
-          .register-btn {
-            --color: green;
-            margin-top: 8px;
-            font-weight: bold;
-            text-transform: none;
-          }
-        `}
-      </style>
     </IonPage>
   );
 };
