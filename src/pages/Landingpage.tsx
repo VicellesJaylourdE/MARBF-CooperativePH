@@ -11,7 +11,7 @@ import {
   IonMenuButton,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import "./LandingPage.css";
+import "../theme/LandingPage.css";
 
 const LandingPage: React.FC = () => {
   const history = useHistory();

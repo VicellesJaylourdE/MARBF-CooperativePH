@@ -73,7 +73,7 @@ const Login: React.FC = () => {
               Sign In
             </IonButton>
 
-            <IonButton routerLink="/register" expand="block" fill="clear" className="register-btn">
+            <IonButton routerLink="/" expand="block" fill="clear" className="register-btn">
               Don&apos;t have an account?
             </IonButton>
           </div>
