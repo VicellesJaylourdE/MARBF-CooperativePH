@@ -2,6 +2,7 @@
   --width: 90%;
   --height: auto;
   --border-radius: 16px;
-  --max-width: 500px;
-  --backdrop-opacity: 0.4;
+  --background: #fff;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  margin: auto;
 }

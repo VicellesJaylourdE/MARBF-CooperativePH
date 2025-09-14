@@ -14,9 +14,12 @@ import {
   IonRow,
   IonCol,
   IonInput,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonText,
 } from "@ionic/react";
-
-import "./BookingModal.css"; 
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -45,12 +48,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   return (
-    <IonModal
-      isOpen={isOpen}
-      onDidDismiss={onClose}
-      backdropDismiss={false}
-      className="booking-modal-card" 
-    >
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} backdropDismiss={false}>
       <IonHeader>
         <IonToolbar>
           <IonTitle>📅 Book Equipment</IonTitle>
@@ -61,55 +59,60 @@ const BookingModal: React.FC<BookingModalProps> = ({
       </IonHeader>
 
       <IonContent className="ion-padding">
-        <p className="text-gray-500 mb-4">
-          Reserve <b>{equipmentName}</b> for your farming needs
-        </p>
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Reserve "{equipmentName}"</IonCardTitle>
+            <IonText color="medium">
+              <p>for your farming needs</p>
+            </IonText>
+          </IonCardHeader>
 
-        <IonGrid>
-          <IonRow>
-            <IonCol>
-              <IonItem>
-                <IonLabel position="stacked">Start Date (dd/mm/yyyy)</IonLabel>
-                <IonInput
-                  type="text"
-                  placeholder="e.g. 14/09/2025"
-                  value={startDate}
-                  onIonInput={(e) => setStartDate(e.detail.value ?? "")}
-                />
-              </IonItem>
-            </IonCol>
+          <IonCardContent>
+            <IonGrid>
+              <IonRow>
+                <IonCol>
+                  <IonItem>
+                    <IonLabel position="stacked">Start Date</IonLabel>
+                    <IonInput
+                      type="date"
+                      value={startDate}
+                      onIonInput={(e) => setStartDate(e.detail.value ?? "")}
+                    />
+                  </IonItem>
+                </IonCol>
 
-            <IonCol>
-              <IonItem>
-                <IonLabel position="stacked">End Date (dd/mm/yyyy)</IonLabel>
-                <IonInput
-                  type="text"
-                  placeholder="e.g. 20/09/2025"
-                  value={endDate}
-                  onIonInput={(e) => setEndDate(e.detail.value ?? "")}
-                />
-              </IonItem>
-            </IonCol>
-          </IonRow>
-        </IonGrid>
+                <IonCol>
+                  <IonItem>
+                    <IonLabel position="stacked">End Date</IonLabel>
+                    <IonInput
+                      type="date"
+                      value={endDate}
+                      onIonInput={(e) => setEndDate(e.detail.value ?? "")}
+                    />
+                  </IonItem>
+                </IonCol>
+              </IonRow>
+            </IonGrid>
 
-        <IonItem>
-          <IonLabel position="stacked">Notes (Optional)</IonLabel>
-          <IonTextarea
-            placeholder="Any special requirements or notes..."
-            value={notes}
-            onIonInput={(e) => setNotes(e.detail.value ?? "")}
-          />
-        </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Notes (Optional)</IonLabel>
+              <IonTextarea
+                placeholder="Any special requirements or notes..."
+                value={notes}
+                onIonInput={(e) => setNotes(e.detail.value ?? "")}
+              />
+            </IonItem>
 
-        <div className="ion-text-end ion-padding-top">
-          <IonButton fill="clear" onClick={onClose}>
-            Cancel
-          </IonButton>
-          <IonButton color="success" onClick={handleSubmit}>
-            Submit Booking
-          </IonButton>
-        </div>
+            <div className="ion-text-end ion-padding-top">
+              <IonButton fill="clear" onClick={onClose}>
+                Cancel
+              </IonButton>
+              <IonButton color="success" onClick={handleSubmit}>
+                Submit Booking
+              </IonButton>
+            </div>
+          </IonCardContent>
+        </IonCard>
       </IonContent>
     </IonModal>
   );
