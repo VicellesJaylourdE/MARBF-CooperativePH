@@ -4,7 +4,6 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import HeaderBar from "../components/HeaderBar";
 import StatsGrid from "../components/StatsGrid";
 import EquipmentCatalog from "../components/EquipmentCatalog";
-import Bookings from "../components/BookingModal";
 import CalendarView from "../components/CalendarView";
 import "../theme/UserDashboard.css";
 import BookingModal from "../components/BookingModal";
