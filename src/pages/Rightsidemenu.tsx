@@ -28,8 +28,8 @@ const RightSideMenu: React.FC = () => {
     >
       <IonHeader>
         <IonToolbar color="light">
-          <IonTitle style={{ fontWeight: "bold", color: "white" }}>
-            Coop PaBOOKid
+          <IonTitle style={{ fontWeight: "", color: "white" }}>
+            Menu
           </IonTitle>
         </IonToolbar>
       </IonHeader>

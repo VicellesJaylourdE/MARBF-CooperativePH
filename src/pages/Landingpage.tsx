@@ -45,7 +45,6 @@ const LandingPage: React.FC = () => {
             </IonTitle>
           </div>
 
-       
           <div className="ion-hide-sm-down">
             <IonButton
               fill="clear"
@@ -65,7 +64,6 @@ const LandingPage: React.FC = () => {
             
               About Us
             </IonButton>
-            {/* 🔑 Gi-ilisan: scrollToSupport() instead of history.push */}
             <IonButton fill="clear" onClick={scrollToSupport} color="warning">
               Contact
             </IonButton>

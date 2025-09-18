@@ -30,15 +30,12 @@ const Register: React.FC = () => {
 
   const doRegister = async () => {
     try {
-      // Create Supabase auth account
       const { error: signUpError } = await supabase.auth.signUp({ email, password });
       if (signUpError) throw new Error(signUpError.message);
 
-      // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Insert into users table with selected role
       const { error: dbError } = await supabase.from('users').insert([{
         username,
         user_email: email,
@@ -99,7 +96,7 @@ const Register: React.FC = () => {
               <IonInputPasswordToggle slot="end" />
             </IonInput>
 
-            {/* 🔑 Role Selector */}
+   
             <IonSelect
               value={role}
               placeholder="Select Role"
@@ -115,7 +112,6 @@ const Register: React.FC = () => {
           </IonCardContent>
         </IonCard>
 
-        {/* Error Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
@@ -124,7 +120,6 @@ const Register: React.FC = () => {
           buttons={['OK']}
         />
 
-        {/* Success Modal */}
         <IonModal isOpen={showSuccessModal} onDidDismiss={() => setShowSuccessModal(false)}>
           <IonContent className="ion-padding">
             <h2>Registration Successful!</h2>

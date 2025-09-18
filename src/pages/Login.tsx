@@ -47,7 +47,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Fetch role from users table
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role')
@@ -62,7 +61,6 @@ const Login: React.FC = () => {
 
     setShowToast(true);
 
-    // Redirect based on role
     setTimeout(() => {
      if (userData.role === 'admin') {
   navigation.push('/admin-dashboard', 'forward', 'replace');
