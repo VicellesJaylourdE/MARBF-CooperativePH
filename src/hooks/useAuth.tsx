@@ -13,7 +13,7 @@ interface AuthContextType {
     lastName: string;
     email: string;
     password: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'user' | 'staff'; // 🔹 Added staff
   }) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 }
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lastName: string;
     email: string;
     password: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'user' | 'staff'; // 🔹 Added staff here too
   }) => {
     try {
       // Create Supabase auth account

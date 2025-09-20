@@ -23,7 +23,7 @@ const Register: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'user'>('user'); // 🔑 Default "user"
+  const [role, setRole] = useState<'admin' | 'user' | 'staff'>('user'); // 🔹 Added staff role
   const [alertMessage, setAlertMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -96,13 +96,13 @@ const Register: React.FC = () => {
               <IonInputPasswordToggle slot="end" />
             </IonInput>
 
-   
             <IonSelect
               value={role}
               placeholder="Select Role"
               onIonChange={(e) => setRole(e.detail.value)}
             >
               <IonSelectOption value="admin">Admin</IonSelectOption>
+              <IonSelectOption value="staff">Staff</IonSelectOption> {/* 🔹 Added staff */}
               <IonSelectOption value="user">User</IonSelectOption>
             </IonSelect>
 

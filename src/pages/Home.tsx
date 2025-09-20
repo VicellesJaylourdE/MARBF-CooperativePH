@@ -41,8 +41,6 @@ import SignUp from './Register';
           </IonTabBar>
         <IonRouterOutlet>
 
-        
-
           <Route exact path="/MARBF-CooperativePH/app/home">
             <Redirect to="/MARBF-CooperativePH/app/home/feed" />
           </Route>

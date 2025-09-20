@@ -29,9 +29,10 @@ import LandingPage from "./pages/Landingpage";
 import LearnMore from "./pages/LearnMore";
 import RightSideMenu from "./pages/Rightsidemenu";
 
-/* 🆕 Import dashboards */
+
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
+import StaffDashboard from "./pages/StaffDashboard"; 
 
 setupIonicReact();
 
@@ -49,9 +50,9 @@ const App: React.FC = () => (
             <Route exact path="/learnmore" component={LearnMore} />
             <Route path="/MARBF-CooperativePH/app" component={Menu} />
 
-           
             <Route exact path="/admin-dashboard" component={AdminDashboard} />
             <Route exact path="/user-dashboard" component={UserDashboard} />
+            <Route exact path="/staff-dashboard" component={StaffDashboard} /> {/* 🟢 Added */}
 
             <Redirect to="/" />
           </Switch>

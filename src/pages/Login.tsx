@@ -62,11 +62,13 @@ const Login: React.FC = () => {
     setShowToast(true);
 
     setTimeout(() => {
-     if (userData.role === 'admin') {
-  navigation.push('/admin-dashboard', 'forward', 'replace');
-} else {
-  navigation.push('/user-dashboard', 'forward', 'replace');
-}
+      if (userData.role === 'admin') {
+        navigation.push('/admin-dashboard', 'forward', 'replace');
+      } else if (userData.role === 'staff') {   // 🔹 Added staff role
+        navigation.push('/staff-dashboard', 'forward', 'replace');
+      } else {
+        navigation.push('/user-dashboard', 'forward', 'replace');
+      }
     }, 300);
   };
 
