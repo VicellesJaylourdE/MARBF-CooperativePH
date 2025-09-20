@@ -1,16 +1,31 @@
-import { IonPage, IonContent, IonSegment, IonSegmentButton, IonLabel } from "@ionic/react";
+import {
+  IonPage,
+  IonContent,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonSpinner,
+} from "@ionic/react";
 import { useState, useEffect } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
+import { supabase } from "../utils/supabaseClient";
 import HeaderBar from "../components/HeaderBar";
 import StatsGrid from "../components/StatsGrid";
 import EquipmentCatalog from "../components/EquipmentCatalog";
 import CalendarView from "../components/CalendarView";
 import "../theme/UserDashboard.css";
-import BookingModal from "../components/BookingModal";
 
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
+  const [stats, setStats] = useState({
+    totalEquipment: 0,
+    availableNow: 0,
+    pendingBookings: 0,
+    activeRentals: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
+  // Push Notifications setup
   useEffect(() => {
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {
@@ -31,13 +46,66 @@ const UserDashboard: React.FC = () => {
     });
   }, []);
 
+  // Fetch stats from Supabase
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        const { count: totalEquipment } = (await supabase
+          .from("equipment")
+          .select("*", { count: "exact", head: true })) as { count: number | null };
+
+        const { count: availableNow } = (await supabase
+          .from("equipment")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "available")) as { count: number | null };
+
+        const { count: pendingBookings } = (await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending")) as { count: number | null };
+
+        const { count: activeRentals } = (await supabase
+          .from("rentals")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "active")) as { count: number | null };
+
+        setStats({
+          totalEquipment: totalEquipment ?? 0,
+          availableNow: availableNow ?? 0,
+          pendingBookings: pendingBookings ?? 0,
+          activeRentals: activeRentals ?? 0,
+        });
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <IonPage>
       <HeaderBar />
       <IonContent fullscreen>
-        <StatsGrid totalEquipment={6} availableNow={6} pendingBookings={3} activeRentals={0} />
+        {loading ? (
+          <IonSpinner name="dots" />
+        ) : (
+          <StatsGrid
+            totalEquipment={stats.totalEquipment}
+            availableNow={stats.availableNow}
+            pendingBookings={stats.pendingBookings}
+            activeRentals={stats.activeRentals}
+          />
+        )}
 
-        <IonSegment value={segment} onIonChange={(e) => setSegment(String(e.detail.value))}>
+        {/* Segments for navigation */}
+        <IonSegment
+          value={segment}
+          onIonChange={(e) => setSegment(String(e.detail.value))}
+        >
           <IonSegmentButton value="catalog">
             <IonLabel>Equipment Catalog</IonLabel>
           </IonSegmentButton>
@@ -49,12 +117,11 @@ const UserDashboard: React.FC = () => {
           </IonSegmentButton>
         </IonSegment>
 
+        {/* Segment Content */}
         {segment === "catalog" && <EquipmentCatalog />}
-        {segment === "BookingModal" && <BookingModal isOpen={false} onClose={function (): void {
-          throw new Error("Function not implemented.");
-        } } onSubmit={function (booking: { startDate: string; endDate: string; notes: string; }): void {
-          throw new Error("Function not implemented.");
-        } } equipmentName={""} />}
+        {segment === "bookings" && (
+          <p className="ion-padding">📖 Your bookings will appear here.</p>
+        )}
         {segment === "calendar" && <CalendarView />}
       </IonContent>
     </IonPage>
