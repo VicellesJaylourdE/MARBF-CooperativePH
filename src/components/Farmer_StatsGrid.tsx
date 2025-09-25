@@ -31,7 +31,7 @@ const StatsGrid: React.FC<StatsProps> = ({
   return (
     <IonGrid className="stats-grid">
       <IonRow>
-        {/* Total Equipment - Green */}
+
         <IonCol size="6" sizeMd="3">
           <IonCard
             style={{
@@ -56,7 +56,6 @@ const StatsGrid: React.FC<StatsProps> = ({
           </IonCard>
         </IonCol>
 
-        {/* Available Now - Orange */}
         <IonCol size="6" sizeMd="3">
           <IonCard
             style={{
@@ -81,7 +80,6 @@ const StatsGrid: React.FC<StatsProps> = ({
           </IonCard>
         </IonCol>
 
-        {/* Pending Bookings - Yellow */}
         <IonCol size="6" sizeMd="3">
           <IonCard
             style={{
@@ -106,7 +104,6 @@ const StatsGrid: React.FC<StatsProps> = ({
           </IonCard>
         </IonCol>
 
-        {/* Active Rentals - Blue */}
         <IonCol size="6" sizeMd="3">
           <IonCard
             style={{

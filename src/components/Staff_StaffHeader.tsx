@@ -31,6 +31,7 @@ const StaffHeaderBar: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -57,6 +58,7 @@ const StaffHeaderBar: React.FC = () => {
           setInitials(init);
         }
       }
+
       setLoading(false);
     };
 
@@ -98,10 +100,12 @@ const StaffHeaderBar: React.FC = () => {
   return (
     <IonHeader>
       <IonToolbar color="light">
-        {/* 👉 Menu button sa left side */}
-        <IonButtons slot="start">
-          <IonMenuButton autoHide={false} />
-        </IonButtons>
+        {/* Left side menu button only on mobile */}
+        {isMobile && (
+          <IonButtons slot="start">
+            <IonMenuButton autoHide={false} />
+          </IonButtons>
+        )}
 
         <IonTitle
           className="logo"
@@ -125,7 +129,6 @@ const StaffHeaderBar: React.FC = () => {
             <IonSpinner name="crescent" />
           ) : (
             <>
-              {/* Avatar */}
               <IonAvatar style={{ width: "35px", height: "35px" }}>
                 <div
                   style={{
@@ -144,7 +147,6 @@ const StaffHeaderBar: React.FC = () => {
                 </div>
               </IonAvatar>
 
-              {/* User info (desktop only) */}
               {!isMobile && (
                 <div style={{ textAlign: "right", marginRight: "4px" }}>
                   <IonLabel style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
@@ -157,7 +159,6 @@ const StaffHeaderBar: React.FC = () => {
                 </div>
               )}
 
-              {/* Notifications */}
               <IonButton id="staff-notif-btn" fill="clear">
                 <IonIcon icon={notificationsOutline} />
                 {notifications.filter((n) => !n.is_read).length > 0 && (
@@ -167,7 +168,6 @@ const StaffHeaderBar: React.FC = () => {
                 )}
               </IonButton>
 
-              {/* Notifications Popover */}
               <IonPopover trigger="staff-notif-btn" triggerAction="click">
                 <div style={{ padding: "10px", minWidth: "250px" }}>
                   <h4 style={{ margin: "0 0 10px 0" }}>Notifications</h4>
@@ -191,9 +191,7 @@ const StaffHeaderBar: React.FC = () => {
                             padding: "8px",
                             border: "1px solid #ddd",
                             borderRadius: "8px",
-                            background: notif.is_read
-                              ? "#f9f9f9"
-                              : "#e8f0fe",
+                            background: notif.is_read ? "#f9f9f9" : "#e8f0fe",
                           }}
                         >
                           <strong>{notif.title}</strong>
@@ -217,6 +215,7 @@ const StaffHeaderBar: React.FC = () => {
                             .from("notifications")
                             .update({ is_read: true })
                             .eq("is_read", false);
+
                           if (error) console.error(error.message);
                         }}
                       >
@@ -227,7 +226,6 @@ const StaffHeaderBar: React.FC = () => {
                 </div>
               </IonPopover>
 
-              {/* Logout */}
               <IonButton
                 fill="clear"
                 color={isLogoutClicked ? "warning" : "medium"}
