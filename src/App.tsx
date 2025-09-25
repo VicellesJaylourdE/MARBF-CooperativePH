@@ -30,9 +30,9 @@ import LearnMore from "./pages/LearnMore";
 import RightSideMenu from "./pages/Rightsidemenu";
 
 
-import AdminDashboard from "./pages/AdminDashboard";
-import UserDashboard from "./pages/UserDashboard";
-import StaffDashboard from "./pages/StaffDashboard"; 
+import AdminDashboard from "./Admin/AdminDashboard";
+import UserDashboard from "./Farmers/UserDashboard";
+import StaffDashboard from "./Staff/StaffDashboard"; 
 
 setupIonicReact();
 
@@ -52,8 +52,7 @@ const App: React.FC = () => (
 
             <Route exact path="/admin-dashboard" component={AdminDashboard} />
             <Route exact path="/user-dashboard" component={UserDashboard} />
-            <Route exact path="/staff-dashboard" component={StaffDashboard} /> {/* 🟢 Added */}
-
+            <Route exact path="/staff-dashboard" component={StaffDashboard} />
             <Redirect to="/" />
           </Switch>
         </IonRouterOutlet>

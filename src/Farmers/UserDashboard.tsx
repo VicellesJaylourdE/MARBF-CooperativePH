@@ -9,10 +9,10 @@ import {
 import { useState, useEffect } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "../utils/supabaseClient";
-import HeaderBar from "../components/HeaderBar";
-import StatsGrid from "../components/StatsGrid";
-import EquipmentCatalog from "../components/EquipmentCatalog";
-import CalendarView from "../components/CalendarView";
+import HeaderBar from "../components/Farmer_HeaderBar";
+import StatsGrid from "../components/Farmer_StatsGrid";
+import EquipmentCatalog from "../components/Farmer_EquipmentCatalog";
+import CalendarView from "../components/Farmer_CalendarView";
 import "../theme/UserDashboard.css";
 
 const UserDashboard: React.FC = () => {
@@ -25,7 +25,6 @@ const UserDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Push Notifications setup
   useEffect(() => {
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {
@@ -46,7 +45,6 @@ const UserDashboard: React.FC = () => {
     });
   }, []);
 
-  // Fetch stats from Supabase
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
@@ -100,8 +98,7 @@ const UserDashboard: React.FC = () => {
             activeRentals={stats.activeRentals}
           />
         )}
-
-        {/* Segments for navigation */}
+        
         <IonSegment
           value={segment}
           onIonChange={(e) => setSegment(String(e.detail.value))}

@@ -13,7 +13,7 @@ interface AuthContextType {
     lastName: string;
     email: string;
     password: string;
-    role: 'admin' | 'user' | 'staff'; // 🔹 Added staff
+    role: 'admin' | 'user' | 'staff';
   }) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 }
@@ -25,7 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔎 Track session
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
@@ -41,14 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // 🟢 Login
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
 
     setUser(data.user);
 
-    // Get role from users table
     const { data: userData } = await supabase
       .from('users')
       .select('role')
@@ -60,7 +57,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {};
   };
 
-  // 🟢 Register
   const register = async (userData: {
     username: string;
     firstName: string;
@@ -70,18 +66,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: 'admin' | 'user' | 'staff'; // 🔹 Added staff here too
   }) => {
     try {
-      // Create Supabase auth account
+
       const { error: signUpError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
       });
       if (signUpError) return { error: signUpError.message };
 
-      // Hash password before storing in custom table
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-      // Insert into users table
       const { error: dbError } = await supabase.from('users').insert([{
         username: userData.username,
         user_firstname: userData.firstName,
@@ -98,8 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: err.message };
     }
   };
-
-  // 🟢 Logout
+  
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
