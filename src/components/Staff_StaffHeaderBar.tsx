@@ -20,10 +20,10 @@ import {
 } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
 
-const StaffHeaderBar: React.FC = () => {
+const Staff_StaffHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState<string>("");
-  const [initials, setInitials] = useState<string>("");
+  const [userName, setUserName] = useState<string>("User");
+  const [initials, setInitials] = useState<string>("U");
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [isLogoutClicked, setIsLogoutClicked] = useState(false);
@@ -31,30 +31,38 @@ const StaffHeaderBar: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
-
+      
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser();
 
+      if (authError) {
+        console.error("Auth error:", authError.message);
+        setLoading(false);
+        return;
+      }
+
       if (user) {
-        const email = user.email ?? "";
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("first_name, last_name")
-          .eq("id", user.id)
+
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("username")
+          .eq("user_email", user.email)
           .single();
 
-        if (error) {
-          console.error("Profile fetch error:", error.message);
-          setUserName(email);
-          setInitials(email.charAt(0).toUpperCase());
-        } else if (profile) {
-          const fullName = `${profile.first_name} ${profile.last_name}`;
-          setUserName(fullName);
+        if (profileError || !profile) {
+          console.error("Profile fetch error:", profileError?.message);
+          setUserName("User");
+          setInitials("U");
+        } else {
+          const username = profile.username;
+          setUserName(username);
 
-          const init =
-            (profile.first_name?.[0] || "").toUpperCase() +
-            (profile.last_name?.[0] || "").toUpperCase();
+          const init = username
+            .split(" ")
+            .map((n: string) => n[0]?.toUpperCase())
+            .join("");
           setInitials(init);
         }
       }
@@ -100,7 +108,6 @@ const StaffHeaderBar: React.FC = () => {
   return (
     <IonHeader>
       <IonToolbar color="light">
-        {/* Left side menu button only on mobile */}
         {isMobile && (
           <IonButtons slot="start">
             <IonMenuButton autoHide={false} />
@@ -109,10 +116,18 @@ const StaffHeaderBar: React.FC = () => {
 
         <IonTitle
           className="logo"
-          style={{ display: "flex", alignItems: "center" }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
-          <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
-          Staff Portal
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
+            Staff Portal
+          </div>
+
+          {!loading && (
+            <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
+              Welcome back, {userName}
+            </IonLabel>
+          )}
         </IonTitle>
 
         <div
@@ -171,7 +186,6 @@ const StaffHeaderBar: React.FC = () => {
               <IonPopover trigger="staff-notif-btn" triggerAction="click">
                 <div style={{ padding: "10px", minWidth: "250px" }}>
                   <h4 style={{ margin: "0 0 10px 0" }}>Notifications</h4>
-
                   {notifications.length === 0 ? (
                     <IonLabel>No notifications</IonLabel>
                   ) : (
@@ -251,4 +265,4 @@ const StaffHeaderBar: React.FC = () => {
   );
 };
 
-export default StaffHeaderBar;
+export default Staff_StaffHeaderBar;

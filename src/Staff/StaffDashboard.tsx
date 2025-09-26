@@ -1,100 +1,63 @@
-import React, { useState } from "react";
-import {
-  IonPage,
-  IonContent,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonSplitPane,
-} from "@ionic/react";
-
-import StaffHeaderBar from "../components/Staff_StaffHeader";
+import React, { useState, useEffect } from "react";
+import { IonPage, IonSplitPane } from "@ionic/react";
+import StaffHeaderBar from "../components/Staff_StaffHeaderBar";
 import StaffSidebar from "../components/Staff_StaffSidebar";
+import { supabase } from "../utils/supabaseClient";
+
+import DashboardCards from "./DashboardCards";
+import UsersTab from "./UsersTab";
+import ReportsTab from "./ReportsTab";
+import MonthlyRevenueTab from "./MonthlyRevenueTab";
+import BookingsTab from "./BookingsTab";
+import TransactionsTab from "./TransactionsTab";
 
 const StaffDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  const [totalEquipment, setTotalEquipment] = useState(0);
+  const [todayBookings, setTodayBookings] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { count: equipmentCount } = await supabase.from("equipment").select("*", { count: "exact", head: true });
+      setTotalEquipment(equipmentCount || 0);
+
+      const today = new Date().toISOString().split("T")[0];
+      const { count: bookingsCount } = await supabase.from("bookings").select("*", { count: "exact", head: true }).eq("date", today);
+      setTodayBookings(bookingsCount || 0);
+
+      const { data: revenueData } = await supabase.from("transactions").select("amount");
+      if (revenueData) {
+        const revenueSum = revenueData.reduce((acc, cur) => acc + Number(cur.amount), 0);
+        setTotalRevenue(revenueSum);
+      }
+
+      const { count: usersCount } = await supabase.from("users").select("*", { count: "exact", head: true });
+      setTotalUsers(usersCount || 0);
+    };
+
+    fetchData();
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard":
-        return (
-          <IonContent className="ion-padding">
-            <IonGrid>
-              <IonRow>
-                <IonCol size="12" sizeMd="3">
-                  <IonCard>
-                    <IonCardHeader>
-                      <IonCardTitle>Today’s Bookings</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>0</IonCardContent>
-                  </IonCard>
-                </IonCol>
-                <IonCol size="12" sizeMd="3">
-                  <IonCard>
-                    <IonCardHeader>
-                      <IonCardTitle>Total Rentals</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>0</IonCardContent>
-                  </IonCard>
-                </IonCol>
-                <IonCol size="12" sizeMd="3">
-                  <IonCard>
-                    <IonCardHeader>
-                      <IonCardTitle>Revenue Highlights</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>P0.00</IonCardContent>
-                  </IonCard>
-                </IonCol>
-              </IonRow>
-            </IonGrid>
-          </IonContent>
-        );
-      case "bookings":
-        return (
-          <IonContent className="ion-padding">
-            <h2>Booking Management</h2>
-            <p>View and manage rental bookings here.</p>
-          </IonContent>
-        );
-      case "transactions":
-        return (
-          <IonContent className="ion-padding">
-            <h2>Transactions</h2>
-            <p>View transactions from farmers.</p>
-          </IonContent>
-        );
-      case "users":
-        return (
-          <IonContent className="ion-padding">
-            <h2>Users</h2>
-            <p>View registered farmers list.</p>
-          </IonContent>
-        );
-      case "reports":
-        return (
-          <IonContent className="ion-padding">
-            <h2>Reports</h2>
-            <p>Generate rental data and financial summaries.</p>
-          </IonContent>
-        );
-      default:
-        return null;
+      case "dashboard": return <DashboardCards totalEquipment={totalEquipment} todayBookings={todayBookings} totalRevenue={totalRevenue} totalUsers={totalUsers} />;
+      case "users": return <UsersTab />;
+      case "reports": return <ReportsTab />;
+      case "monthly revenue": return <MonthlyRevenueTab />;
+      case "bookings": return <BookingsTab />;
+      case "transactions": return <TransactionsTab />;
+      default: return null;
     }
   };
 
   return (
     <IonPage>
-      <IonSplitPane contentId="staff-main">
-        {/* Sidebar Component */}
+      <IonSplitPane when="md" contentId="staff-main">
         <StaffSidebar setActiveTab={setActiveTab} />
-
-        {/* Main Content */}
         <IonPage id="staff-main">
-          {/* StaffHeaderBar is the only header now */}
           <StaffHeaderBar />
           {renderContent()}
         </IonPage>

@@ -114,7 +114,6 @@ const UserDashboard: React.FC = () => {
           </IonSegmentButton>
         </IonSegment>
 
-        {/* Segment Content */}
         {segment === "catalog" && <EquipmentCatalog />}
         {segment === "bookings" && (
           <p className="ion-padding">📖 Your bookings will appear here.</p>
