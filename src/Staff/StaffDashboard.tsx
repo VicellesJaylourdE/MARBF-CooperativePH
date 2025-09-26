@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { IonPage, IonSplitPane } from "@ionic/react";
+import { IonPage, IonSplitPane, IonContent } from "@ionic/react";
 import StaffHeaderBar from "../components/Staff_StaffHeaderBar";
 import StaffSidebar from "../components/Staff_StaffSidebar";
 import { supabase } from "../utils/supabaseClient";
@@ -21,21 +21,32 @@ const StaffDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { count: equipmentCount } = await supabase.from("equipment").select("*", { count: "exact", head: true });
-      setTotalEquipment(equipmentCount || 0);
+      try {
+        const { count: equipmentCount } = await supabase
+          .from("equipment")
+          .select("*", { count: "exact", head: true });
+        setTotalEquipment(equipmentCount || 0);
 
-      const today = new Date().toISOString().split("T")[0];
-      const { count: bookingsCount } = await supabase.from("bookings").select("*", { count: "exact", head: true }).eq("date", today);
-      setTodayBookings(bookingsCount || 0);
+        const today = new Date().toISOString().split("T")[0];
+        const { count: bookingsCount } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("date", today);
+        setTodayBookings(bookingsCount || 0);
 
-      const { data: revenueData } = await supabase.from("transactions").select("amount");
-      if (revenueData) {
-        const revenueSum = revenueData.reduce((acc, cur) => acc + Number(cur.amount), 0);
-        setTotalRevenue(revenueSum);
+        const { data: revenueData } = await supabase.from("transactions").select("amount");
+        if (revenueData) {
+          const revenueSum = revenueData.reduce((acc, cur) => acc + Number(cur.amount), 0);
+          setTotalRevenue(revenueSum);
+        }
+
+        const { count: usersCount } = await supabase
+          .from("users")
+          .select("*", { count: "exact", head: true });
+        setTotalUsers(usersCount || 0);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-
-      const { count: usersCount } = await supabase.from("users").select("*", { count: "exact", head: true });
-      setTotalUsers(usersCount || 0);
     };
 
     fetchData();
@@ -43,26 +54,38 @@ const StaffDashboard: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <DashboardCards totalEquipment={totalEquipment} todayBookings={todayBookings} totalRevenue={totalRevenue} totalUsers={totalUsers} />;
-      case "users": return <UsersTab />;
-      case "reports": return <ReportsTab />;
-      case "monthly revenue": return <MonthlyRevenueTab />;
-      case "bookings": return <BookingsTab />;
-      case "transactions": return <TransactionsTab />;
-      default: return null;
+      case "dashboard":
+        return (
+          <DashboardCards
+            totalEquipment={totalEquipment}
+            todayBookings={todayBookings}
+            totalRevenue={totalRevenue}
+            totalUsers={totalUsers}
+          />
+        );
+      case "users":
+        return <UsersTab />;
+      case "reports":
+        return <ReportsTab />;
+      case "monthly revenue":
+        return <MonthlyRevenueTab />;
+      case "bookings":
+        return <BookingsTab />;
+      case "transactions":
+        return <TransactionsTab />;
+      default:
+        return null;
     }
   };
 
   return (
-    <IonPage>
-      <IonSplitPane when="md" contentId="staff-main">
-        <StaffSidebar setActiveTab={setActiveTab} />
-        <IonPage id="staff-main">
-          <StaffHeaderBar />
-          {renderContent()}
-        </IonPage>
-      </IonSplitPane>
-    </IonPage>
+    <IonSplitPane contentId="staff-main">
+      <StaffSidebar setActiveTab={setActiveTab} />
+      <IonPage id="staff-main">
+        <StaffHeaderBar />
+        <IonContent>{renderContent()}</IonContent>
+      </IonPage>
+    </IonSplitPane>
   );
 };
 
