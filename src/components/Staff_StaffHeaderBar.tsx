@@ -31,7 +31,7 @@ const Staff_StaffHeaderBar: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
-      
+
       const {
         data: { user },
         error: authError,
@@ -44,7 +44,6 @@ const Staff_StaffHeaderBar: React.FC = () => {
       }
 
       if (user) {
-
         const { data: profile, error: profileError } = await supabase
           .from("users")
           .select("username")
@@ -108,11 +107,9 @@ const Staff_StaffHeaderBar: React.FC = () => {
   return (
     <IonHeader>
       <IonToolbar color="light">
-        {isMobile && (
-          <IonButtons slot="start">
-            <IonMenuButton autoHide={false} />
-          </IonButtons>
-        )}
+        <IonButtons slot="start">
+          <IonMenuButton autoHide={false} />
+        </IonButtons>
 
         <IonTitle
           className="logo"

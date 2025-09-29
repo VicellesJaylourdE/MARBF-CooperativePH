@@ -17,7 +17,7 @@ interface User {
   user_lastname: string | null;
 }
 
-const UsersTab: React.FC = () => {
+const Staff_UsersTab: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,4 +83,4 @@ const UsersTab: React.FC = () => {
   );
 };
 
-export default UsersTab;
+export default Staff_UsersTab;

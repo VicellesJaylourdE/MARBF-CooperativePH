@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { IonPage, IonSplitPane, IonContent } from "@ionic/react";
+import {
+  IonPage,
+  IonSplitPane,
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+} from "@ionic/react";
 import StaffHeaderBar from "../components/Staff_StaffHeaderBar";
 import StaffSidebar from "../components/Staff_StaffSidebar";
 import { supabase } from "../utils/supabaseClient";
 
 import DashboardCards from "./DashboardCards";
-import UsersTab from "./UsersTab";
+import Staff_UsersTab from "../components/Staff_UsersTab";
 import ReportsTab from "./ReportsTab";
 import MonthlyRevenueTab from "./MonthlyRevenueTab";
-import BookingsTab from "./BookingsTab";
+import Staff_BookingsTab from "../components/Staff_BookingsTab";
 import TransactionsTab from "./TransactionsTab";
 
 const StaffDashboard: React.FC = () => {
@@ -34,9 +45,14 @@ const StaffDashboard: React.FC = () => {
           .eq("date", today);
         setTodayBookings(bookingsCount || 0);
 
-        const { data: revenueData } = await supabase.from("transactions").select("amount");
+        const { data: revenueData } = await supabase
+          .from("transactions")
+          .select("amount");
         if (revenueData) {
-          const revenueSum = revenueData.reduce((acc, cur) => acc + Number(cur.amount), 0);
+          const revenueSum = revenueData.reduce(
+            (acc, cur) => acc + Number(cur.amount),
+            0
+          );
           setTotalRevenue(revenueSum);
         }
 
@@ -56,21 +72,39 @@ const StaffDashboard: React.FC = () => {
     switch (activeTab) {
       case "dashboard":
         return (
-          <DashboardCards
-            totalEquipment={totalEquipment}
-            todayBookings={todayBookings}
-            totalRevenue={totalRevenue}
-            totalUsers={totalUsers}
-          />
+          <IonGrid className="ion-padding">
+            <DashboardCards
+              totalEquipment={totalEquipment}
+              todayBookings={todayBookings}
+              totalRevenue={totalRevenue}
+              totalUsers={totalUsers}
+            />
+
+            <IonRow>
+              {/* Users Column */}
+              <IonCol size="12" sizeMd="10" sizeLg="5">
+                <IonCardContent style={{ height: "100%", overflow: "auto" }}>
+                  <Staff_UsersTab />
+                </IonCardContent>
+              </IonCol>
+
+              {/* Bookings Column */}
+              <IonCol size="12" sizeMd="5" sizeLg="7">
+                <IonCard style={{ height: "400px" }}>
+                  <Staff_BookingsTab />
+                </IonCard>
+              </IonCol>
+            </IonRow>
+          </IonGrid>
         );
       case "users":
-        return <UsersTab />;
+        return <Staff_UsersTab />;
       case "reports":
         return <ReportsTab />;
       case "monthly revenue":
         return <MonthlyRevenueTab />;
       case "bookings":
-        return <BookingsTab />;
+        return <Staff_BookingsTab />;
       case "transactions":
         return <TransactionsTab />;
       default:
@@ -79,11 +113,11 @@ const StaffDashboard: React.FC = () => {
   };
 
   return (
-    <IonSplitPane contentId="staff-main">
+    <IonSplitPane contentId="staff-main" when={false}>
       <StaffSidebar setActiveTab={setActiveTab} />
       <IonPage id="staff-main">
         <StaffHeaderBar />
-        <IonContent>{renderContent()}</IonContent>
+        <IonContent scrollY={true}>{renderContent()}</IonContent>
       </IonPage>
     </IonSplitPane>
   );

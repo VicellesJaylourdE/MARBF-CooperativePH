@@ -16,6 +16,7 @@ import {
   cashOutline,
   peopleOutline,
   barChartOutline,
+  bookOutline,
 } from "ionicons/icons";
 
 interface StaffSidebarProps {
@@ -24,7 +25,7 @@ interface StaffSidebarProps {
 
 const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
   return (
-    <IonMenu contentId="staff-main" type="overlay">
+    <IonMenu contentId="staff-main" type="overlay" side="start">
       <IonHeader>
         <IonToolbar color="light">
           <IonTitle>Menu</IonTitle>
@@ -41,7 +42,7 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonLabel>Booking Management</IonLabel>
           </IonItem>
           <IonItem button onClick={() => setActiveTab("transactions")}>
-            <IonIcon icon={cashOutline} slot="start" />
+            <IonIcon icon={bookOutline} slot="start" />
             <IonLabel>Transactions</IonLabel>
           </IonItem>
           <IonItem button onClick={() => setActiveTab("users")}>
