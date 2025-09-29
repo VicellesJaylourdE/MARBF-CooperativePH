@@ -11,7 +11,7 @@ import {
   IonBadge,
   IonPopover,
   IonButtons,
-  
+  IonMenuButton,
 } from "@ionic/react";
 import {
   contractOutline,
@@ -20,7 +20,7 @@ import {
 } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
 
-const Farmer_HeaderBar: React.FC = () => {
+const Admin_AdminHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
   const [initials, setInitials] = useState<string>("U");
@@ -85,7 +85,7 @@ const Farmer_HeaderBar: React.FC = () => {
     fetchNotifications();
 
     const channel = supabase
-      .channel("user-notifications-channel")
+      .channel("admin-notifications-channel")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications" },
@@ -108,7 +108,7 @@ const Farmer_HeaderBar: React.FC = () => {
     <IonHeader>
       <IonToolbar color="light">
         <IonButtons slot="start">
-       
+          <IonMenuButton autoHide={false} />
         </IonButtons>
 
         <IonTitle
@@ -117,7 +117,7 @@ const Farmer_HeaderBar: React.FC = () => {
         >
           <div style={{ display: "flex", alignItems: "center" }}>
             <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
-            Farmer Portal
+            Admin Portal
           </div>
 
           {!loading && (
@@ -166,7 +166,7 @@ const Farmer_HeaderBar: React.FC = () => {
                   </IonLabel>
                   <br />
                   <IonLabel color="medium" style={{ fontSize: "0.75rem" }}>
-                    User
+                    Admin
                   </IonLabel>
                 </div>
               )}
@@ -262,4 +262,4 @@ const Farmer_HeaderBar: React.FC = () => {
   );
 };
 
-export default Farmer_HeaderBar;
+export default Admin_AdminHeaderBar;

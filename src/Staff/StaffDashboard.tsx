@@ -17,14 +17,15 @@ import { supabase } from "../utils/supabaseClient";
 
 import DashboardCards from "./DashboardCards";
 import Staff_UsersTab from "../components/Staff_UsersTab";
-import ReportsTab from "./ReportsTab";
+import ReportsTab from "../components/Staff_ReportsTab";
 import MonthlyRevenueTab from "./MonthlyRevenueTab";
 import Staff_BookingsTab from "../components/Staff_BookingsTab";
 import TransactionsTab from "./TransactionsTab";
+import ManageRentalBookings from "./ManageRentalBookings";
+
 
 const StaffDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-
   const [totalEquipment, setTotalEquipment] = useState(0);
   const [todayBookings, setTodayBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -81,14 +82,12 @@ const StaffDashboard: React.FC = () => {
             />
 
             <IonRow>
-              {/* Users Column */}
               <IonCol size="12" sizeMd="10" sizeLg="5">
                 <IonCardContent style={{ height: "100%", overflow: "auto" }}>
                   <Staff_UsersTab />
                 </IonCardContent>
               </IonCol>
 
-              {/* Bookings Column */}
               <IonCol size="12" sizeMd="5" sizeLg="7">
                 <IonCard style={{ height: "400px" }}>
                   <Staff_BookingsTab />
@@ -105,6 +104,8 @@ const StaffDashboard: React.FC = () => {
         return <MonthlyRevenueTab />;
       case "bookings":
         return <Staff_BookingsTab />;
+      case "managerentalbookings":
+        return <ManageRentalBookings />;
       case "transactions":
         return <TransactionsTab />;
       default:
