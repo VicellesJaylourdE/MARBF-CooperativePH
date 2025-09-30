@@ -37,29 +37,41 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={homeOutline} slot="start" />
             <IonLabel>Dashboard</IonLabel>
           </IonItem>
-           <IonItem button onClick={() => setActiveTab("managerentalbookings")}>
+           <IonItem button onClick={() => setActiveTab("registermembers")}>
             <IonIcon icon={barChartOutline} slot="start" />
-            <IonLabel>ManageRentalBookings</IonLabel>
+            <IonLabel>Register Members</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("bookings")}>
+           <IonItem button onClick={() => setActiveTab("manageequipment")}>
             <IonIcon icon={calendarOutline} slot="start" />
-            <IonLabel>Booking Management</IonLabel>
+            <IonLabel>Manage Equipment</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("transactions")}>
+          <IonItem button onClick={() => setActiveTab("viewcbookingcalendar")}>
+            <IonIcon icon={calendarOutline} slot="start" />
+            <IonLabel>View Booking Calendar</IonLabel>
+          </IonItem>
+          <IonItem button onClick={() => setActiveTab("managerentalbookings")}>
+            <IonIcon icon={calendarOutline} slot="start" />
+            <IonLabel>Manage Rental Bookings</IonLabel>
+          </IonItem>
+          <IonItem button onClick={() => setActiveTab("viewalltransactions")}>
             <IonIcon icon={bookOutline} slot="start" />
-            <IonLabel>Transactions</IonLabel>
+            <IonLabel>View all Transactions</IonLabel>
+          </IonItem>
+          <IonItem button onClick={() => setActiveTab("manageusers")}>
+            <IonIcon icon={cashOutline} slot="start" />
+            <IonLabel>Manage users</IonLabel>
+          </IonItem>
+          <IonItem button onClick={() => setActiveTab("generatereports")}>
+            <IonIcon icon={barChartOutline} slot="start" />
+            <IonLabel>Generate reports</IonLabel>
           </IonItem>
           <IonItem button onClick={() => setActiveTab("users")}>
             <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>View User List</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("monthly revenue")}>
-            <IonIcon icon={cashOutline} slot="start" />
-            <IonLabel>Monthly Revenue</IonLabel>
-          </IonItem>
-          <IonItem button onClick={() => setActiveTab("reports")}>
-            <IonIcon icon={barChartOutline} slot="start" />
-            <IonLabel>Reports</IonLabel>
+           <IonItem button onClick={() => setActiveTab("latereturnpenalty")}>
+            <IonIcon icon={peopleOutline} slot="start" />
+            <IonLabel>Late Return Penalty</IonLabel>
           </IonItem>
         </IonList>
       </IonContent>

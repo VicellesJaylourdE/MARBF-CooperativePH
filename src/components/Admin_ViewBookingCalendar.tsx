@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { IonContent, IonSpinner, IonCard, IonCardContent } from "@ionic/react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // base styles
+import "react-calendar/dist/Calendar.css";
 import { supabase } from "../utils/supabaseClient";
 
 interface Booking {
@@ -11,7 +11,7 @@ interface Booking {
   status: string;
 }
 
-const Staff_BookingsTab: React.FC = () => {
+const Admin_ViewBookingCalendar: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -48,12 +48,11 @@ const Staff_BookingsTab: React.FC = () => {
         <IonSpinner name="crescent" />
       ) : (
         <>
-          {/* Calendar */}
           <div className="calendar-container">
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
               value={selectedDate}
-              showWeekNumbers={false} // optional, hide week numbers
+              showWeekNumbers={false}
               tileClassName={({ date }) =>
                 bookings.some(
                   (b) => new Date(b.date).toDateString() === date.toDateString()
@@ -63,8 +62,6 @@ const Staff_BookingsTab: React.FC = () => {
               }
             />
           </div>
-
-          {/* Booking list */}
           <div style={{ marginTop: "16px" }}>
             <h3>
               Bookings on {selectedDate.toDateString()} (
@@ -162,4 +159,4 @@ const Staff_BookingsTab: React.FC = () => {
   );
 };
 
-export default Staff_BookingsTab;
+export default Admin_ViewBookingCalendar;

@@ -16,6 +16,9 @@ import {
   informationCircleOutline,
   callOutline,
   logInOutline,
+  hourglassOutline,
+  arrowBackOutline,
+  gitCommitOutline,
 } from "ionicons/icons";
 
 const RightSideMenu: React.FC = () => {
@@ -57,7 +60,7 @@ const RightSideMenu: React.FC = () => {
               }
             }}
           >
-            <IonIcon icon={callOutline} slot="start" color="warning" />
+            <IonIcon icon={gitCommitOutline} slot="start" color="warning" />
             <IonLabel style={{ fontWeight: 500 }}>About us</IonLabel>
           </IonItem>
 

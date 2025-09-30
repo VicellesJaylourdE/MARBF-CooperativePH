@@ -93,13 +93,18 @@ const Login: React.FC = () => {
         }}
       >
         <div className="login-layout">
+          {/* Desktop left-panel */}
           <div className="left-panel">
             <img src={logo} alt="Logo" className="logo" />
             <h2>Mantibugao Agrarian Reform Beneficiaries Farmers’ Cooperative</h2>
           </div>
 
+          {/* Right side form */}
           <div className="right-panel">
             <div className="login-card">
+              {/* Logo inside form (mobile only) */}
+              <img src={logo} alt="Logo" className="logo mobile-logo" />
+
               <h1 className="login-title">Welcome back!</h1>
               <p className="login-subtitle">
                 Sign in with your email and password
@@ -179,7 +184,7 @@ const Login: React.FC = () => {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center; /* Center horizontally */
+            align-items: center;
             text-align: center;
             padding: 50px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -205,17 +210,18 @@ const Login: React.FC = () => {
             flex-direction: column;
             align-items: center;
           }
-          .login-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: black;
-            margin-bottom: 4px;
-          }
+         .login-title {
+          font-size: 22px;
+          font-weight: bold;
+          color: black;
+          margin-bottom: 5px; /* tighter spacing */
+          } 
+
           .login-subtitle {
-            font-size: 14px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
+          font-size: 14px;
+          color: #333;
+          text-align: center;
+          margin-bottom: 30px; /* reduced spacing */
           }
           .label {
             align-self: flex-start;
@@ -243,6 +249,11 @@ const Login: React.FC = () => {
             text-transform: none;
           }
 
+          /* Hide mobile logo by default */
+          .mobile-logo {
+            display: none;
+          }
+
           /* Responsive */
           @media (max-width: 768px) {
             .login-layout {
@@ -251,10 +262,20 @@ const Login: React.FC = () => {
               text-align: left;
             }
             .left-panel {
-              padding: 20px;
+              display: none; /* Hide left side on mobile */
+            }
+            .mobile-logo {
+              display: block;
+              width: 50px;
+              margin-bottom: 1px;
             }
             .right-panel {
               padding: 20px;
+              width: 100%;
+            }
+            .login-card {
+              width: 100%;
+              max-width: 360px;
             }
           }
         `}

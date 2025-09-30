@@ -74,7 +74,7 @@ const EquipmentCatalog: React.FC = () => {
   const getStatusColor = (eq: Equipment) => {
     if (eq.status === "available" || eq.available) return "success";
     if (eq.status === "maintenance") return "warning";
-    return "medium"; // non-available
+    return "medium";
   };
 
   const getStatusText = (eq: Equipment) => {
@@ -117,8 +117,7 @@ const EquipmentCatalog: React.FC = () => {
                       <h3>{eq.name}</h3>
                       <p>{eq.category}</p>
                       <p><strong>₱{eq.price}</strong> / day</p>
-
-                      {/* Status badge */}
+                      
                       <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px" }}>
                         {getStatusText(eq)}
                       </IonBadge>

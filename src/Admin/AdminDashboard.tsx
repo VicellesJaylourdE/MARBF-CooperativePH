@@ -17,10 +17,15 @@ import { supabase } from "../utils/supabaseClient";
 
 import DashboardCards from "./AdminDashboardCards";
 import Staff_UsersTab from "../components/Staff_UsersTab";
-import ReportsTab from "../components/Staff_ReportsTab";
+import Admin_GenerateReports from "../components/Admin_GenerateReports";
 import Staff_BookingsTab from "../components/Staff_BookingsTab";
-
-
+import Admin_UsersTab from "../components/Admin_UsersTab";
+import Admin_Manageequipment from "../components/Admin_Manageequipment";
+import Admin_ViewBookingCalendar from "../components/Admin_ViewBookingCalendar";
+import Admin_ManageRentalBookings from "../components/Admin_ManageRentalBookings";
+import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
+import Admin_ManageUsers from "../components/Admin_ManageUsers";
+import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -82,24 +87,36 @@ const AdminDashboard: React.FC = () => {
             <IonRow>
               <IonCol size="12" sizeMd="10" sizeLg="5">
                 <IonCardContent style={{ height: "100%", overflow: "auto" }}>
-                  <Staff_UsersTab />
+                  <Admin_UsersTab />
                 </IonCardContent>
               </IonCol>
 
               <IonCol size="12" sizeMd="5" sizeLg="7">
                 <IonCard style={{ height: "400px" }}>
-                  <Staff_BookingsTab />
+                  <Admin_ViewBookingCalendar />
                 </IonCard>
               </IonCol>
             </IonRow>
           </IonGrid>
         );
       case "users":
-        return <Staff_UsersTab />;
-      case "reports":
-        return <ReportsTab />;
+        return <Admin_UsersTab/>;
+      case "generatereports":
+        return <Admin_GenerateReports/>;
       case "bookings":
         return <Staff_BookingsTab />;
+         case "manageequipment":
+        return <Admin_Manageequipment />;
+         case "viewcbookingcalendar":
+        return <Admin_ViewBookingCalendar />;
+         case "managerentalbookings":
+        return <Admin_ManageRentalBookings />;
+         case "viewalltransactions":
+        return <Admin_ViewAllTransactions />;
+         case "manageusers":
+        return <Admin_ManageUsers />;
+         case "latereturnpenalty":
+        return <Admin_LateReturnPenalty />;
       default:
         return null;
     }
