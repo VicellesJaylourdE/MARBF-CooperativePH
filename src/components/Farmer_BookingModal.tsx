@@ -28,6 +28,7 @@ interface BookingModalProps {
   onSubmit: (booking: { startDate: string; endDate: string; notes: string }) => void;
   equipmentName: string;
   price: number;
+  equipmentId?: string; // ✅ add equipmentId for transaction linking
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({
@@ -36,6 +37,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   onSubmit,
   equipmentName,
   price,
+  equipmentId,
 }) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -45,7 +47,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
   // Compute total days & price dynamically
   const days =
     startDate && endDate
-      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24) + 1
+      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+          (1000 * 60 * 60 * 24) +
+        1
       : 0;
   const totalPrice = days > 0 ? days * price : 0;
 
@@ -65,20 +69,41 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      const { error } = await supabase.from("bookings").insert([
-        {
-          user_id: user.id,
-          equipment_name: equipmentName,
-          start_date: startDate,
-          end_date: endDate,
-          notes,
-          status: "pending",
-          total_price: totalPrice,
-        },
-      ]);
+      // ✅ Step 1: Insert booking
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("bookings")
+        .insert([
+          {
+            user_id: user.id,
+            equipment_id: equipmentId,
+            equipment_name: equipmentName,
+            start_date: startDate,
+            end_date: endDate,
+            notes,
+            status: "pending",
+            total_price: totalPrice,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (bookingError) throw bookingError;
 
+      // ✅ Step 2: Insert transaction (linked to booking)
+      const { error: transactionError } = await supabase
+        .from("transactions")
+        .insert([
+          {
+            booking_id: bookingData.id,
+            user_id: user.id,
+            amount: totalPrice,
+            status: "unpaid", // default: unpaid
+          },
+        ]);
+
+      if (transactionError) throw transactionError;
+
+      // Success
       onSubmit({ startDate, endDate, notes });
       setToastMsg("Booking submitted successfully!");
       setStartDate("");
@@ -144,7 +169,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   </IonItem>
                   <IonItem>
                     <IonLabel>
-                      <strong>Total ({days} day{days > 1 ? "s" : ""}):</strong> ₱{totalPrice}
+                      <strong>Total ({days} day{days > 1 ? "s" : ""}):</strong> ₱
+                      {totalPrice}
                     </IonLabel>
                   </IonItem>
                 </>

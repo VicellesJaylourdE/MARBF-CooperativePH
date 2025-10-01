@@ -194,18 +194,7 @@ const LandingPage: React.FC = () => {
             Cooperative in embracing digital transformation for better
             agricultural outcomes.
           </p>
-          <IonButton
-            style={{
-              marginTop: "1.5rem",
-              padding: "0.8rem 2rem",
-              fontSize: "1rem",
-              borderRadius: "8px",
-            }}
-            color="light"
-            onClick={() => history.push("/register")}
-          >
-            Get Started Today →
-          </IonButton>
+
         </div>
 
         {/* ✅ Footer */}

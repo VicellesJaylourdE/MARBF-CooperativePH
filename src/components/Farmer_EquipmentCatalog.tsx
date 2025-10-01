@@ -13,7 +13,7 @@ import {
   IonBadge,
 } from "@ionic/react";
 import { contractOutline } from "ionicons/icons";
-import { supabase } from "../utils/supabaseClient"; 
+import { supabase } from "../utils/supabaseClient";
 import BookingModal from "./Farmer_BookingModal";
 
 interface Equipment {
@@ -35,29 +35,40 @@ const EquipmentCatalog: React.FC = () => {
   const [selectedPrice, setSelectedPrice] = useState<number>(0);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
-  const staticEquipment: Equipment[] = [
-    { id: 1, name: "Tractor A", category: "Tractor", price: 1500, available: true, image_url: "https://img.icons8.com/emoji/96/tractor-emoji.png" },
-    { id: 2, name: "Harvester B", category: "Harvester", price: 2500, available: true, image_url: "https://img.icons8.com/fluency/96/combine-harvester.png" },
-    { id: 3, name: "Plow C", category: "Plow", price: 800, available: true, image_url: "https://img.icons8.com/color/96/plough.png" },
-  ];
+  const fetchEquipment = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("equipment")
+      .select("id, name, category, status, price, image_url");
+
+    if (error) {
+      console.error("Error fetching equipment:", error);
+      setEquipment([]);
+    } else {
+      setEquipment(data || []);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchEquipment = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("equipment")
-        .select("id, name, category, status, price, image_url");
-
-      if (error) {
-        console.error("Error fetching equipment:", error);
-        setEquipment(staticEquipment);
-      } else {
-        const combined = [...staticEquipment, ...(data || [])];
-        setEquipment(combined);
-      }
-      setLoading(false);
-    };
     fetchEquipment();
+
+    // 📡 Realtime subscription
+    const channel = supabase
+      .channel("equipment-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "equipment" },
+        (payload) => {
+          console.log("Change received!", payload);
+          fetchEquipment(); // refresh list when admin updates
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const openBooking = (eqName: string, eqPrice: number) => {
@@ -105,8 +116,12 @@ const EquipmentCatalog: React.FC = () => {
         <IonGrid>
           <IonRow>
             {equipment
-              .filter(eq => eq.name.toLowerCase().includes(searchText.toLowerCase()) || eq.category.toLowerCase().includes(searchText.toLowerCase()))
-              .map(eq => (
+              .filter(
+                (eq) =>
+                  eq.name.toLowerCase().includes(searchText.toLowerCase()) ||
+                  eq.category.toLowerCase().includes(searchText.toLowerCase())
+              )
+              .map((eq) => (
                 <IonCol size="6" sizeMd="4" key={eq.id}>
                   <IonCard className="equipment-card">
                     <IonImg
@@ -116,8 +131,10 @@ const EquipmentCatalog: React.FC = () => {
                     <IonCardContent>
                       <h3>{eq.name}</h3>
                       <p>{eq.category}</p>
-                      <p><strong>₱{eq.price}</strong> / day</p>
-                      
+                      <p>
+                        <strong>₱{eq.price}</strong> / day
+                      </p>
+
                       <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px" }}>
                         {getStatusText(eq)}
                       </IonBadge>

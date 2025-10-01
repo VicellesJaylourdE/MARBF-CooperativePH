@@ -37,7 +37,7 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={homeOutline} slot="start" />
             <IonLabel>Dashboard</IonLabel>
           </IonItem>
-           <IonItem button onClick={() => setActiveTab("registermembers")}>
+           <IonItem button onClick={() => setActiveTab("registermember")}>
             <IonIcon icon={barChartOutline} slot="start" />
             <IonLabel>Register Members</IonLabel>
           </IonItem>

@@ -122,24 +122,13 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
-            Join Our Journey Towards Smarter Farming 🚀
+            Join Our Journey Towards Smarter Farming
           </h2>
           <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
             MARBF Cooperative. is not just a system — it’s a movement to uplift
             farmers and cooperatives with digital innovation.
           </p>
-          <IonButton
-            style={{
-              marginTop: "1.5rem",
-              padding: "0.8rem 2rem",
-              fontSize: "1rem",
-              borderRadius: "8px",
-            }}
-            color="light"
-            onClick={() => history.push("/register")}
-          >
-            Get Started Today →
-          </IonButton>
+          
         </div>
 
         <div

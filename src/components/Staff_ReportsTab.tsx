@@ -1,7 +1,7 @@
 import React from "react";
 import { IonContent } from "@ionic/react";
 
-const ReportsTab: React.FC = () => {
+const Staff_ReportsTab: React.FC = () => {
   return (
     <IonContent className="ion-padding">
       <h2>Reports</h2>
@@ -10,4 +10,4 @@ const ReportsTab: React.FC = () => {
   );
 };
 
-export default ReportsTab;
+export default Staff_ReportsTab;
