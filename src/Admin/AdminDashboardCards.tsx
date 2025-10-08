@@ -9,7 +9,7 @@ interface DashboardCardsProps {
   totalUsers: number;
 }
 
-const DashboardCards: React.FC<DashboardCardsProps> = ({
+const AdminDashboardCards: React.FC<DashboardCardsProps> = ({
   totalEquipment,
   todayBookings,
   totalRevenue,
@@ -62,4 +62,4 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({
   );
 };
 
-export default DashboardCards;
+export default AdminDashboardCards;

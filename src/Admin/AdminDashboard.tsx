@@ -38,11 +38,13 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Count total equipment
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
+        // Count today's bookings
         const today = new Date().toISOString().split("T")[0];
         const { count: bookingsCount } = await supabase
           .from("bookings")
@@ -50,17 +52,38 @@ const AdminDashboard: React.FC = () => {
           .eq("date", today);
         setTodayBookings(bookingsCount || 0);
 
-        const { data: revenueData } = await supabase
-          .from("transactions")
-          .select("amount");
-        if (revenueData) {
-          const revenueSum = revenueData.reduce(
-            (acc, cur) => acc + Number(cur.amount),
-            0
-          );
-          setTotalRevenue(revenueSum);
+        // Fetch revenue only for APPROVED bookings
+        const { data: approvedBookings, error: bookingError } = await supabase
+          .from("bookings")
+          .select("id")
+          .eq("status", "approved");
+
+        if (bookingError) {
+          console.error("Error fetching approved bookings:", bookingError);
+        } else {
+          const approvedIds = approvedBookings?.map((b) => b.id) || [];
+
+          if (approvedIds.length > 0) {
+            const { data: revenueData, error: revenueError } = await supabase
+              .from("transactions")
+              .select("amount, booking_id")
+              .in("booking_id", approvedIds);
+
+            if (revenueError) {
+              console.error("Error fetching revenue data:", revenueError);
+            } else if (revenueData) {
+              const revenueSum = revenueData.reduce(
+                (acc, cur) => acc + Number(cur.amount),
+                0
+              );
+              setTotalRevenue(revenueSum);
+            }
+          } else {
+            setTotalRevenue(0);
+          }
         }
 
+        // Count total users
         const { count: usersCount } = await supabase
           .from("users")
           .select("*", { count: "exact", head: true });
@@ -101,24 +124,24 @@ const AdminDashboard: React.FC = () => {
           </IonGrid>
         );
       case "users":
-        return <Admin_UsersTab/>;
+        return <Admin_UsersTab />;
       case "generatereports":
-        return <Admin_GenerateReports/>;
+        return <Admin_GenerateReports />;
       case "bookings":
         return <Staff_BookingsTab />;
-         case "manageequipment":
+      case "manageequipment":
         return <Admin_Manageequipment />;
-         case "viewcbookingcalendar":
+      case "viewcbookingcalendar":
         return <Admin_ViewBookingCalendar />;
-         case "managerentalbookings":
+      case "managerentalbookings":
         return <Admin_ManageRentalBookings />;
-         case "viewalltransactions":
+      case "viewalltransactions":
         return <Admin_ViewAllTransactions />;
-         case "manageusers":
+      case "manageusers":
         return <Admin_ManageUsers />;
-         case "latereturnpenalty":
+      case "latereturnpenalty":
         return <Admin_LateReturnPenalty />;
-        case "registermember":
+      case "registermember":
         return <Admin_RegisterMember />;
       default:
         return null;
