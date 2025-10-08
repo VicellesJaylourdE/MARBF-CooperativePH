@@ -5,10 +5,13 @@ import "react-calendar/dist/Calendar.css";
 import { supabase } from "../utils/supabaseClient";
 
 interface Booking {
-  id: number;
-  user_name: string;
-  date: string;
+  id: string;
+  equipment_name: string;
+  start_date: string;
+  end_date: string;
   status: string;
+  total_price: number;
+  user_id: string;
 }
 
 const Admin_ViewBookingCalendar: React.FC = () => {
@@ -16,16 +19,17 @@ const Admin_ViewBookingCalendar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
+  // Fetch bookings from Supabase
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, user_name, date, status")
-        .order("date", { ascending: true });
+        .select("id, equipment_name, start_date, end_date, status, total_price, user_id")
+        .order("start_date", { ascending: true });
 
       if (error) {
-        console.error("Error fetching bookings:", error.message);
+        console.error("❌ Error fetching bookings:", error.message);
       } else {
         setBookings(data || []);
       }
@@ -33,10 +37,26 @@ const Admin_ViewBookingCalendar: React.FC = () => {
     };
 
     fetchBookings();
+
+    const channel = supabase
+      .channel("bookings-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        (payload) => {
+          console.log("Realtime change:", payload);
+          fetchBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const bookingsForDate = bookings.filter(
-    (b) => new Date(b.date).toDateString() === selectedDate.toDateString()
+    (b) => new Date(b.start_date).toDateString() === selectedDate.toDateString()
   );
 
   return (
@@ -48,6 +68,7 @@ const Admin_ViewBookingCalendar: React.FC = () => {
         <IonSpinner name="crescent" />
       ) : (
         <>
+          {/* Calendar */}
           <div className="calendar-container">
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
@@ -55,13 +76,16 @@ const Admin_ViewBookingCalendar: React.FC = () => {
               showWeekNumbers={false}
               tileClassName={({ date }) =>
                 bookings.some(
-                  (b) => new Date(b.date).toDateString() === date.toDateString()
+                  (b) =>
+                    new Date(b.start_date).toDateString() === date.toDateString()
                 )
                   ? "has-booking"
                   : ""
               }
             />
           </div>
+
+          {/* Booking list */}
           <div style={{ marginTop: "16px" }}>
             <h3>
               Bookings on {selectedDate.toDateString()} (
@@ -73,12 +97,13 @@ const Admin_ViewBookingCalendar: React.FC = () => {
               bookingsForDate.map((b) => (
                 <IonCard key={b.id}>
                   <IonCardContent>
-                    <strong>{b.user_name}</strong> <br />
+                    <strong>{b.equipment_name}</strong> <br />
+                    {b.start_date} → {b.end_date} <br />
                     Status:{" "}
                     <span
                       style={{
                         color:
-                          b.status === "confirmed"
+                          b.status === "approved"
                             ? "green"
                             : b.status === "pending"
                             ? "orange"
@@ -95,7 +120,7 @@ const Admin_ViewBookingCalendar: React.FC = () => {
         </>
       )}
 
-      {/* Inline styles */}
+      {/* Styles */}
       <style>{`
         .calendar-container {
           display: flex;
@@ -103,28 +128,22 @@ const Admin_ViewBookingCalendar: React.FC = () => {
           width: 100%;
         }
         .react-calendar {
-          width: 80%; /* laptop size */
+          width: 80%;
           max-width: 900px;
           font-size: 1.2rem;
           border-radius: 8px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-
-        /* header color */
         .react-calendar__navigation {
           background-color: #FCB53B;
-          border-top-left-radius: px;
-          border-top-right-radius: px;
         }
         .react-calendar__navigation button {
           color: white;
           font-weight: bold;
           font-size: 1.1rem;
         }
-
-        /* weekdays row (Mon–Sun) */
         .react-calendar__month-view__weekdays {
-          background: #FCB53B; /* same as header */
+          background: #FCB53B;
           font-weight: bold;
           text-align: center;
           text-transform: uppercase;
@@ -133,21 +152,15 @@ const Admin_ViewBookingCalendar: React.FC = () => {
         .react-calendar__month-view__weekdays__weekday {
           padding: 0.5rem;
         }
-
-        /* highlight days with bookings */
         .has-booking {
           background: #ffe9c4 !important;
           border-radius: 50%;
         }
-
-        /* selected date highlight */
         .react-calendar__tile--active {
           background: #FCB53B !important;
           color: white !important;
           border-radius: 50%;
         }
-
-        /* Mobile responsive */
         @media (max-width: 768px) {
           .react-calendar {
             width: 95%;

@@ -38,13 +38,11 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Count total equipment
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
-        // Count today's bookings
         const today = new Date().toISOString().split("T")[0];
         const { count: bookingsCount } = await supabase
           .from("bookings")
@@ -52,7 +50,6 @@ const AdminDashboard: React.FC = () => {
           .eq("date", today);
         setTodayBookings(bookingsCount || 0);
 
-        // Fetch revenue only for APPROVED bookings
         const { data: approvedBookings, error: bookingError } = await supabase
           .from("bookings")
           .select("id")
