@@ -25,10 +25,10 @@ import { supabase } from "../utils/supabaseClient";
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (booking: { startDate: string; endDate: string; notes: string }) => void;
+  onSubmit: (booking: { startDate: string; endDate: string; notes: string; location: string }) => void;
   equipmentName: string;
   price: number;
-  equipmentId?: string; // ✅ add equipmentId for transaction linking
+  equipmentId?: string;
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({
@@ -42,14 +42,12 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+  const [location, setLocation] = useState<string>(""); // ✅ Added location
   const [toastMsg, setToastMsg] = useState<string>("");
 
-  // Compute total days & price dynamically
   const days =
     startDate && endDate
-      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-          (1000 * 60 * 60 * 24) +
-        1
+      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24) + 1
       : 0;
   const totalPrice = days > 0 ? days * price : 0;
 
@@ -69,7 +67,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      // ✅ Step 1: Insert booking
+      // ✅ Insert booking with location
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert([
@@ -80,6 +78,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             start_date: startDate,
             end_date: endDate,
             notes,
+            location, // ✅ Added location
             status: "pending",
             total_price: totalPrice,
           },
@@ -89,26 +88,24 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
       if (bookingError) throw bookingError;
 
-      // ✅ Step 2: Insert transaction (linked to booking)
-      const { error: transactionError } = await supabase
-        .from("transactions")
-        .insert([
-          {
-            booking_id: bookingData.id,
-            user_id: user.id,
-            amount: totalPrice,
-            status: "unpaid", // default: unpaid
-          },
-        ]);
+      // ✅ Insert transaction
+      const { error: transactionError } = await supabase.from("transactions").insert([
+        {
+          booking_id: bookingData.id,
+          user_id: user.id,
+          amount: totalPrice,
+          status: "unpaid",
+        },
+      ]);
 
       if (transactionError) throw transactionError;
 
-      // Success
-      onSubmit({ startDate, endDate, notes });
+      onSubmit({ startDate, endDate, notes, location });
       setToastMsg("Booking submitted successfully!");
       setStartDate("");
       setEndDate("");
       setNotes("");
+      setLocation(""); // ✅ reset location
       onClose();
     } catch (err: any) {
       console.error("Booking error:", err.message);
@@ -160,6 +157,16 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 </IonRow>
               </IonGrid>
 
+              {/* ✅ Location Input */}
+              <IonItem>
+                <IonLabel position="stacked">Location</IonLabel>
+                <IonInput
+                  placeholder="Enter location or pickup point"
+                  value={location}
+                  onIonInput={(e) => setLocation(e.detail.value ?? "")}
+                />
+              </IonItem>
+
               {startDate && endDate && days > 0 && (
                 <>
                   <IonItem>
@@ -169,8 +176,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   </IonItem>
                   <IonItem>
                     <IonLabel>
-                      <strong>Total ({days} day{days > 1 ? "s" : ""}):</strong> ₱
-                      {totalPrice}
+                      <strong>
+                        Total ({days} day{days > 1 ? "s" : ""}):
+                      </strong>{" "}
+                      ₱{totalPrice}
                     </IonLabel>
                   </IonItem>
                 </>

@@ -10,7 +10,7 @@ import {
   useIonRouter,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
-import loginBg from "../assets/Background3.png";
+
 import logo from "../assets/logo.png";
 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({
@@ -84,13 +84,7 @@ const Login: React.FC = () => {
   return (
     <IonPage>
       <IonContent
-        fullscreen
-        style={{
-          "--background": "none",
-          backgroundImage: `url(${loginBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+      
       >
         <div className="login-layout">
           {/* Desktop left-panel */}

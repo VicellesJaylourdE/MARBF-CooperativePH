@@ -40,7 +40,6 @@ const Admin_Manageequipment: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch existing equipment
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -61,7 +60,6 @@ const Admin_Manageequipment: React.FC = () => {
     fetchEquipment();
   }, []);
 
-  // ✅ Add equipment
   const handleAddEquipment = async () => {
     if (!name || !price || !category) {
       alert("⚠️ Please fill all required fields");
@@ -70,7 +68,6 @@ const Admin_Manageequipment: React.FC = () => {
 
     let imageUrl: string | null = null;
 
-    // Upload image to Supabase Storage
     if (imageFile) {
       const fileName = `${Date.now()}-${imageFile.name}`;
       const { error: uploadError } = await supabase.storage
@@ -87,7 +84,6 @@ const Admin_Manageequipment: React.FC = () => {
       }
     }
 
-    // Insert into equipment table
     const { data, error } = await supabase
       .from("equipment")
       .insert([
@@ -114,6 +110,23 @@ const Admin_Manageequipment: React.FC = () => {
     }
   };
 
+  // 🗑️ Delete Function (tagsa-tagsa)
+  const handleDeleteEquipment = async (id: string) => {
+    const confirmDelete = window.confirm(
+      "🗑️ Are you sure you want to delete this equipment?"
+    );
+    if (!confirmDelete) return;
+
+    const { error } = await supabase.from("equipment").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting equipment:", error.message);
+    } else {
+      alert("✅ Equipment deleted!");
+      setEquipment(equipment.filter((eq) => eq.id !== id));
+    }
+  };
+
   return (
     <IonPage>
       <IonHeader>
@@ -122,7 +135,6 @@ const Admin_Manageequipment: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-
         {/* Add Form */}
         <IonList>
           <IonItem>
@@ -193,8 +205,18 @@ const Admin_Manageequipment: React.FC = () => {
                     <IonCardContent>
                       <h3>{eq.name}</h3>
                       <p>{eq.category}</p>
-                      <p><strong>₱{eq.price}</strong> / day</p>
+                      <p>
+                        <strong>₱{eq.price}</strong> / day
+                      </p>
                       <p>Status: {eq.status}</p>
+
+                      <IonButton
+                        color="danger"
+                        expand="block"
+                        onClick={() => handleDeleteEquipment(eq.id)}
+                      >
+                        Delete
+                      </IonButton>
                     </IonCardContent>
                   </IonCard>
                 </IonCol>
