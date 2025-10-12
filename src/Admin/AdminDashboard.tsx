@@ -7,8 +7,6 @@ import {
   IonRow,
   IonCol,
   IonCard,
-  IonCardHeader,
-  IonCardTitle,
   IonCardContent,
 } from "@ionic/react";
 import StaffHeaderBar from "../components/Admin_AdminHeaderBar";
@@ -16,10 +14,9 @@ import StaffSidebar from "../components/Admin_AdminSidebar";
 import { supabase } from "../utils/supabaseClient";
 
 import DashboardCards from "./AdminDashboardCards";
-import Staff_UsersTab from "../components/Staff_UsersTab";
+import Admin_UsersTab from "../components/Admin_UsersTab";
 import Admin_GenerateReports from "../components/Admin_GenerateReports";
 import Staff_BookingsTab from "../components/Staff_BookingsTab";
-import Admin_UsersTab from "../components/Admin_UsersTab";
 import Admin_Manageequipment from "../components/Admin_Manageequipment";
 import Admin_ViewBookingCalendar from "../components/Admin_ViewBookingCalendar";
 import Admin_ManageRentalBookings from "../components/Admin_ManageRentalBookings";
@@ -38,11 +35,13 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // ✅ Equipment count
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
+        // ✅ Today's bookings count
         const today = new Date().toISOString().split("T")[0];
         const { count: bookingsCount } = await supabase
           .from("bookings")
@@ -50,37 +49,26 @@ const AdminDashboard: React.FC = () => {
           .eq("date", today);
         setTodayBookings(bookingsCount || 0);
 
-        const { data: approvedBookings, error: bookingError } = await supabase
-          .from("bookings")
-          .select("id")
-          .eq("status", "approved");
+        // ✅ Total revenue (only for paid transactions)
+        const { data: revenueData, error: revenueError } = await supabase
+          .from("transactions")
+          .select("amount")
+          .eq("status", "paid");
 
-        if (bookingError) {
-          console.error("Error fetching approved bookings:", bookingError);
+        if (revenueError) {
+          console.error("Error fetching revenue data:", revenueError);
+          setTotalRevenue(0);
+        } else if (revenueData && revenueData.length > 0) {
+          const revenueSum = revenueData.reduce(
+            (acc, cur) => acc + Number(cur.amount),
+            0
+          );
+          setTotalRevenue(revenueSum);
         } else {
-          const approvedIds = approvedBookings?.map((b) => b.id) || [];
-
-          if (approvedIds.length > 0) {
-            const { data: revenueData, error: revenueError } = await supabase
-              .from("transactions")
-              .select("amount, booking_id")
-              .in("booking_id", approvedIds);
-
-            if (revenueError) {
-              console.error("Error fetching revenue data:", revenueError);
-            } else if (revenueData) {
-              const revenueSum = revenueData.reduce(
-                (acc, cur) => acc + Number(cur.amount),
-                0
-              );
-              setTotalRevenue(revenueSum);
-            }
-          } else {
-            setTotalRevenue(0);
-          }
+          setTotalRevenue(0);
         }
 
-        // Count total users
+        // ✅ Total users (from your users table, not auth.users)
         const { count: usersCount } = await supabase
           .from("users")
           .select("*", { count: "exact", head: true });
@@ -93,6 +81,7 @@ const AdminDashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  // 🔹 Render the right tab content
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -120,6 +109,7 @@ const AdminDashboard: React.FC = () => {
             </IonRow>
           </IonGrid>
         );
+
       case "users":
         return <Admin_UsersTab />;
       case "generatereports":

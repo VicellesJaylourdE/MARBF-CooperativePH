@@ -17,7 +17,7 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { bookOutline, person, search, star } from 'ionicons/icons';
 import { Route, Redirect } from 'react-router';
-import SignUp from './Register';
+
   const Home: React.FC = () => {
 
     const tabs = [

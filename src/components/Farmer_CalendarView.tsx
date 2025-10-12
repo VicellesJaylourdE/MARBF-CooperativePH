@@ -27,7 +27,6 @@ const CalendarView: React.FC = () => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        // 👉 fetch only current user's bookings
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -37,7 +36,7 @@ const CalendarView: React.FC = () => {
         const { data, error } = await supabase
           .from("bookings")
           .select("id, equipment_name, start_date, end_date, status")
-          .eq("user_id", user.id) // assuming bookings table has user_id column
+          .eq("user_id", user.id)
           .order("start_date", { ascending: true });
 
         if (error) throw error;

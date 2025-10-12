@@ -63,50 +63,91 @@ const Register: React.FC = () => {
       <IonContent className="ion-padding">
         <IonCard>
           <IonCardHeader>
-            <IonCardTitle>Register</IonCardTitle>
+            <IonCardTitle>Register Member</IonCardTitle>
           </IonCardHeader>
           <IonCardContent>
-            <IonInput
-              placeholder="Username"
-              value={username}
-              onIonChange={(e) => setUsername(e.detail.value!)}
-            />
-            <IonInput
-              placeholder="First Name"
-              value={firstName}
-              onIonChange={(e) => setFirstName(e.detail.value!)}
-            />
-            <IonInput
-              placeholder="Last Name"
-              value={lastName}
-              onIonChange={(e) => setLastName(e.detail.value!)}
-            />
-            <IonInput
-              placeholder="Email"
-              type="email"
-              value={email}
-              onIonChange={(e) => setEmail(e.detail.value!)}
-            />
-            <IonInput
-              placeholder="Password"
-              type="password"
-              value={password}
-              onIonChange={(e) => setPassword(e.detail.value!)}
-            >
-              <IonInputPasswordToggle slot="end" />
-            </IonInput>
+            {/* Excel-style table container */}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>Username</strong></td>
+                    <td style={cellStyle}>
+                      <IonInput
+                        placeholder="Username"
+                        value={username}
+                        onIonChange={(e) => setUsername(e.detail.value!)}
+                      />
+                    </td>
+                  </tr>
 
-            <IonSelect
-              value={role}
-              placeholder="Select Role"
-              onIonChange={(e) => setRole(e.detail.value)}
-            >
-              <IonSelectOption value="admin">Admin</IonSelectOption>
-              <IonSelectOption value="staff">Staff</IonSelectOption>
-              <IonSelectOption value="user">User</IonSelectOption>
-            </IonSelect>
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>First Name</strong></td>
+                    <td style={cellStyle}>
+                      <IonInput
+                        placeholder="First Name"
+                        value={firstName}
+                        onIonChange={(e) => setFirstName(e.detail.value!)}
+                      />
+                    </td>
+                  </tr>
 
-            <IonButton expand="block" onClick={doRegister}>
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>Last Name</strong></td>
+                    <td style={cellStyle}>
+                      <IonInput
+                        placeholder="Last Name"
+                        value={lastName}
+                        onIonChange={(e) => setLastName(e.detail.value!)}
+                      />
+                    </td>
+                  </tr>
+
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>Email</strong></td>
+                    <td style={cellStyle}>
+                      <IonInput
+                        placeholder="Email"
+                        type="email"
+                        value={email}
+                        onIonChange={(e) => setEmail(e.detail.value!)}
+                      />
+                    </td>
+                  </tr>
+
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>Password</strong></td>
+                    <td style={cellStyle}>
+                      <IonInput
+                        placeholder="Password"
+                        type="password"
+                        value={password}
+                        onIonChange={(e) => setPassword(e.detail.value!)}
+                      >
+                        <IonInputPasswordToggle slot="end" />
+                      </IonInput>
+                    </td>
+                  </tr>
+
+                  <tr style={rowStyle}>
+                    <td style={cellStyle}><strong>Role</strong></td>
+                    <td style={cellStyle}>
+                      <IonSelect
+                        value={role}
+                        placeholder="Select Role"
+                        onIonChange={(e) => setRole(e.detail.value)}
+                      >
+                        <IonSelectOption value="admin">Admin</IonSelectOption>
+                        <IonSelectOption value="staff">Staff</IonSelectOption>
+                        <IonSelectOption value="user">User</IonSelectOption>
+                      </IonSelect>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <IonButton expand="block" onClick={doRegister} style={{ marginTop: '1rem' }}>
               Register
             </IonButton>
           </IonCardContent>
@@ -123,7 +164,7 @@ const Register: React.FC = () => {
         <IonModal isOpen={showSuccessModal} onDidDismiss={() => setShowSuccessModal(false)}>
           <IonContent className="ion-padding">
             <h2>Registration Successful!</h2>
-            <IonButton expand="block" routerLink="/login">
+            <IonButton expand="block" routerLink="/login" style={{ marginTop: '1rem' }}>
               Go to Login
             </IonButton>
           </IonContent>
@@ -131,6 +172,15 @@ const Register: React.FC = () => {
       </IonContent>
     </IonPage>
   );
+};
+
+const rowStyle: React.CSSProperties = {
+  borderBottom: '1px solid #ddd',
+};
+
+const cellStyle: React.CSSProperties = {
+  padding: '10px',
+  verticalAlign: 'middle',
 };
 
 export default Register;

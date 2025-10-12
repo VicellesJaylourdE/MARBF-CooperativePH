@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonText,
-  IonAvatar,
   IonButton,
+  IonText,
   IonAlert,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
@@ -46,7 +42,6 @@ const Admin_ManageUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Delete User
   const handleDelete = async () => {
     if (!userToDelete) return;
 
@@ -55,15 +50,10 @@ const Admin_ManageUsers: React.FC = () => {
       .delete()
       .eq("user_id", userToDelete);
 
-    if (error) {
-      console.error("Error deleting user:", error.message);
-    } else {
-      setUsers(users.filter((u) => u.user_id !== userToDelete));
-    }
+    if (!error) setUsers(users.filter((u) => u.user_id !== userToDelete));
     setShowDeleteAlert(false);
   };
 
-  // Edit User
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
 
@@ -79,9 +69,7 @@ const Admin_ManageUsers: React.FC = () => {
       .update(updatedData)
       .eq("user_id", editingUser.user_id);
 
-    if (error) {
-      console.error("Error updating user:", error.message);
-    } else {
+    if (!error) {
       setUsers((prev) =>
         prev.map((u) =>
           u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u
@@ -93,64 +81,71 @@ const Admin_ManageUsers: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
-      <h2>Users</h2>
+   
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+        <h2 style={{ margin: 0 }}>Users</h2>
+        <IonButton
+          color="primary"
+          style={{ marginLeft: "auto" }}
+          routerLink="/register"
+        >
+          Add Member
+        </IonButton>
+      </div>
+
       {loading ? (
         <IonText>Loading users...</IonText>
       ) : users.length === 0 ? (
         <IonText>No users found.</IonText>
       ) : (
-        <IonList>
-          {users.map((user) => (
-            <IonItem key={user.user_id}>
-              <IonAvatar slot="start">
-                <div
-                  style={{
-                    background: "#3b82f6",
-                    color: "white",
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {user.username.charAt(0).toUpperCase()}
-                </div>
-              </IonAvatar>
-              <IonLabel>
-                <h3>{user.username}</h3>
-                <p>{user.user_email}</p>
-                {(user.user_firstname || user.user_lastname) && (
-                  <p>
-                    {user.user_firstname} {user.user_lastname}
-                  </p>
-                )}
-              </IonLabel>
-
-              <IonButton
-                color="primary"
-                onClick={() => {
-                  setEditingUser(user);
-                  setShowEditAlert(true);
-                }}
-              >
-                Edit
-              </IonButton>
-
-              <IonButton
-                color="danger"
-                onClick={() => {
-                  setUserToDelete(user.user_id);
-                  setShowDeleteAlert(true);
-                }}
-              >
-                Remove
-              </IonButton>
-            </IonItem>
-          ))}
-        </IonList>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead style={{ backgroundColor: "#000000ff" }}>
+              <tr>
+                <th style={thStyle}>#</th>
+                <th style={thStyle}>Username</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Full Name</th>
+                <th style={thStyle}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user, index) => (
+                <tr key={user.user_id} style={index % 2 === 0 ? rowEven : rowOdd}>
+                  <td style={tdStyle}>{index + 1}</td>
+                  <td style={tdStyle}>{user.username}</td>
+                  <td style={tdStyle}>{user.user_email}</td>
+                  <td style={tdStyle}>
+                    {user.user_firstname || ""} {user.user_lastname || ""}
+                  </td>
+                  <td style={tdStyle}>
+                    <IonButton
+                      color="primary"
+                      size="small"
+                      onClick={() => {
+                        setEditingUser(user);
+                        setShowEditAlert(true);
+                      }}
+                      style={{ marginRight: "0.5rem" }}
+                    >
+                      Edit
+                    </IonButton>
+                    <IonButton
+                      color="danger"
+                      size="small"
+                      onClick={() => {
+                        setUserToDelete(user.user_id);
+                        setShowDeleteAlert(true);
+                      }}
+                    >
+                      Remove
+                    </IonButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Edit User Alert */}
@@ -159,40 +154,14 @@ const Admin_ManageUsers: React.FC = () => {
         onDidDismiss={() => setShowEditAlert(false)}
         header="Edit User"
         inputs={[
-          {
-            name: "username",
-            type: "text",
-            placeholder: "Username",
-            value: editingUser?.username || "",
-          },
-          {
-            name: "user_email",
-            type: "email",
-            placeholder: "Email",
-            value: editingUser?.user_email || "",
-          },
-          {
-            name: "user_firstname",
-            type: "text",
-            placeholder: "First Name",
-            value: editingUser?.user_firstname || "",
-          },
-          {
-            name: "user_lastname",
-            type: "text",
-            placeholder: "Last Name",
-            value: editingUser?.user_lastname || "",
-          },
+          { name: "username", type: "text", placeholder: "Username", value: editingUser?.username || "" },
+          { name: "user_email", type: "email", placeholder: "Email", value: editingUser?.user_email || "" },
+          { name: "user_firstname", type: "text", placeholder: "First Name", value: editingUser?.user_firstname || "" },
+          { name: "user_lastname", type: "text", placeholder: "Last Name", value: editingUser?.user_lastname || "" },
         ]}
         buttons={[
-          {
-            text: "Cancel",
-            role: "cancel",
-          },
-          {
-            text: "Save",
-            handler: handleEdit,
-          },
+          { text: "Cancel", role: "cancel" },
+          { text: "Save", handler: handleEdit },
         ]}
       />
 
@@ -203,18 +172,27 @@ const Admin_ManageUsers: React.FC = () => {
         header="Confirm Delete"
         message="Are you sure you want to remove this user?"
         buttons={[
-          {
-            text: "Cancel",
-            role: "cancel",
-          },
-          {
-            text: "Delete",
-            handler: handleDelete,
-          },
+          { text: "Cancel", role: "cancel" },
+          { text: "Delete", handler: handleDelete },
         ]}
       />
     </IonContent>
   );
 };
+
+// Styles for Excel-style table
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "8px",
+  borderBottom: "1px solid #ffffffff",
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "8px",
+  borderBottom: "1px solid #fff9f9ff",
+};
+
+const rowEven: React.CSSProperties = { backgroundColor: "#000000ff" };
+const rowOdd: React.CSSProperties = { backgroundColor: "#f9f9f9" };
 
 export default Admin_ManageUsers;

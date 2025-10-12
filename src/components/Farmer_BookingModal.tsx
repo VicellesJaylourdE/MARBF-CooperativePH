@@ -25,7 +25,12 @@ import { supabase } from "../utils/supabaseClient";
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (booking: { startDate: string; endDate: string; notes: string; location: string }) => void;
+  onSubmit: (booking: {
+    startDate: string;
+    endDate: string;
+    notes: string;
+    location: string;
+  }) => void;
   equipmentName: string;
   price: number;
   equipmentId?: string;
@@ -42,12 +47,14 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [location, setLocation] = useState<string>(""); // ✅ Added location
+  const [location, setLocation] = useState<string>("");
   const [toastMsg, setToastMsg] = useState<string>("");
 
   const days =
     startDate && endDate
-      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24) + 1
+      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+          (1000 * 60 * 60 * 24) +
+        1
       : 0;
   const totalPrice = days > 0 ? days * price : 0;
 
@@ -67,7 +74,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      // ✅ Insert booking with location
+      // Insert booking record
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert([
@@ -78,7 +85,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             start_date: startDate,
             end_date: endDate,
             notes,
-            location, // ✅ Added location
+            location,
             status: "pending",
             total_price: totalPrice,
           },
@@ -88,7 +95,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
       if (bookingError) throw bookingError;
 
-      // ✅ Insert transaction
+      // Insert transaction record
       const { error: transactionError } = await supabase.from("transactions").insert([
         {
           booking_id: bookingData.id,
@@ -105,7 +112,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setStartDate("");
       setEndDate("");
       setNotes("");
-      setLocation(""); // ✅ reset location
+      setLocation("");
       onClose();
     } catch (err: any) {
       console.error("Booking error:", err.message);
@@ -118,7 +125,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       <IonModal isOpen={isOpen} onDidDismiss={onClose} backdropDismiss={false}>
         <IonHeader>
           <IonToolbar>
-            <IonTitle>📅 Book Equipment</IonTitle>
+            <IonTitle>Book Equipment</IonTitle>
             <IonButtons slot="end">
               <IonButton onClick={onClose}>✕</IonButton>
             </IonButtons>
@@ -128,7 +135,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         <IonContent className="ion-padding">
           <IonCard>
             <IonCardHeader>
-              <IonCardTitle>Reserve "{equipmentName}"</IonCardTitle>
+              <IonCardTitle>Reserve “{equipmentName}”</IonCardTitle>
             </IonCardHeader>
 
             <IonCardContent>
@@ -157,7 +164,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 </IonRow>
               </IonGrid>
 
-              {/* ✅ Location Input */}
               <IonItem>
                 <IonLabel position="stacked">Location</IonLabel>
                 <IonInput
