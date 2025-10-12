@@ -14,8 +14,6 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonCard,
-  IonCardContent,
   IonSelect,
   IonSelectOption,
   IonSpinner,
@@ -139,10 +137,7 @@ const Admin_Manageequipment: React.FC = () => {
         <IonList>
           <IonItem>
             <IonLabel position="stacked">Name</IonLabel>
-            <IonInput
-              value={name}
-              onIonChange={(e) => setName(e.detail.value!)}
-            />
+            <IonInput value={name} onIonChange={(e) => setName(e.detail.value!)} />
           </IonItem>
 
           <IonItem>
@@ -164,10 +159,7 @@ const Admin_Manageequipment: React.FC = () => {
 
           <IonItem>
             <IonLabel position="stacked">Status</IonLabel>
-            <IonSelect
-              value={status}
-              onIonChange={(e) => setStatus(e.detail.value)}
-            >
+            <IonSelect value={status} onIonChange={(e) => setStatus(e.detail.value)}>
               <IonSelectOption value="available">Available</IonSelectOption>
               <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
               <IonSelectOption value="unavailable">Unavailable</IonSelectOption>
@@ -193,35 +185,55 @@ const Admin_Manageequipment: React.FC = () => {
         {loading ? (
           <IonSpinner name="dots" />
         ) : (
-          <IonGrid>
-            <IonRow>
-              {equipment.map((eq) => (
-                <IonCol size="6" sizeMd="4" key={eq.id}>
-                  <IonCard>
-                    <IonImg
-                      src={eq.image_url || "https://via.placeholder.com/150"}
-                      alt={eq.name}
-                    />
-                    <IonCardContent>
-                      <h3>{eq.name}</h3>
-                      <p>{eq.category}</p>
-                      <p>
-                        <strong>₱{eq.price}</strong> / day
-                      </p>
-                      <p>Status: {eq.status}</p>
-
-                      <IonButton
-                        color="danger"
-                        expand="block"
-                        onClick={() => handleDeleteEquipment(eq.id)}
-                      >
-                        Delete
-                      </IonButton>
-                    </IonCardContent>
-                  </IonCard>
-                </IonCol>
-              ))}
+          <IonGrid className="table-grid">
+            {/* Table Header */}
+            <IonRow
+              className="table-header"
+              style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}
+            >
+              <IonCol>ID</IonCol>
+              <IonCol>Name</IonCol>
+              <IonCol>Category</IonCol>
+              <IonCol>Price (₱/day)</IonCol>
+              <IonCol>Status</IonCol>
+              <IonCol>Image</IonCol>
+              <IonCol>Actions</IonCol>
             </IonRow>
+
+            {/* Table Rows */}
+            {equipment.map((eq, index) => (
+              <IonRow
+                key={eq.id}
+                className="table-row"
+                style={{
+                  borderBottom: "1px solid #0d0d0dff",
+                  backgroundColor: index % 2 === 0 ? "#191919ff" : "#000000ff",
+                  alignItems: "center",
+                }}
+              >
+             
+                <IonCol>{eq.name}</IonCol>
+                <IonCol>{eq.category}</IonCol>
+                <IonCol>₱{eq.price}</IonCol>
+                <IonCol>{eq.status}</IonCol>
+                <IonCol>
+                  <IonImg
+                    src={eq.image_url || "https://via.placeholder.com/50"}
+                    alt={eq.name}
+                    style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                  />
+                </IonCol>
+                <IonCol>
+                  <IonButton
+                    color="danger"
+                    size="small"
+                    onClick={() => handleDeleteEquipment(eq.id)}
+                  >
+                    Delete
+                  </IonButton>
+                </IonCol>
+              </IonRow>
+            ))}
           </IonGrid>
         )}
       </IonContent>
