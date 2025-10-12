@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   IonPage,
   IonHeader,
@@ -17,6 +17,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
+  IonAlert,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
@@ -35,9 +36,16 @@ const Admin_Manageequipment: React.FC = () => {
   const [price, setPrice] = useState<number | null>(null);
   const [status, setStatus] = useState("available");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch equipment list
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -49,7 +57,20 @@ const Admin_Manageequipment: React.FC = () => {
       console.error(error);
       setEquipment([]);
     } else {
-      setEquipment((data ?? []) as Equipment[]);
+      const updatedData = await Promise.all(
+        (data ?? []).map(async (eq: Equipment) => {
+          if (eq.image_url) {
+            try {
+              const { data: signedData } = await supabase.storage
+                .from("user-avatars")
+                .createSignedUrl(eq.image_url.split("/").pop()!, 60);
+              eq.image_url = signedData?.signedUrl ?? eq.image_url;
+            } catch {}
+          }
+          return eq;
+        })
+      );
+      setEquipment(updatedData);
     }
     setLoading(false);
   };
@@ -58,27 +79,45 @@ const Admin_Manageequipment: React.FC = () => {
     fetchEquipment();
   }, []);
 
+  // Handle image selection
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Add equipment
   const handleAddEquipment = async () => {
     if (!name || !price || !category) {
-      alert("⚠️ Please fill all required fields");
+      setAlertMessage("⚠️ Please fill all required fields");
+      setShowAlert(true);
       return;
     }
+
+    setUploading(true);
 
     let imageUrl: string | null = null;
 
     if (imageFile) {
-      const fileName = `${Date.now()}-${imageFile.name}`;
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `user-avatars/${fileName}`;
+
       const { error: uploadError } = await supabase.storage
-        .from("equipment-images")
-        .upload(fileName, imageFile);
+        .from("user-avatars")
+        .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
       if (uploadError) {
-        console.error("Image upload failed:", uploadError.message);
+        setAlertMessage(`Image upload failed: ${uploadError.message}`);
+        setShowAlert(true);
       } else {
         const { data: urlData } = supabase.storage
-          .from("equipment-images")
-          .getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
+          .from("user-avatars")
+          .getPublicUrl(filePath);
+        imageUrl = urlData?.publicUrl ?? null;
       }
     }
 
@@ -96,19 +135,25 @@ const Admin_Manageequipment: React.FC = () => {
       .select("*");
 
     if (error) {
-      console.error("Error adding equipment:", error.message);
+      setAlertMessage(`Error adding equipment: ${error.message}`);
+      setShowAlert(true);
     } else {
-      alert("✅ Equipment added!");
       setEquipment([...(data as Equipment[]), ...equipment]);
       setName("");
       setCategory("");
       setPrice(null);
-      setImageFile(null);
       setStatus("available");
+      setImageFile(null);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+      setAlertMessage("✅ Equipment added!");
+      setShowAlert(true);
     }
+
+    setUploading(false);
   };
 
-  // 🗑️ Delete Function (tagsa-tagsa)
+  // Delete equipment
   const handleDeleteEquipment = async (id: string) => {
     const confirmDelete = window.confirm(
       "🗑️ Are you sure you want to delete this equipment?"
@@ -118,10 +163,12 @@ const Admin_Manageequipment: React.FC = () => {
     const { error } = await supabase.from("equipment").delete().eq("id", id);
 
     if (error) {
-      console.error("Error deleting equipment:", error.message);
+      setAlertMessage(`Error deleting equipment: ${error.message}`);
+      setShowAlert(true);
     } else {
-      alert("✅ Equipment deleted!");
       setEquipment(equipment.filter((eq) => eq.id !== id));
+      setAlertMessage("✅ Equipment deleted!");
+      setShowAlert(true);
     }
   };
 
@@ -132,8 +179,8 @@ const Admin_Manageequipment: React.FC = () => {
           <IonTitle>Manage Equipment</IonTitle>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
-        {/* Add Form */}
         <IonList>
           <IonItem>
             <IonLabel position="stacked">Name</IonLabel>
@@ -142,10 +189,7 @@ const Admin_Manageequipment: React.FC = () => {
 
           <IonItem>
             <IonLabel position="stacked">Category</IonLabel>
-            <IonInput
-              value={category}
-              onIonChange={(e) => setCategory(e.detail.value!)}
-            />
+            <IonInput value={category} onIonChange={(e) => setCategory(e.detail.value!)} />
           </IonItem>
 
           <IonItem>
@@ -166,32 +210,46 @@ const Admin_Manageequipment: React.FC = () => {
             </IonSelect>
           </IonItem>
 
+          {/* Image Upload */}
           <IonItem>
             <IonLabel position="stacked">Upload Image</IonLabel>
             <input
               type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              onChange={handleImageChange}
             />
+            <IonButton expand="block" onClick={() => fileInputRef.current?.click()}>
+              Upload Image
+            </IonButton>
           </IonItem>
 
-          <IonButton expand="block" onClick={handleAddEquipment}>
-            Add Equipment
+          {/* Live Preview */}
+          {imagePreview && (
+            <IonRow className="ion-justify-content-center ion-align-items-center">
+              <IonCol className="ion-text-center">
+                <IonImg
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{ width: "100px", height: "100px", objectFit: "cover", marginTop: "10px" }}
+                />
+              </IonCol>
+            </IonRow>
+          )}
+
+          <IonButton expand="block" onClick={handleAddEquipment} disabled={uploading}>
+            {uploading ? "Uploading..." : "Add Equipment"}
           </IonButton>
         </IonList>
 
+        {/* Equipment List */}
         <h2 style={{ marginTop: "20px" }}>Equipment List</h2>
-
         {loading ? (
           <IonSpinner name="dots" />
         ) : (
           <IonGrid className="table-grid">
-            {/* Table Header */}
-            <IonRow
-              className="table-header"
-              style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}
-            >
-              <IonCol>ID</IonCol>
+            <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
               <IonCol>Name</IonCol>
               <IonCol>Category</IonCol>
               <IonCol>Price (₱/day)</IonCol>
@@ -200,18 +258,15 @@ const Admin_Manageequipment: React.FC = () => {
               <IonCol>Actions</IonCol>
             </IonRow>
 
-            {/* Table Rows */}
             {equipment.map((eq, index) => (
               <IonRow
                 key={eq.id}
-                className="table-row"
                 style={{
-                  borderBottom: "1px solid #0d0d0dff",
+                  borderBottom: "1px solid #b8b8b8ff",
                   backgroundColor: index % 2 === 0 ? "#191919ff" : "#000000ff",
                   alignItems: "center",
                 }}
               >
-             
                 <IonCol>{eq.name}</IonCol>
                 <IonCol>{eq.category}</IonCol>
                 <IonCol>₱{eq.price}</IonCol>
@@ -224,11 +279,7 @@ const Admin_Manageequipment: React.FC = () => {
                   />
                 </IonCol>
                 <IonCol>
-                  <IonButton
-                    color="danger"
-                    size="small"
-                    onClick={() => handleDeleteEquipment(eq.id)}
-                  >
+                  <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)}>
                     Delete
                   </IonButton>
                 </IonCol>
@@ -236,6 +287,14 @@ const Admin_Manageequipment: React.FC = () => {
             ))}
           </IonGrid>
         )}
+
+        {/* Alerts */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          message={alertMessage}
+          buttons={['OK']}
+        />
       </IonContent>
     </IonPage>
   );
