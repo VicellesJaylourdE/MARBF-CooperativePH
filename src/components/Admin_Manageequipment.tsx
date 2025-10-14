@@ -43,6 +43,9 @@ const Admin_Manageequipment: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Partial<Equipment>>({});
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch equipment list
@@ -172,6 +175,45 @@ const Admin_Manageequipment: React.FC = () => {
     }
   };
 
+  // Edit equipment
+  const handleEdit = (eq: Equipment) => {
+    setEditingId(eq.id);
+    setEditData({ ...eq });
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editData.name || !editData.category || !editData.price) {
+      setAlertMessage("⚠️ Please fill all required fields before saving");
+      setShowAlert(true);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("equipment")
+      .update({
+        name: editData.name,
+        category: editData.category,
+        price: editData.price,
+        status: editData.status,
+      })
+      .eq("id", id);
+
+    if (error) {
+      setAlertMessage(`Error updating equipment: ${error.message}`);
+      setShowAlert(true);
+    } else {
+      setEquipment(
+        equipment.map((eq) =>
+          eq.id === id ? { ...eq, ...editData } : eq
+        )
+      );
+      setEditingId(null);
+      setEditData({});
+      setAlertMessage("✅ Equipment updated successfully!");
+      setShowAlert(true);
+    }
+  };
+
   return (
     <IonPage>
       <IonHeader>
@@ -210,7 +252,6 @@ const Admin_Manageequipment: React.FC = () => {
             </IonSelect>
           </IonItem>
 
-          {/* Image Upload */}
           <IonItem>
             <IonLabel position="stacked">Upload Image</IonLabel>
             <input
@@ -225,7 +266,6 @@ const Admin_Manageequipment: React.FC = () => {
             </IonButton>
           </IonItem>
 
-          {/* Live Preview */}
           {imagePreview && (
             <IonRow className="ion-justify-content-center ion-align-items-center">
               <IonCol className="ion-text-center">
@@ -243,7 +283,6 @@ const Admin_Manageequipment: React.FC = () => {
           </IonButton>
         </IonList>
 
-        {/* Equipment List */}
         <h2 style={{ marginTop: "20px" }}>Equipment List</h2>
         {loading ? (
           <IonSpinner name="dots" />
@@ -267,10 +306,59 @@ const Admin_Manageequipment: React.FC = () => {
                   alignItems: "center",
                 }}
               >
-                <IonCol>{eq.name}</IonCol>
-                <IonCol>{eq.category}</IonCol>
-                <IonCol>₱{eq.price}</IonCol>
-                <IonCol>{eq.status}</IonCol>
+                <IonCol>
+                  {editingId === eq.id ? (
+                    <IonInput
+                      value={editData.name}
+                      onIonChange={(e) =>
+                        setEditData({ ...editData, name: e.detail.value! })
+                      }
+                    />
+                  ) : (
+                    eq.name
+                  )}
+                </IonCol>
+                <IonCol>
+                  {editingId === eq.id ? (
+                    <IonInput
+                      value={editData.category}
+                      onIonChange={(e) =>
+                        setEditData({ ...editData, category: e.detail.value! })
+                      }
+                    />
+                  ) : (
+                    eq.category
+                  )}
+                </IonCol>
+                <IonCol>
+                  {editingId === eq.id ? (
+                    <IonInput
+                      type="number"
+                      value={editData.price}
+                      onIonChange={(e) =>
+                        setEditData({ ...editData, price: Number(e.detail.value!) })
+                      }
+                    />
+                  ) : (
+                    `₱${eq.price}`
+                  )}
+                </IonCol>
+                <IonCol>
+                  {editingId === eq.id ? (
+                    <IonSelect
+                      value={editData.status}
+                      onIonChange={(e) =>
+                        setEditData({ ...editData, status: e.detail.value })
+                      }
+                    >
+                      <IonSelectOption value="available">Available</IonSelectOption>
+                      <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
+                      <IonSelectOption value="unavailable">Unavailable</IonSelectOption>
+                    </IonSelect>
+                  ) : (
+                    eq.status
+                  )}
+                </IonCol>
                 <IonCol>
                   <IonImg
                     src={eq.image_url || "https://via.placeholder.com/50"}
@@ -279,21 +367,52 @@ const Admin_Manageequipment: React.FC = () => {
                   />
                 </IonCol>
                 <IonCol>
-                  <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)}>
-                    Delete
-                  </IonButton>
+                  {editingId === eq.id ? (
+                    <>
+                      <IonButton
+                        color="success"
+                        size="small"
+                        onClick={() => handleSaveEdit(eq.id)}
+                      >
+                        Save
+                      </IonButton>
+                      <IonButton
+                        color="medium"
+                        size="small"
+                        onClick={() => setEditingId(null)}
+                      >
+                        Cancel
+                      </IonButton>
+                    </>
+                  ) : (
+                    <>
+                      <IonButton
+                        color="primary"
+                        size="small"
+                        onClick={() => handleEdit(eq)}
+                      >
+                        Edit
+                      </IonButton>
+                      <IonButton
+                        color="danger"
+                        size="small"
+                        onClick={() => handleDeleteEquipment(eq.id)}
+                      >
+                        Delete
+                      </IonButton>
+                    </>
+                  )}
                 </IonCol>
               </IonRow>
             ))}
           </IonGrid>
         )}
 
-        {/* Alerts */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
           message={alertMessage}
-          buttons={['OK']}
+          buttons={["OK"]}
         />
       </IonContent>
     </IonPage>

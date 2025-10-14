@@ -184,15 +184,15 @@ const Admin_ManageUsers: React.FC = () => {
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "8px",
-  borderBottom: "1px solid #ffffffff",
+  borderBottom: "1px solid #000000ff",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "8px",
-  borderBottom: "1px solid #fff9f9ff",
+  borderBottom: "1px solid #000000ff",
 };
 
 const rowEven: React.CSSProperties = { backgroundColor: "#000000ff" };
-const rowOdd: React.CSSProperties = { backgroundColor: "#f9f9f9" };
+const rowOdd: React.CSSProperties = { backgroundColor: "#000000ff" };
 
 export default Admin_ManageUsers;

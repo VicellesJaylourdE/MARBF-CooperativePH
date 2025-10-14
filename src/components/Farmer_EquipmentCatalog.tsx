@@ -53,7 +53,7 @@ const EquipmentCatalog: React.FC = () => {
   useEffect(() => {
     fetchEquipment();
 
-    // 📡 Realtime subscription
+   
     const channel = supabase
       .channel("equipment-changes")
       .on(
@@ -61,7 +61,7 @@ const EquipmentCatalog: React.FC = () => {
         { event: "*", schema: "public", table: "equipment" },
         (payload) => {
           console.log("Change received!", payload);
-          fetchEquipment(); // refresh list when admin updates
+          fetchEquipment(); 
         }
       )
       .subscribe();
@@ -97,7 +97,7 @@ const EquipmentCatalog: React.FC = () => {
   return (
     <div className="equipment-section">
       <h2 className="equipment-title">
-        <IonIcon icon={contractOutline} style={{ marginRight: "6px" }} />
+     
         Available Equipment
       </h2>
       <p className="equipment-sub">
@@ -122,20 +122,48 @@ const EquipmentCatalog: React.FC = () => {
                   eq.category.toLowerCase().includes(searchText.toLowerCase())
               )
               .map((eq) => (
-                <IonCol size="6" sizeMd="4" key={eq.id}>
-                  <IonCard className="equipment-card">
-                    <IonImg
-                      src={eq.image_url || "https://via.placeholder.com/150x100?text=No+Image"}
-                      alt={eq.name}
-                    />
-                    <IonCardContent>
-                      <h3>{eq.name}</h3>
-                      <p>{eq.category}</p>
-                      <p>
+                <IonCol size="6" sizeMd="3" key={eq.id}>
+                  <IonCard
+                    className="equipment-card"
+                    style={{
+                      borderRadius: "10px",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "#f9f9f9",
+                        height: "100px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <IonImg
+                        src={eq.image_url || "https://via.placeholder.com/100?text=No+Image"}
+                        alt={eq.name}
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </div>
+
+                    <IonCardContent style={{ textAlign: "center", padding: "8px" }}>
+                      <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
+                      <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
+                      <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
                         <strong>₱{eq.price}</strong> / day
                       </p>
 
-                      <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px" }}>
+                      <IonBadge
+                        color={getStatusColor(eq)}
+                        style={{ marginBottom: "6px", fontSize: "0.7rem" }}
+                      >
                         {getStatusText(eq)}
                       </IonBadge>
 
@@ -145,6 +173,7 @@ const EquipmentCatalog: React.FC = () => {
                         color={getStatusColor(eq)}
                         disabled={!(eq.status === "available" || eq.available)}
                         onClick={() => openBooking(eq.name, eq.price)}
+                        style={{ marginTop: "6px" }}
                       >
                         {eq.status === "available" || eq.available ? "Book Now" : "Unavailable"}
                       </IonButton>

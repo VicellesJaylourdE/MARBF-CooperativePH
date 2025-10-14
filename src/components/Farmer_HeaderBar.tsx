@@ -116,7 +116,7 @@ const Farmer_HeaderBar: React.FC = () => {
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-            <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
+          
             Farmer Portal
           </div>
 
