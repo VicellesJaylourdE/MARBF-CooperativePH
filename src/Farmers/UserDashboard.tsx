@@ -197,7 +197,6 @@ const UserDashboard: React.FC = () => {
           </>
         )}
 
-        {/* Calendar View */}
         {segment === "calendar" && <CalendarView />}
 
         <IonToast

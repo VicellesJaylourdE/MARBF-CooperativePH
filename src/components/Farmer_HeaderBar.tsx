@@ -116,7 +116,6 @@ const Farmer_HeaderBar: React.FC = () => {
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-          
             Farmer Portal
           </div>
 

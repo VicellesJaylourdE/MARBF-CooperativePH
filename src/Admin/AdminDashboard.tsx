@@ -68,7 +68,6 @@ const AdminDashboard: React.FC = () => {
           setTotalRevenue(0);
         }
 
-        // ✅ Total users (from your users table, not auth.users)
         const { count: usersCount } = await supabase
           .from("users")
           .select("*", { count: "exact", head: true });
@@ -81,7 +80,6 @@ const AdminDashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // 🔹 Render the right tab content
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":

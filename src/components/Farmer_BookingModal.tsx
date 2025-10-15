@@ -19,6 +19,9 @@ import {
   IonCardTitle,
   IonCardContent,
   IonToast,
+  IonSelect,
+  IonSelectOption,
+  IonImg,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
@@ -48,6 +51,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [endDate, setEndDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [location, setLocation] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("gcash"); // ✅ default to gcash
+  const [proofUrl, setProofUrl] = useState<string>(""); // ✅ proof of payment
+  const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
 
   const days =
@@ -58,9 +64,41 @@ const BookingModal: React.FC<BookingModalProps> = ({
       : 0;
   const totalPrice = days > 0 ? days * price : 0;
 
+  // ✅ Handle proof of payment upload
+  const handleProofUpload = async (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const fileName = `${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage
+        .from("payment_proofs") // make sure this bucket exists
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("payment_proofs").getPublicUrl(fileName);
+
+      setProofUrl(publicUrl);
+      setToastMsg("Proof of payment uploaded!");
+    } catch (err: any) {
+      console.error("Upload error:", err.message);
+      setToastMsg("Failed to upload proof. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!startDate || !endDate) {
       alert("Please select start and end dates.");
+      return;
+    }
+
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
       return;
     }
 
@@ -102,6 +140,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
           user_id: user.id,
           amount: totalPrice,
           status: "unpaid",
+          payment_method: paymentMethod,
+          proof_url: proofUrl || null, // ✅ save proof if uploaded
         },
       ]);
 
@@ -113,6 +153,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setEndDate("");
       setNotes("");
       setLocation("");
+      setPaymentMethod("gcash");
+      setProofUrl("");
       onClose();
     } catch (err: any) {
       console.error("Booking error:", err.message);
@@ -173,6 +215,55 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </IonItem>
 
+              {/* ✅ Payment method selection */}
+              <IonItem>
+                <IonLabel position="stacked">Payment Method</IonLabel>
+                <IonSelect
+                  placeholder="Select payment method"
+                  value={paymentMethod}
+                  onIonChange={(e) => setPaymentMethod(e.detail.value)}
+                >
+                  <IonSelectOption value="gcash">Gcash</IonSelectOption>
+                  <IonSelectOption value="cash">Cash</IonSelectOption>
+                </IonSelect>
+              </IonItem>
+
+              {/* ✅ Show GCash details when selected */}
+              {paymentMethod === "gcash" && (
+                <IonCard className="ion-margin-top">
+                  <IonCardHeader>
+                    <IonCardTitle>GCash Payment Details</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    <p>
+                      📱 <strong>Number:</strong> 09639539761
+                      <br />
+                      👤 <strong>Name:</strong> Jay Vicelles
+                    </p>
+                    <p>Please send your payment to the above GCash account.</p>
+                  </IonCardContent>
+                </IonCard>
+              )}
+
+              {/* ✅ Upload proof of payment */}
+              {paymentMethod === "gcash" && (
+                <IonItem>
+                  <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProofUpload}
+                    disabled={uploading}
+                  />
+                </IonItem>
+              )}
+
+              {proofUrl && (
+                <div className="ion-padding-top ion-text-center">
+                  <IonImg src={proofUrl} alt="Payment proof" />
+                </div>
+              )}
+
               {startDate && endDate && days > 0 && (
                 <>
                   <IonItem>
@@ -204,8 +295,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 <IonButton fill="clear" onClick={onClose}>
                   Cancel
                 </IonButton>
-                <IonButton color="success" onClick={handleSubmit}>
-                  Submit Booking
+                <IonButton color="success" onClick={handleSubmit} disabled={uploading}>
+                  {uploading ? "Uploading..." : "Submit Booking"}
                 </IonButton>
               </div>
             </IonCardContent>
