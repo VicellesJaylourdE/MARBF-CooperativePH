@@ -15,8 +15,9 @@ interface Transaction {
   booking_id: string | null;
   user_id: string | null;
   amount: number;
-  status: string;
-  payment_method: string | null;
+  status: "unpaid" | "paid" | "cancelled";
+  payment_method: "cash" | "gcash" | null;
+  proof_url: string | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -41,7 +42,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
 
       if (error) throw error;
 
-      // Remove duplicates based on booking_id + user_id, keep latest
+      // Remove duplicates (if any)
       const uniqueMap = new Map<string, Transaction>();
       data?.forEach((t) => {
         const key = `${t.booking_id}-${t.user_id}`;
@@ -65,7 +66,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
         <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>
           View All Transactions
         </h2>
-        <p>List of all transactions.</p>
+        <p>List of all transactions with payment proof images.</p>
 
         {loading ? (
           <div className="ion-text-center" style={{ marginTop: "30px" }}>
@@ -79,6 +80,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
               style={{
                 fontWeight: "bold",
                 background: "#030303ff",
+                color: "white",
                 padding: "8px 0",
                 fontSize: "0.9rem",
               }}
@@ -89,6 +91,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
               <IonCol>Amount</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Payment Method</IonCol>
+              <IonCol>Proof</IonCol>
               <IonCol>Paid At</IonCol>
               <IonCol>Created At</IonCol>
             </IonRow>
@@ -119,7 +122,30 @@ const Admin_ViewAllTransactions: React.FC = () => {
                   {t.status}
                 </IonCol>
                 <IonCol>{t.payment_method || "-"}</IonCol>
-                <IonCol>{t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}</IonCol>
+
+                {/* ✅ Display public proof image */}
+                <IonCol>
+                  {t.proof_url ? (
+                    <img
+                      src={t.proof_url}
+                      alt="Proof"
+                      style={{
+                        width: "70px",
+                        height: "70px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => window.open(t.proof_url!, "_blank")}
+                    />
+                  ) : (
+                    "-"
+                  )}
+                </IonCol>
+
+                <IonCol>
+                  {t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}
+                </IonCol>
                 <IonCol>{new Date(t.created_at).toLocaleString()}</IonCol>
               </IonRow>
             ))}
