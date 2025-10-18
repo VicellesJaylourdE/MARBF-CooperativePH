@@ -54,14 +54,40 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [proofFileName, setProofFileName] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
+  const [days, setDays] = useState<number>(0);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
 
-  const days =
-    startDate && endDate
-      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-          (1000 * 60 * 60 * 24) +
-        1
-      : 0;
-  const totalPrice = days > 0 ? days * price : 0;
+  // ✅ Reset total when changing start date
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    setDays(0);
+    setTotalPrice(0);
+  };
+
+  // ✅ Compute correct total using normalized times
+  const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    if (startDate && value) {
+      const start = new Date(startDate);
+      const end = new Date(value);
+
+      // normalize both dates to 00:00:00
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24) + 1;
+
+      if (diffDays > 0) {
+        setDays(diffDays);
+        setTotalPrice(diffDays * price);
+      } else {
+        setDays(0);
+        setTotalPrice(0);
+        setToastMsg("⚠️ End date must be after start date.");
+      }
+    }
+  };
 
   // ✅ Handle proof upload
   const handleProofUpload = async (e: any) => {
@@ -87,7 +113,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
-  // ✅ Fixed to match INT user_id from "users" table
+  // ✅ Submit booking and transaction
   const handleSubmit = async () => {
     if (!startDate || !endDate) {
       alert("Please select start and end dates.");
@@ -100,7 +126,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
 
     try {
-      // 🔹 Get authenticated user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -110,7 +135,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      // 🔹 Match auth UUID to users.user_id (INT)
       const { data: profile } = await supabase
         .from("users")
         .select("user_id")
@@ -122,12 +146,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      // 🔹 Create booking
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert([
           {
-            user_id: profile.user_id, // ✅ INT user_id
+            user_id: profile.user_id,
             equipment_id: equipmentId,
             equipment_name: equipmentName,
             start_date: startDate,
@@ -143,13 +166,12 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
       if (bookingError) throw bookingError;
 
-      // 🔹 Create matching transaction (schema aligned)
       const { error: transactionError } = await supabase
         .from("transactions")
         .insert([
           {
             booking_id: bookingData.id,
-            user_id: profile.user_id, // ✅ INT user_id
+            user_id: profile.user_id,
             amount: totalPrice,
             status: "unpaid",
             payment_method: paymentMethod,
@@ -201,7 +223,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
                       <IonInput
                         type="date"
                         value={startDate}
-                        onIonInput={(e) => setStartDate(e.detail.value ?? "")}
+                        onIonInput={(e) =>
+                          handleStartDateChange(e.detail.value ?? "")
+                        }
                       />
                     </IonItem>
                   </IonCol>
@@ -211,7 +235,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
                       <IonInput
                         type="date"
                         value={endDate}
-                        onIonInput={(e) => setEndDate(e.detail.value ?? "")}
+                        onIonInput={(e) =>
+                          handleEndDateChange(e.detail.value ?? "")
+                        }
                       />
                     </IonItem>
                   </IonCol>
@@ -298,7 +324,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 <IonButton fill="clear" onClick={onClose}>
                   Cancel
                 </IonButton>
-                <IonButton color="success" onClick={handleSubmit} disabled={uploading}>
+                <IonButton
+                  color="success"
+                  onClick={handleSubmit}
+                  disabled={uploading}
+                >
                   {uploading ? "Uploading..." : "Submit Booking"}
                 </IonButton>
               </div>

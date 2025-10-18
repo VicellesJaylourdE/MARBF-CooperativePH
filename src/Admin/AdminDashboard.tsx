@@ -24,6 +24,8 @@ import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
 import Admin_ManageUsers from "../components/Admin_ManageUsers";
 import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
+import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
+
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -164,6 +166,8 @@ const AdminDashboard: React.FC = () => {
         return <Admin_LateReturnPenalty />;
       case "registermember":
         return <Admin_RegisterMember />;
+         case "admindashboardanaltys":
+        return <Admin_AdminDashboardAnaltys />;
       default:
         return null;
     }
