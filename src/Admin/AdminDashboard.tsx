@@ -42,7 +42,7 @@ const AdminDashboard: React.FC = () => {
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
-        // ✅ Today approved bookings count (based on start_date)
+        // ✅ Today approved bookings count (based on approval date)
         const today = new Date().toISOString().split("T")[0];
 
         const { count: todayApprovedCount, error: todayApprovedError } =
@@ -50,7 +50,8 @@ const AdminDashboard: React.FC = () => {
             .from("bookings")
             .select("*", { count: "exact", head: true })
             .eq("status", "approved")
-            .eq("start_date", today);
+            .gte("approved_at", `${today}T00:00:00`)
+            .lte("approved_at", `${today}T23:59:59`);
 
         if (todayApprovedError) throw todayApprovedError;
         setTodayBookings(todayApprovedCount || 0);
@@ -105,7 +106,7 @@ const AdminDashboard: React.FC = () => {
 
     fetchData();
 
-    // ✅ Real-time listener to auto-update dashboard when bookings table changes
+    // ✅ Real-time updates for bookings table
     const subscription = supabase
       .channel("bookings-updates")
       .on(
@@ -132,7 +133,6 @@ const AdminDashboard: React.FC = () => {
               todayBookings={todayBookings}
               totalRevenue={totalRevenue}
               totalUsers={totalUsers}
-            
             />
 
             <IonRow>
