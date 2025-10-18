@@ -31,18 +31,15 @@ const AdminDashboard: React.FC = () => {
   const [todayBookings, setTodayBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [totalBookings, setTotalBookings] = useState(0); // ✅ total bookings counter
-
+  const [totalBookings, setTotalBookings] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ✅ Equipment count
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
-        // ✅ Today approved bookings count (based on approval date)
         const today = new Date().toISOString().split("T")[0];
 
         const { count: todayApprovedCount, error: todayApprovedError } =
@@ -56,7 +53,6 @@ const AdminDashboard: React.FC = () => {
         if (todayApprovedError) throw todayApprovedError;
         setTodayBookings(todayApprovedCount || 0);
 
-        // ✅ Total bookings count (all statuses)
         const { count: totalBookingsCount, error: totalBookingsError } =
           await supabase
             .from("bookings")
@@ -65,7 +61,6 @@ const AdminDashboard: React.FC = () => {
         if (totalBookingsError) throw totalBookingsError;
         setTotalBookings(totalBookingsCount || 0);
 
-        // ✅ Approved bookings for revenue computation
         const { data: approvedBookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("id")
@@ -94,7 +89,6 @@ const AdminDashboard: React.FC = () => {
 
         setTotalRevenue(revenueSum);
 
-        // ✅ Users count
         const { count: usersCount } = await supabase
           .from("users")
           .select("*", { count: "exact", head: true });
@@ -106,7 +100,6 @@ const AdminDashboard: React.FC = () => {
 
     fetchData();
 
-    // ✅ Real-time updates for bookings table
     const subscription = supabase
       .channel("bookings-updates")
       .on(
