@@ -30,6 +30,8 @@ const UserDashboard: React.FC = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
+
+      // ✅ Get authenticated user
       const {
         data: { user },
         error: userError,
@@ -41,10 +43,22 @@ const UserDashboard: React.FC = () => {
         return;
       }
 
+      // ✅ Match user record in users table
+      const { data: userData, error: userTableError } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("user_email", user.email)
+        .single();
+
+      if (userTableError || !userData) {
+        throw new Error("No matching user record found.");
+      }
+
+      // ✅ Fetch bookings using the matching user_id
       const { data, error } = await supabase
         .from("bookings")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userData.user_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -53,26 +67,27 @@ const UserDashboard: React.FC = () => {
     } catch (err: any) {
       console.error("Error loading bookings:", err.message);
       setToastMsg("Failed to load bookings.");
+      setBookings([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Load bookings only when switching to “My Bookings”
   useEffect(() => {
     if (segment === "bookings") {
       fetchBookings();
     }
   }, [segment]);
 
+  // ✅ Fix: Don’t delete booking history on logout
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event) => {
         if (event === "SIGNED_IN") {
-          fetchBookings();
+          fetchBookings(); // reload on login
         }
-        if (event === "SIGNED_OUT") {
-          setBookings([]);
-        }
+        // ❌ Removed setBookings([]) that was wiping history permanently
       }
     );
     return () => {
@@ -80,6 +95,7 @@ const UserDashboard: React.FC = () => {
     };
   }, []);
 
+  // ✅ Push notifications setup
   useEffect(() => {
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {

@@ -27,16 +27,35 @@ const CalendarView: React.FC = () => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
+        // ✅ Get current authenticated user
         const {
           data: { user },
+          error: userError,
         } = await supabase.auth.getUser();
 
-        if (!user) return;
+        if (userError || !user) {
+          setBookings([]);
+          return;
+        }
 
+        // ✅ Match the correct user_id from users table
+        const { data: userData, error: userTableError } = await supabase
+          .from("users")
+          .select("user_id")
+          .eq("user_email", user.email)
+          .single();
+
+        if (userTableError || !userData) {
+          console.error("No matching user record found.");
+          setBookings([]);
+          return;
+        }
+
+        // ✅ Fetch bookings using integer user_id (not user.id)
         const { data, error } = await supabase
           .from("bookings")
           .select("id, equipment_name, start_date, end_date, status")
-          .eq("user_id", user.id)
+          .eq("user_id", userData.user_id)
           .order("start_date", { ascending: true });
 
         if (error) throw error;
@@ -70,7 +89,9 @@ const CalendarView: React.FC = () => {
       </IonCard>
 
       {loading ? (
-        <IonSpinner name="dots" />
+        <div className="ion-text-center ion-padding">
+          <IonSpinner name="dots" />
+        </div>
       ) : bookings.length > 0 ? (
         <IonList>
           {bookings.map((b) => (
@@ -81,13 +102,30 @@ const CalendarView: React.FC = () => {
                   {new Date(b.start_date).toLocaleDateString()} →{" "}
                   {new Date(b.end_date).toLocaleDateString()}
                 </p>
-                <p>Status: {b.status}</p>
+                <p>
+                  Status:{" "}
+                  <span
+                    style={{
+                      color:
+                        b.status === "approved"
+                          ? "green"
+                          : b.status === "pending"
+                          ? "orange"
+                          : b.status === "declined"
+                          ? "red"
+                          : "gray",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {b.status.toUpperCase()}
+                  </span>
+                </p>
               </IonLabel>
             </IonItem>
           ))}
         </IonList>
       ) : (
-        <p>No bookings found.</p>
+        <p className="ion-text-center ion-padding">No bookings found.</p>
       )}
     </div>
   );

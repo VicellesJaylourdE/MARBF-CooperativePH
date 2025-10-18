@@ -100,7 +100,7 @@ const LandingPage: React.FC = () => {
           </p>
 
           <div style={{ marginTop: "1.5rem" }}>
-            <IonButton onClick={() => history.push("/Login")} color="warning">
+            <IonButton onClick={() => history.push("/Register")} color="warning">
               Start Booking
             </IonButton>
             <IonButton

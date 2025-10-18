@@ -30,7 +30,6 @@ const EquipmentCatalog: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number>(0);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -53,7 +52,6 @@ const EquipmentCatalog: React.FC = () => {
   useEffect(() => {
     fetchEquipment();
 
-   
     const channel = supabase
       .channel("equipment-changes")
       .on(
@@ -61,7 +59,7 @@ const EquipmentCatalog: React.FC = () => {
         { event: "*", schema: "public", table: "equipment" },
         (payload) => {
           console.log("Change received!", payload);
-          fetchEquipment(); 
+          fetchEquipment();
         }
       )
       .subscribe();
@@ -77,9 +75,55 @@ const EquipmentCatalog: React.FC = () => {
     setIsBookingOpen(true);
   };
 
-  const handleBookingSubmit = (booking: { startDate: string; endDate: string; notes: string }) => {
-    console.log("Booking submitted:", booking);
-    alert(`Booking confirmed for ${selectedEquipment} from ${booking.startDate} to ${booking.endDate}`);
+  // ✅ Match booking creation to DB schema (bookings + transactions)
+  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; notes: string }) => {
+    try {
+      // 🔹 Get logged-in user
+      const { data: userData } = await supabase.auth.getUser();
+      const user_id = userData?.user?.id;
+
+      if (!user_id) {
+        alert("Please log in to make a booking.");
+        return;
+      }
+
+      // 🔹 Insert into bookings table
+      const { data: newBooking, error: bookingError } = await supabase
+        .from("bookings")
+        .insert([
+          {
+            user_id: user_id,
+            equipment_name: selectedEquipment,
+            start_date: booking.startDate,
+            end_date: booking.endDate,
+            status: "pending",
+          },
+        ])
+        .select()
+        .single();
+
+      if (bookingError) throw bookingError;
+
+      // 🔹 Create transaction entry linked to that booking
+      const { error: transactionError } = await supabase.from("transactions").insert([
+        {
+          booking_id: newBooking.id,
+          user_id: user_id,
+          amount: selectedPrice,
+          status: "unpaid",
+          payment_method: "gcash",
+          proof_url: null,
+        },
+      ]);
+
+      if (transactionError) throw transactionError;
+
+      alert(`✅ Booking created for ${selectedEquipment}. Transaction pending payment.`);
+      setIsBookingOpen(false);
+    } catch (err) {
+      console.error("Booking error:", err);
+      alert("Error creating booking or transaction.");
+    }
   };
 
   const getStatusColor = (eq: Equipment) => {
@@ -96,10 +140,7 @@ const EquipmentCatalog: React.FC = () => {
 
   return (
     <div className="equipment-section">
-      <h2 className="equipment-title">
-     
-        Available Equipment
-      </h2>
+      <h2 className="equipment-title">Available Equipment</h2>
       <p className="equipment-sub">
         Browse and book agricultural equipment for your farming needs
       </p>

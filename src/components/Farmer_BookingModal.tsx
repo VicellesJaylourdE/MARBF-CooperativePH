@@ -22,7 +22,7 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
-import { supabase } from "../utils/supabaseClient"; // 👈 keep this
+import { supabase } from "../utils/supabaseClient";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [notes, setNotes] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("gcash");
-  const [proofFileName, setProofFileName] = useState<string>(""); // filename only
+  const [proofFileName, setProofFileName] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
 
@@ -63,7 +63,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       : 0;
   const totalPrice = days > 0 ? days * price : 0;
 
-  // ✅ Handle proof upload (store only file name)
+  // ✅ Handle proof upload
   const handleProofUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -71,14 +71,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
 
-      // ✅ Upload inside 'payment_proofs/' folder
       const { error } = await supabase.storage
         .from("payment_proofs")
         .upload(`payment_proofs/${fileName}`, file);
 
       if (error) throw error;
 
-      setProofFileName(file.name); // ✅ show only name
+      setProofFileName(file.name);
       setToastMsg(`Uploaded: ${file.name}`);
     } catch (err: any) {
       console.error("Upload error:", err.message);
@@ -88,6 +87,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
+  // ✅ Fixed to match INT user_id from "users" table
   const handleSubmit = async () => {
     if (!startDate || !endDate) {
       alert("Please select start and end dates.");
@@ -100,6 +100,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
 
     try {
+      // 🔹 Get authenticated user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -109,11 +110,24 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
+      // 🔹 Match auth UUID to users.user_id (INT)
+      const { data: profile } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("user_email", user.email)
+        .single();
+
+      if (!profile) {
+        alert("User record not found.");
+        return;
+      }
+
+      // 🔹 Create booking
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert([
           {
-            user_id: user.id,
+            user_id: profile.user_id, // ✅ INT user_id
             equipment_id: equipmentId,
             equipment_name: equipmentName,
             start_date: startDate,
@@ -129,12 +143,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
       if (bookingError) throw bookingError;
 
+      // 🔹 Create matching transaction (schema aligned)
       const { error: transactionError } = await supabase
         .from("transactions")
         .insert([
           {
             booking_id: bookingData.id,
-            user_id: user.id,
+            user_id: profile.user_id, // ✅ INT user_id
             amount: totalPrice,
             status: "unpaid",
             payment_method: paymentMethod,
@@ -241,17 +256,15 @@ const BookingModal: React.FC<BookingModalProps> = ({
               )}
 
               {paymentMethod === "gcash" && (
-                <>
-                  <IonItem>
-                    <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProofUpload}
-                      disabled={uploading}
-                    />
-                  </IonItem>
-                </>
+                <IonItem>
+                  <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProofUpload}
+                    disabled={uploading}
+                  />
+                </IonItem>
               )}
 
               {startDate && endDate && days > 0 && (

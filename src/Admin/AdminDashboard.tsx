@@ -31,6 +31,7 @@ const AdminDashboard: React.FC = () => {
   const [todayBookings, setTodayBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [totalBookings, setTotalBookings] = useState(0); // ✅ total bookings counter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,33 +42,58 @@ const AdminDashboard: React.FC = () => {
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
-        // ✅ Today's bookings count
+        // ✅ Today approved bookings count (based on start_date)
         const today = new Date().toISOString().split("T")[0];
-        const { count: bookingsCount } = await supabase
+
+        const { count: todayApprovedCount, error: todayApprovedError } =
+          await supabase
+            .from("bookings")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "approved")
+            .eq("start_date", today);
+
+        if (todayApprovedError) throw todayApprovedError;
+        setTodayBookings(todayApprovedCount || 0);
+
+        // ✅ Total bookings count (all statuses)
+        const { count: totalBookingsCount, error: totalBookingsError } =
+          await supabase
+            .from("bookings")
+            .select("*", { count: "exact", head: true });
+
+        if (totalBookingsError) throw totalBookingsError;
+        setTotalBookings(totalBookingsCount || 0);
+
+        // ✅ Approved bookings for revenue computation
+        const { data: approvedBookings, error: bookingsError } = await supabase
           .from("bookings")
-          .select("*", { count: "exact", head: true })
-          .eq("date", today);
-        setTodayBookings(bookingsCount || 0);
+          .select("id")
+          .eq("status", "approved");
 
-        // ✅ Total revenue (only for paid transactions)
-        const { data: revenueData, error: revenueError } = await supabase
-          .from("transactions")
-          .select("amount")
-          .eq("status", "paid");
+        if (bookingsError) throw bookingsError;
 
-        if (revenueError) {
-          console.error("Error fetching revenue data:", revenueError);
-          setTotalRevenue(0);
-        } else if (revenueData && revenueData.length > 0) {
-          const revenueSum = revenueData.reduce(
-            (acc, cur) => acc + Number(cur.amount),
-            0
-          );
-          setTotalRevenue(revenueSum);
-        } else {
-          setTotalRevenue(0);
+        const approvedBookingIds = approvedBookings?.map((b) => b.id) || [];
+        let revenueSum = 0;
+
+        if (approvedBookingIds.length > 0) {
+          const { data: revenueData, error: revenueError } = await supabase
+            .from("transactions")
+            .select("amount, booking_id")
+            .in("booking_id", approvedBookingIds);
+
+          if (revenueError) throw revenueError;
+
+          if (revenueData && revenueData.length > 0) {
+            revenueSum = revenueData.reduce(
+              (acc, cur) => acc + Number(cur.amount || 0),
+              0
+            );
+          }
         }
 
+        setTotalRevenue(revenueSum);
+
+        // ✅ Users count
         const { count: usersCount } = await supabase
           .from("users")
           .select("*", { count: "exact", head: true });
@@ -78,6 +104,22 @@ const AdminDashboard: React.FC = () => {
     };
 
     fetchData();
+
+    // ✅ Real-time listener to auto-update dashboard when bookings table changes
+    const subscription = supabase
+      .channel("bookings-updates")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const renderContent = () => {
@@ -90,6 +132,7 @@ const AdminDashboard: React.FC = () => {
               todayBookings={todayBookings}
               totalRevenue={totalRevenue}
               totalUsers={totalUsers}
+            
             />
 
             <IonRow>
