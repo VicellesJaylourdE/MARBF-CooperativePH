@@ -1,13 +1,10 @@
+// AdminDashboard.tsx
 import React, { useState, useEffect } from "react";
 import {
   IonPage,
   IonSplitPane,
   IonContent,
   IonGrid,
-  IonRow,
-  IonCol,
-  IonCard,
-  IonCardContent,
 } from "@ionic/react";
 import StaffHeaderBar from "../components/Admin_AdminHeaderBar";
 import StaffSidebar from "../components/Admin_AdminSidebar";
@@ -26,7 +23,6 @@ import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
 import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
 
-
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [totalEquipment, setTotalEquipment] = useState(0);
@@ -34,6 +30,7 @@ const AdminDashboard: React.FC = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -129,20 +126,7 @@ const AdminDashboard: React.FC = () => {
               totalRevenue={totalRevenue}
               totalUsers={totalUsers}
             />
-
-            <IonRow>
-              <IonCol size="12" sizeMd="10" sizeLg="5">
-                <IonCardContent style={{ height: "100%", overflow: "auto" }}>
-                  <Admin_UsersTab />
-                </IonCardContent>
-              </IonCol>
-
-              <IonCol size="12" sizeMd="5" sizeLg="7">
-                <IonCard style={{ height: "400px" }}>
-                  <Admin_ViewBookingCalendar />
-                </IonCard>
-              </IonCol>
-            </IonRow>
+            <Admin_AdminDashboardAnaltys />
           </IonGrid>
         );
 
@@ -166,7 +150,7 @@ const AdminDashboard: React.FC = () => {
         return <Admin_LateReturnPenalty />;
       case "registermember":
         return <Admin_RegisterMember />;
-         case "admindashboardanaltys":
+      case "admindashboardanaltys":
         return <Admin_AdminDashboardAnaltys />;
       default:
         return null;

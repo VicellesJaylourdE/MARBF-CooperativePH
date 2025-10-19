@@ -23,90 +23,73 @@ import {
 } from "recharts";
 
 const Admin_AdminDashboardAnaltys: React.FC = () => {
-  const [bookingData, setBookingData] = useState<any[]>([]);
+  const [salesData, setSalesData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState({
     totalBookings: 0,
     totalRevenue: 0,
-    pending: 0,
-    approved: 0,
-    completed: 0,
   });
   const [filter, setFilter] = useState<"week" | "month" | "year">("month");
+
+  const [topEquipments, setTopEquipments] = useState<any[]>([]);
+  const [loadingEquipments, setLoadingEquipments] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
 
-        const { data: bookings, error } = await supabase
-          .from("bookings")
-          .select("id, status, total_price, start_date");
+        const { data: transactions, error } = await supabase
+          .from("transactions")
+          .select("id, amount, status, paid_at, booking:booking_id(equipment_name)");
 
         if (error) throw error;
-        
+
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
 
-        const filtered = bookings.filter((b: any) => {
-          const date = new Date(b.start_date);
+        const filtered = transactions.filter((t: any) => {
+          if (t.status !== "paid") return false;
+
+          const date = new Date(t.paid_at);
           if (filter === "year") return date.getFullYear() === currentYear;
           if (filter === "month")
-            return (
-              date.getMonth() === currentMonth &&
-              date.getFullYear() === currentYear
-            );
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
           if (filter === "week") return date >= startOfWeek;
           return true;
         });
 
-        const groupedStats: Record<string, number> = {};
         let totalRevenue = 0;
-        let pending = 0;
-        let approved = 0;
-        let completed = 0;
+        const groupedSales: Record<string, number> = {};
 
-        filtered.forEach((b: any) => {
-          const date = new Date(b.start_date);
+        filtered.forEach((t: any) => {
+          const date = new Date(t.paid_at);
           let label = "";
 
           if (filter === "year") {
             label = date.toLocaleString("default", { month: "short" });
           } else if (filter === "month") {
-            label = date.toLocaleDateString("default", {
-              day: "numeric",
-            });
+            label = date.toLocaleDateString("default", { day: "numeric" });
           } else {
-            label = date.toLocaleDateString("default", {
-              weekday: "short",
-            });
+            label = date.toLocaleDateString("default", { weekday: "short" });
           }
 
-          groupedStats[label] = (groupedStats[label] || 0) + 1;
-          totalRevenue += b.total_price || 0;
-
-          if (b.status === "pending") pending++;
-          if (b.status === "approved") approved++;
-          if (b.status === "completed") completed++;
+          groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
+          totalRevenue += t.amount || 0;
         });
 
-        const formattedData = Object.entries(groupedStats).map(
-          ([label, count]) => ({
-            label,
-            bookings: count,
-          })
-        );
+        const formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
+          label,
+          revenue: amount,
+        }));
 
-        setBookingData(formattedData);
+        setSalesData(formattedData);
         setSummary({
           totalBookings: filtered.length,
           totalRevenue,
-          pending,
-          approved,
-          completed,
         });
       } catch (err) {
         console.error("Error fetching analytics:", err);
@@ -115,82 +98,133 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
       }
     };
 
+    const fetchTopEquipments = async () => {
+      try {
+        setLoadingEquipments(true);
+
+        const { data: transactions, error } = await supabase
+          .from("transactions")
+          .select("amount, status, paid_at, booking:booking_id(equipment_name)");
+
+        if (error) throw error;
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+
+        const filtered = transactions.filter((t: any) => {
+          if (t.status !== "paid") return false;
+          const date = new Date(t.paid_at);
+          if (filter === "year") return date.getFullYear() === currentYear;
+          if (filter === "month")
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+          if (filter === "week") return date >= startOfWeek;
+          return true;
+        });
+
+        const revenuePerEquipment: Record<string, number> = {};
+        filtered.forEach((t: any) => {
+          const equipmentName = t.booking?.equipment_name || "Unknown Equipment";
+          revenuePerEquipment[equipmentName] =
+            (revenuePerEquipment[equipmentName] || 0) + (t.amount || 0);
+        });
+
+        const top = Object.entries(revenuePerEquipment)
+          .map(([name, revenue]) => ({ name, revenue }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 5);
+
+        setTopEquipments(top);
+      } catch (err) {
+        console.error("Error fetching top equipment:", err);
+      } finally {
+        setLoadingEquipments(false);
+      }
+    };
+
     fetchAnalytics();
+    fetchTopEquipments();
   }, [filter]);
 
   return (
     <IonContent className="ion-padding">
-      {/* ✅ Original header (untouched) */}
-      <h2>Late Return Penalty</h2>
-      <p>View monthly revenue details.</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div style={{ flex: "1 1 65%", minWidth: "320px" }}>
+          <IonCard>
+            <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+              <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
+              <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+                <IonLabel>Filter:</IonLabel>
+                <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
+                  <IonSelectOption value="week">Week</IonSelectOption>
+                  <IonSelectOption value="month">Month</IonSelectOption>
+                  <IonSelectOption value="year">Year</IonSelectOption>
+                </IonSelect>
+              </IonItem>
+            </IonCardHeader>
 
-      {/* ✅ Analytics Filter */}
-      <IonItem lines="none" className="ion-margin-bottom">
-        <IonLabel>Filter by:</IonLabel>
-        <IonSelect
-          value={filter}
-          onIonChange={(e) => setFilter(e.detail.value)}
-        >
-          <IonSelectOption value="week">This Week</IonSelectOption>
-          <IonSelectOption value="month">This Month</IonSelectOption>
-          <IonSelectOption value="year">This Year</IonSelectOption>
-        </IonSelect>
-      </IonItem>
+            <IonCardContent>
+              {loading ? (
+                <IonSpinner name="dots" />
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", marginBottom: "1rem", textAlign: "center" }}>
+                    <div>
+                      <strong>Total Sales:</strong> ₱{summary.totalRevenue.toFixed(2)}
+                    </div>
+                    <div>
+                      <strong>Total Bookings:</strong> {summary.totalBookings}
+                    </div>
+                  </div>
 
-      {/* ✅ Analytics Card */}
-      <IonCard>
-        <IonCardHeader>
-          <IonCardTitle>📊 Booking Analytics ({filter})</IonCardTitle>
-        </IonCardHeader>
-        <IonCardContent>
-          {loading ? (
-            <IonSpinner name="dots" />
-          ) : (
-            <>
-              {/* ✅ Summary */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-around",
-                  flexWrap: "wrap",
-                  marginBottom: "1rem",
-                  textAlign: "center",
-                }}
-              >
-                <div>
-                  <strong>Total Bookings:</strong> {summary.totalBookings}
-                </div>
-                <div>
-                  <strong>Total Revenue:</strong> ₱
-                  {summary.totalRevenue.toFixed(2)}
-                </div>
-                <div>
-                  <strong>Pending:</strong> {summary.pending}
-                </div>
-                <div>
-                  <strong>Approved:</strong> {summary.approved}
-                </div>
-                <div>
-                  <strong>Completed:</strong> {summary.completed}
-                </div>
-              </div>
+                  <div style={{ width: "100%", height: 320 }}>
+                    <ResponsiveContainer>
+                      <BarChart data={salesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                        <Bar
+                          dataKey="revenue"
+                          fill={filter === "week" ? "#36a2eb" : filter === "month" ? "#4caf50" : "#ff9800"}
+                          radius={[8, 8, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
+            </IonCardContent>
+          </IonCard>
+        </div>
 
-              {/* ✅ Chart */}
-              <div style={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer>
-                  <BarChart data={bookingData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="bookings" fill="#3880ff" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </>
-          )}
-        </IonCardContent>
-      </IonCard>
+        <div style={{ flex: "1 1 30%", minWidth: "300px" }}>
+          <IonCard>
+            <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
+            </IonCardHeader>
+
+            <IonCardContent>
+              {loadingEquipments ? (
+                <IonSpinner name="dots" />
+              ) : topEquipments.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {topEquipments.map((item, index) => (
+                    <div key={index} style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#1e1e1e", padding: "10px 15px", borderRadius: "8px", color: "white", fontSize: "15px" }}>
+                      <span>{item.name}</span>
+                      <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No equipment data available for this {filter}.</p>
+              )}
+            </IonCardContent>
+          </IonCard>
+        </div>
+      </div>
     </IonContent>
   );
 };
