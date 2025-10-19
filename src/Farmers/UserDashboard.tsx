@@ -31,7 +31,6 @@ const UserDashboard: React.FC = () => {
     try {
       setLoading(true);
 
-      // ✅ Get authenticated user
       const {
         data: { user },
         error: userError,
@@ -43,7 +42,6 @@ const UserDashboard: React.FC = () => {
         return;
       }
 
-      // ✅ Match user record in users table
       const { data: userData, error: userTableError } = await supabase
         .from("users")
         .select("user_id")
@@ -54,7 +52,6 @@ const UserDashboard: React.FC = () => {
         throw new Error("No matching user record found.");
       }
 
-      // ✅ Fetch bookings using the matching user_id
       const { data, error } = await supabase
         .from("bookings")
         .select("*")
@@ -73,29 +70,24 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-  // ✅ Load bookings only when switching to “My Bookings”
   useEffect(() => {
     if (segment === "bookings") {
       fetchBookings();
     }
   }, [segment]);
 
-  // ✅ Fix: Don’t delete booking history on logout
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event) => {
         if (event === "SIGNED_IN") {
-          fetchBookings(); // reload on login
+          fetchBookings();
         }
-        // ❌ Removed setBookings([]) that was wiping history permanently
       }
     );
     return () => {
       authListener?.subscription.unsubscribe();
     };
   }, []);
-
-  // ✅ Push notifications setup
   useEffect(() => {
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {

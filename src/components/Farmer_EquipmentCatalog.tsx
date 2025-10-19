@@ -5,14 +5,12 @@ import {
   IonCol,
   IonCard,
   IonCardContent,
-  IonIcon,
   IonButton,
   IonSearchbar,
   IonSpinner,
   IonImg,
   IonBadge,
 } from "@ionic/react";
-import { contractOutline } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
 import BookingModal from "./Farmer_BookingModal";
 
@@ -75,19 +73,51 @@ const EquipmentCatalog: React.FC = () => {
     setIsBookingOpen(true);
   };
 
-  // ✅ Match booking creation to DB schema (bookings + transactions)
+  // ✅ FIXED: Prevent duplicate bookings
   const handleBookingSubmit = async (booking: { startDate: string; endDate: string; notes: string }) => {
     try {
-      // 🔹 Get logged-in user
-      const { data: userData } = await supabase.auth.getUser();
-      const user_id = userData?.user?.id;
-
-      if (!user_id) {
+      // 🔹 1. Get logged-in user
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError || !userData?.user) {
         alert("Please log in to make a booking.");
         return;
       }
 
-      // 🔹 Insert into bookings table
+      const userEmail = userData.user.email;
+
+      // 🔹 2. Look up user_id from users table
+      const { data: userRecord, error: userLookupError } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("user_email", userEmail)
+        .single();
+
+      if (userLookupError || !userRecord) {
+        console.error("User lookup failed:", userLookupError);
+        alert("Account not found in users table.");
+        return;
+      }
+
+      const user_id = userRecord.user_id;
+
+      // 🔹 3. Check for existing active booking for same equipment
+      const { data: existingBooking, error: dupCheckError } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("user_id", user_id)
+        .eq("equipment_name", selectedEquipment)
+        .in("status", ["pending", "approved"]);
+
+      if (dupCheckError) {
+        console.error("Error checking duplicate booking:", dupCheckError);
+      }
+
+      if (existingBooking && existingBooking.length > 0) {
+        alert("⚠️ You already have an active booking for this equipment. Please wait until it’s completed or cancelled.");
+        return;
+      }
+
+      // 🔹 4. Create booking
       const { data: newBooking, error: bookingError } = await supabase
         .from("bookings")
         .insert([
@@ -96,6 +126,8 @@ const EquipmentCatalog: React.FC = () => {
             equipment_name: selectedEquipment,
             start_date: booking.startDate,
             end_date: booking.endDate,
+            notes: booking.notes || "",
+            payment_method: "gcash",
             status: "pending",
           },
         ])
@@ -104,7 +136,7 @@ const EquipmentCatalog: React.FC = () => {
 
       if (bookingError) throw bookingError;
 
-      // 🔹 Create transaction entry linked to that booking
+      // 🔹 5. Create transaction record
       const { error: transactionError } = await supabase.from("transactions").insert([
         {
           booking_id: newBooking.id,

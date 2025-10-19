@@ -58,7 +58,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
 
       if (bookingsError) throw bookingsError;
 
-      // Fetch users
       const { data: usersData, error: usersError } = await supabase
         .from("users")
         .select("user_id, username, user_firstname, user_lastname");
@@ -92,6 +91,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
     totalPrice: number | null
   ) => {
     try {
+    
       const { error: updateError } = await supabase
         .from("bookings")
         .update({
@@ -103,9 +103,20 @@ const Admin_ManageRentalBookings: React.FC = () => {
       if (updateError) throw updateError;
 
       if (newStatus === "approved" && totalPrice && userId) {
-        const { data: newTransaction, error: insertError } = await supabase
+       
+        const { data: existingTransactions, error: checkError } = await supabase
           .from("transactions")
-          .insert([
+          .select("*")
+          .eq("booking_id", bookingId)
+          .eq("status", "unpaid");
+
+        if (checkError) throw checkError;
+
+        if (existingTransactions && existingTransactions.length > 0) {
+          console.log("⚠️ Transaction already exists, skipping insert...");
+          setToastMessage("⚠️ Existing unpaid transaction found. No duplicate created.");
+        } else {
+          const { error: insertError } = await supabase.from("transactions").insert([
             {
               booking_id: bookingId,
               user_id: userId,
@@ -114,16 +125,16 @@ const Admin_ManageRentalBookings: React.FC = () => {
               payment_method: "gcash",
               created_at: new Date().toISOString(),
             },
-          ])
-          .select();
+          ]);
 
-        if (insertError) throw insertError;
-        setToastMessage("✅ Booking approved and transaction created!");
+          if (insertError) throw insertError;
+          setToastMessage("✅ Booking approved and transaction created!");
+        }
       } else if (newStatus === "declined") {
         setToastMessage("❌ Booking declined.");
       }
 
-      // Update local state
+      // Update state
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
@@ -308,9 +319,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                         <IonButton
                           size="small"
                           color="primary"
-                          onClick={() =>
-                            markTransactionPaid(booking.transaction![0].id)
-                          }
+                          onClick={() => markTransactionPaid(booking.transaction![0].id)}
                         >
                           Mark as Paid
                         </IonButton>
