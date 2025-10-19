@@ -2,14 +2,6 @@ import React, { useEffect, useState } from "react";
 import { IonContent, IonBadge, IonSpinner, IonButton, IonToast } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
-interface Transaction {
-  id: string;
-  status: string;
-  amount: number;
-  paid_at: string | null;
-  created_at: string;
-}
-
 interface Booking {
   id: string;
   user_id: number;
@@ -20,7 +12,12 @@ interface Booking {
   status: string;
   total_price: number | null;
   user_name?: string;
-  transaction?: Transaction[];
+  transaction?: {
+    id: string;
+    status: string;
+    amount: number;
+    paid_at: string | null;
+  }[];
 }
 
 const headerStyle: React.CSSProperties = {
@@ -51,10 +48,12 @@ const Admin_ManageRentalBookings: React.FC = () => {
     try {
       setLoading(true);
 
-      // Fetch bookings
       const { data: bookingsData, error: bookingsError } = await supabase
         .from("bookings")
-        .select("*")
+        .select(`
+          *,
+          transaction:transactions!booking_id(id, status, amount, paid_at)
+        `)
         .order("start_date", { ascending: false });
 
       if (bookingsError) throw bookingsError;
@@ -66,34 +65,18 @@ const Admin_ManageRentalBookings: React.FC = () => {
 
       if (usersError) throw usersError;
 
-      // Fetch latest transaction per booking
-      const bookingIds = bookingsData?.map((b) => b.id) || [];
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from("transactions")
-        .select("*")
-        .in("booking_id", bookingIds)
-        .order("created_at", { ascending: false });
-
-      if (transactionsError) throw transactionsError;
-
-      // Merge bookings, users, and latest transaction
-      const mergedBookings = bookingsData?.map((booking) => {
+      const merged = bookingsData.map((booking) => {
         const user = usersData?.find((u) => u.user_id === booking.user_id);
-        const latestTransaction = transactionsData
-          ?.filter((t) => t.booking_id === booking.id)
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-
         return {
           ...booking,
           user_name: user
             ? user.username ||
               `${user.user_firstname || ""} ${user.user_lastname || ""}`.trim()
             : "Unknown Farmer",
-          transaction: latestTransaction ? [latestTransaction] : [],
         };
       });
 
-      setBookings(mergedBookings || []);
+      setBookings(merged || []);
     } catch (error: any) {
       console.error("Error fetching bookings:", error.message);
       setToastMessage("Error fetching bookings.");
@@ -119,7 +102,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
         .eq("id", bookingId);
       if (updateError) throw updateError;
 
-      // Create transaction if approved
       if (newStatus === "approved" && totalPrice && userId) {
         const { data: newTransaction, error: insertError } = await supabase
           .from("transactions")
@@ -136,23 +118,15 @@ const Admin_ManageRentalBookings: React.FC = () => {
           .select();
 
         if (insertError) throw insertError;
-
-        // Update local state with new transaction
-        setBookings((prev) =>
-          prev.map((b) =>
-            b.id === bookingId
-              ? { ...b, status: newStatus, transaction: newTransaction }
-              : b
-          )
-        );
-
         setToastMessage("✅ Booking approved and transaction created!");
       } else if (newStatus === "declined") {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
-        );
         setToastMessage("❌ Booking declined.");
       }
+
+      // Update local state
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      );
     } catch (error: any) {
       console.error("Error updating booking:", error.message);
       setToastMessage("Error updating booking status.");
@@ -161,31 +135,18 @@ const Admin_ManageRentalBookings: React.FC = () => {
 
   const markTransactionPaid = async (transactionId: string) => {
     try {
-      const paidAt = new Date().toISOString();
       const { error } = await supabase
         .from("transactions")
         .update({
           status: "paid",
-          paid_at: paidAt,
+          paid_at: new Date().toISOString(),
         })
         .eq("id", transactionId);
 
       if (error) throw error;
 
-      // Update local state directly to prevent duplicates
-      setBookings((prev) =>
-        prev.map((booking) => {
-          if (booking.transaction) {
-            const updatedTrans = booking.transaction.map((t) =>
-              t.id === transactionId ? { ...t, status: "paid", paid_at: paidAt } : t
-            );
-            return { ...booking, transaction: updatedTrans };
-          }
-          return booking;
-        })
-      );
-
       setToastMessage("✅ Transaction marked as paid!");
+      fetchBookings();
     } catch (err: any) {
       console.error("Error marking transaction paid:", err.message);
       setToastMessage("Error marking transaction paid.");
@@ -226,9 +187,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
         <p style={{ color: "#666", fontSize: "0.80rem" }}>
           View, approve, or decline rental equipment bookings.
         </p>
-        <p style={{ color: "#333", fontSize: "0.85rem" }}>
-          Total Bookings: {bookings.length}
-        </p>
       </div>
 
       {loading ? (
@@ -242,7 +200,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
             <thead style={{ backgroundColor: "#000000ff" }}>
               <tr>
-                <th style={headerStyle}>#</th> {/* Number Column */}
                 <th style={headerStyle}>Equipment</th>
                 <th style={headerStyle}>Booked By</th>
                 <th style={headerStyle}>Days</th>
@@ -263,7 +220,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
                     backgroundColor: index % 2 === 0 ? "#080808ff" : "#141414ff",
                   }}
                 >
-                  <td style={cellStyle}>{index + 1}</td> {/* Number Column */}
                   <td style={cellStyle}>{booking.equipment_name}</td>
                   <td style={cellStyle}>{booking.user_name}</td>
                   <td style={cellStyle}>{booking.user_id}</td>
