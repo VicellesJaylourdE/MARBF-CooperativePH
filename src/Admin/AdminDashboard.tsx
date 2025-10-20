@@ -1,16 +1,25 @@
-// AdminDashboard.tsx
 import React, { useState, useEffect } from "react";
 import {
   IonPage,
   IonSplitPane,
   IonContent,
   IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonSpinner,
+  IonSelect,
+  IonSelectOption,
+  IonItem,
+  IonLabel,
 } from "@ionic/react";
 import StaffHeaderBar from "../components/Admin_AdminHeaderBar";
 import StaffSidebar from "../components/Admin_AdminSidebar";
 import { supabase } from "../utils/supabaseClient";
 
-import DashboardCards from "./AdminDashboardCards";
 import Admin_UsersTab from "../components/Admin_UsersTab";
 import Admin_GenerateReports from "../components/Admin_GenerateReports";
 import Staff_BookingsTab from "../components/Staff_BookingsTab";
@@ -21,6 +30,16 @@ import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
 import Admin_ManageUsers from "../components/Admin_ManageUsers";
 import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
 
 const AdminDashboard: React.FC = () => {
@@ -31,9 +50,16 @@ const AdminDashboard: React.FC = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
 
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+  const [filter, setFilter] = useState<"week" | "month" | "year">("month");
+  const [topEquipments, setTopEquipments] = useState<any[]>([]);
+  const [loadingEquipments, setLoadingEquipments] = useState(true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Summary Cards
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
@@ -93,40 +119,206 @@ const AdminDashboard: React.FC = () => {
           .select("*", { count: "exact", head: true });
         setTotalUsers(usersCount || 0);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching summary data:", error);
+      }
+    };
+
+    const fetchAnalytics = async () => {
+      try {
+        setLoadingAnalytics(true);
+        const { data: transactions, error } = await supabase
+          .from("transactions")
+          .select("id, amount, status, paid_at, booking:booking_id(equipment_name)");
+
+        if (error) throw error;
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+
+        const filtered = transactions.filter((t: any) => {
+          if (t.status !== "paid") return false;
+          const date = new Date(t.paid_at);
+          if (filter === "year") return date.getFullYear() === currentYear;
+          if (filter === "month")
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+          if (filter === "week") return date >= startOfWeek;
+          return true;
+        });
+
+        let totalRevenueChart = 0;
+        const groupedSales: Record<string, number> = {};
+
+        filtered.forEach((t: any) => {
+          const date = new Date(t.paid_at);
+          let label = "";
+          if (filter === "year") label = date.toLocaleString("default", { month: "short" });
+          else if (filter === "month") label = date.toLocaleDateString("default", { day: "numeric" });
+          else label = date.toLocaleDateString("default", { weekday: "short" });
+
+          groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
+          totalRevenueChart += t.amount || 0;
+        });
+
+        const formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
+          label,
+          revenue: amount,
+        }));
+
+        setSalesData(formattedData);
+
+        // Top Equipments
+        const revenuePerEquipment: Record<string, number> = {};
+        filtered.forEach((t: any) => {
+          const equipmentName = t.booking?.equipment_name || "Unknown Equipment";
+          revenuePerEquipment[equipmentName] = (revenuePerEquipment[equipmentName] || 0) + (t.amount || 0);
+        });
+
+        const top = Object.entries(revenuePerEquipment)
+          .map(([name, revenue]) => ({ name, revenue }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 5);
+
+        setTopEquipments(top);
+      } catch (err) {
+        console.error("Error fetching analytics:", err);
+      } finally {
+        setLoadingAnalytics(false);
+        setLoadingEquipments(false);
       }
     };
 
     fetchData();
+    fetchAnalytics();
 
     const subscription = supabase
       .channel("bookings-updates")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings" },
-        () => {
-          fetchData();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+        fetchData();
+        fetchAnalytics();
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [filter]);
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return (
           <IonGrid className="ion-padding">
-            <DashboardCards
-              totalEquipment={totalEquipment}
-              todayBookings={todayBookings}
-              totalRevenue={totalRevenue}
-              totalUsers={totalUsers}
-            />
-            <Admin_AdminDashboardAnaltys />
+            {/* 🔹 Summary Cards */}
+            <IonRow>
+              <IonCol size="12" sizeMd="3">
+                <IonCard color="primary">
+                  <IonCardHeader>
+                    <IonCardTitle>Total Equipment</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                    {totalEquipment}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+
+              <IonCol size="12" sizeMd="3">
+                <IonCard color="success">
+                  <IonCardHeader>
+                    <IonCardTitle>Today's Bookings</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                    {todayBookings}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+
+              <IonCol size="12" sizeMd="3">
+                <IonCard color="tertiary">
+                  <IonCardHeader>
+                    <IonCardTitle>Total Users</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                    {totalUsers}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+
+              <IonCol size="12" sizeMd="3">
+                <IonCard color="warning">
+                  <IonCardHeader>
+                    <IonCardTitle>Total Revenue</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                    ₱{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+            </IonRow>
+
+            {/* 🔹 Analytics Charts */}
+            <IonRow style={{ marginTop: "20px" }}>
+              <IonCol size="12" sizeMd="8">
+                <IonCard>
+                  <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
+                    <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+                      <IonLabel>Filter:</IonLabel>
+                      <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
+                        <IonSelectOption value="week">Week</IonSelectOption>
+                        <IonSelectOption value="month">Month</IonSelectOption>
+                        <IonSelectOption value="year">Year</IonSelectOption>
+                      </IonSelect>
+                    </IonItem>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    {loadingAnalytics ? (
+                      <IonSpinner name="dots" />
+                    ) : (
+                      <ResponsiveContainer width="100%" height={320}>
+                        <BarChart data={salesData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" />
+                          <YAxis />
+                          <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                          <Bar
+                            dataKey="revenue"
+                            fill={filter === "week" ? "#36a2eb" : filter === "month" ? "#4caf50" : "#ff9800"}
+                            radius={[8, 8, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+
+              <IonCol size="12" sizeMd="4">
+                <IonCard>
+                  <IonCardHeader>
+                    <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    {loadingEquipments ? (
+                      <IonSpinner name="dots" />
+                    ) : topEquipments.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {topEquipments.map((item, index) => (
+                          <div key={index} style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#1e1e1e", padding: "10px 15px", borderRadius: "8px", color: "white", fontSize: "15px" }}>
+                            <span>{item.name}</span>
+                            <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>No equipment data available for this {filter}.</p>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+            </IonRow>
           </IonGrid>
         );
 
@@ -150,7 +342,7 @@ const AdminDashboard: React.FC = () => {
         return <Admin_LateReturnPenalty />;
       case "registermember":
         return <Admin_RegisterMember />;
-      case "admindashboardanaltys":
+        case "admindashboardanaltys":
         return <Admin_AdminDashboardAnaltys />;
       default:
         return null;

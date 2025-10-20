@@ -91,7 +91,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     totalPrice: number | null
   ) => {
     try {
-    
       const { error: updateError } = await supabase
         .from("bookings")
         .update({
@@ -103,7 +102,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
       if (updateError) throw updateError;
 
       if (newStatus === "approved" && totalPrice && userId) {
-       
         const { data: existingTransactions, error: checkError } = await supabase
           .from("transactions")
           .select("*")
@@ -134,7 +132,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
         setToastMessage("❌ Booking declined.");
       }
 
-      // Update state
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
@@ -211,6 +208,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
             <thead style={{ backgroundColor: "#000000ff" }}>
               <tr>
+                <th style={headerStyle}>#</th>
                 <th style={headerStyle}>Equipment</th>
                 <th style={headerStyle}>Booked By</th>
                 <th style={headerStyle}>Days</th>
@@ -231,9 +229,16 @@ const Admin_ManageRentalBookings: React.FC = () => {
                     backgroundColor: index % 2 === 0 ? "#080808ff" : "#141414ff",
                   }}
                 >
+                  <td style={cellStyle}>{index + 1}</td>
                   <td style={cellStyle}>{booking.equipment_name}</td>
                   <td style={cellStyle}>{booking.user_name}</td>
-                  <td style={cellStyle}>{booking.user_id}</td>
+                  <td style={cellStyle}>
+                    {Math.ceil(
+                      (new Date(booking.end_date).getTime() -
+                        new Date(booking.start_date).getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    ) || 1}
+                  </td>
                   <td style={cellStyle}>{booking.start_date}</td>
                   <td style={cellStyle}>{booking.end_date}</td>
                   <td style={cellStyle}>{booking.location || "N/A"}</td>

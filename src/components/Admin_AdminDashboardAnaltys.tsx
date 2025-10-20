@@ -10,6 +10,9 @@ import {
   IonSelectOption,
   IonItem,
   IonLabel,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import {
@@ -34,6 +37,42 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
   const [topEquipments, setTopEquipments] = useState<any[]>([]);
   const [loadingEquipments, setLoadingEquipments] = useState<boolean>(true);
 
+  // 👉 NEW STATES for the copied cards
+  const [totalEquipment, setTotalEquipment] = useState(0);
+  const [todayBookings, setTodayBookings] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // 🔹 Fetch dashboard summary (copied from AdminDashboard)
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const { count: equipmentCount } = await supabase
+          .from("equipment")
+          .select("*", { count: "exact", head: true });
+        setTotalEquipment(equipmentCount || 0);
+
+        const today = new Date().toISOString().split("T")[0];
+        const { count: todayApprovedCount } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "approved")
+          .gte("approved_at", `${today}T00:00:00`)
+          .lte("approved_at", `${today}T23:59:59`);
+        setTodayBookings(todayApprovedCount || 0);
+
+        const { count: usersCount } = await supabase
+          .from("users")
+          .select("*", { count: "exact", head: true });
+        setTotalUsers(usersCount || 0);
+      } catch (error) {
+        console.error("Error fetching summary:", error);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  // 🔹 Fetch analytics + top equipment (existing code)
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -53,7 +92,6 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
 
         const filtered = transactions.filter((t: any) => {
           if (t.status !== "paid") return false;
-
           const date = new Date(t.paid_at);
           if (filter === "year") return date.getFullYear() === currentYear;
           if (filter === "month")
@@ -150,14 +188,80 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
+      {/* ✅ Copied Dashboard Summary Cards */}
+      <IonGrid>
+        <IonRow>
+          <IonCol size="12" sizeMd="3">
+            <IonCard color="primary">
+              <IonCardHeader>
+                <IonCardTitle>Total Equipment</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                {totalEquipment}
+              </IonCardContent>
+            </IonCard>
+          </IonCol>
+
+          <IonCol size="12" sizeMd="3">
+            <IonCard color="success">
+              <IonCardHeader>
+                <IonCardTitle>Today's Bookings</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                {todayBookings}
+              </IonCardContent>
+            </IonCard>
+          </IonCol>
+
+          <IonCol size="12" sizeMd="3">
+            <IonCard color="tertiary">
+              <IonCardHeader>
+                <IonCardTitle>Total Users</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                {totalUsers}
+              </IonCardContent>
+            </IonCard>
+          </IonCol>
+
+          <IonCol size="12" sizeMd="3">
+            <IonCard color="warning">
+              <IonCardHeader>
+                <IonCardTitle>Total Revenue</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                ₱{summary.totalRevenue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </IonCardContent>
+            </IonCard>
+          </IonCol>
+        </IonRow>
+      </IonGrid>
+
+      {/* 🔸 Existing Analytics Section */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
         <div style={{ flex: "1 1 65%", minWidth: "320px" }}>
           <IonCard>
-            <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+            <IonCardHeader
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
-              <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+              <IonItem
+                lines="none"
+                style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}
+              >
                 <IonLabel>Filter:</IonLabel>
-                <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
+                <IonSelect
+                  value={filter}
+                  onIonChange={(e) => setFilter(e.detail.value)}
+                  interface="popover"
+                >
                   <IonSelectOption value="week">Week</IonSelectOption>
                   <IonSelectOption value="month">Month</IonSelectOption>
                   <IonSelectOption value="year">Year</IonSelectOption>
@@ -170,9 +274,18 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
                 <IonSpinner name="dots" />
               ) : (
                 <>
-                  <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", marginBottom: "1rem", textAlign: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-around",
+                      flexWrap: "wrap",
+                      marginBottom: "1rem",
+                      textAlign: "center",
+                    }}
+                  >
                     <div>
-                      <strong>Total Sales:</strong> ₱{summary.totalRevenue.toFixed(2)}
+                      <strong>Total Sales:</strong> ₱
+                      {summary.totalRevenue.toFixed(2)}
                     </div>
                     <div>
                       <strong>Total Bookings:</strong> {summary.totalBookings}
@@ -185,10 +298,22 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="label" />
                         <YAxis />
-                        <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                        <Tooltip
+                          formatter={(value: number) =>
+                            `₱${value.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                            })}`
+                          }
+                        />
                         <Bar
                           dataKey="revenue"
-                          fill={filter === "week" ? "#36a2eb" : filter === "month" ? "#4caf50" : "#ff9800"}
+                          fill={
+                            filter === "week"
+                              ? "#36a2eb"
+                              : filter === "month"
+                              ? "#4caf50"
+                              : "#ff9800"
+                          }
                           radius={[8, 8, 0, 0]}
                         />
                       </BarChart>
@@ -202,7 +327,13 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
 
         <div style={{ flex: "1 1 30%", minWidth: "300px" }}>
           <IonCard>
-            <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <IonCardHeader
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
             </IonCardHeader>
 
@@ -212,9 +343,25 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
               ) : topEquipments.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {topEquipments.map((item, index) => (
-                    <div key={index} style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#1e1e1e", padding: "10px 15px", borderRadius: "8px", color: "white", fontSize: "15px" }}>
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        backgroundColor: "#1e1e1e",
+                        padding: "10px 15px",
+                        borderRadius: "8px",
+                        color: "white",
+                        fontSize: "15px",
+                      }}
+                    >
                       <span>{item.name}</span>
-                      <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      <span>
+                        ₱
+                        {item.revenue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                   ))}
                 </div>

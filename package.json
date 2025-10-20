@@ -23,6 +23,8 @@
     "@types/react-router-dom": "^5.3.3",
     "bcryptjs": "^3.0.2",
     "ionicons": "^7.4.0",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.544.0",
     "react": "19.0.0",
     "react-calendar": "^6.0.0",
@@ -30,7 +32,8 @@
     "react-dom": "19.0.0",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
-    "recharts": "^3.2.1"
+    "recharts": "^3.2.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@testing-library/dom": ">=7.21.4",
