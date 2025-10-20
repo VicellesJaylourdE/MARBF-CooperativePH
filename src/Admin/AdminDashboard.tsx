@@ -22,7 +22,7 @@ import { supabase } from "../utils/supabaseClient";
 
 import Admin_UsersTab from "../components/Admin_UsersTab";
 import Admin_GenerateReports from "../components/Admin_GenerateReports";
-import Staff_BookingsTab from "../components/Staff_BookingsTab";
+import Staff_BookingsTab from "../components/Staff_ViewBookingCalendar";
 import Admin_Manageequipment from "../components/Admin_Manageequipment";
 import Admin_ViewBookingCalendar from "../components/Admin_ViewBookingCalendar";
 import Admin_ManageRentalBookings from "../components/Admin_ManageRentalBookings";
@@ -30,7 +30,7 @@ import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
 import Admin_ManageUsers from "../components/Admin_ManageUsers";
 import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
-
+import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
 import {
   BarChart,
   Bar,
@@ -40,8 +40,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
-
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [totalEquipment, setTotalEquipment] = useState(0);
@@ -59,13 +57,11 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Total Equipment
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
-        // Today's Bookings
         const today = new Date().toISOString().split("T")[0];
         const { count: todayApprovedCount, error: todayApprovedError } =
           await supabase
@@ -77,7 +73,6 @@ const AdminDashboard: React.FC = () => {
         if (todayApprovedError) throw todayApprovedError;
         setTodayBookings(todayApprovedCount || 0);
 
-        // Total Bookings
         const { count: totalBookingsCount, error: totalBookingsError } =
           await supabase
             .from("bookings")
@@ -85,7 +80,6 @@ const AdminDashboard: React.FC = () => {
         if (totalBookingsError) throw totalBookingsError;
         setTotalBookings(totalBookingsCount || 0);
 
-        // Total Revenue
         const { data: approvedBookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("id")
@@ -109,7 +103,6 @@ const AdminDashboard: React.FC = () => {
         }
         setTotalRevenue(revenueSum);
 
-        // Pending Bookings
         const { count: pendingCount } = await supabase
           .from("bookings")
           .select("*", { count: "exact", head: true })
@@ -161,7 +154,6 @@ const AdminDashboard: React.FC = () => {
         }));
         setSalesData(formattedData);
 
-        // Top Equipments
         const revenuePerEquipment: Record<string, number> = {};
         filtered.forEach((t: any) => {
           const equipmentName = t.booking?.equipment_name || "Unknown Equipment";

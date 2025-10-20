@@ -17,6 +17,8 @@ import {
   peopleOutline,
   barChartOutline,
   bookOutline,
+  gridOutline,
+  printOutline,
 } from "ionicons/icons";
 
 interface StaffSidebarProps {
@@ -41,25 +43,25 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={barChartOutline} slot="start" />
             <IonLabel>ManageRentalBookings</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("bookings")}>
+          <IonItem button onClick={() => setActiveTab("viewbookingcalendar")}>
             <IonIcon icon={calendarOutline} slot="start" />
-            <IonLabel>Booking Management</IonLabel>
+            <IonLabel>ViewBookingCalendar</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("transactions")}>
+          <IonItem button onClick={() => setActiveTab("viewalltransactions")}>
             <IonIcon icon={bookOutline} slot="start" />
-            <IonLabel>Transactions</IonLabel>
+            <IonLabel>View All Transactions</IonLabel>
           </IonItem>
           <IonItem button onClick={() => setActiveTab("users")}>
             <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>View User List</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("monthly revenue")}>
-            <IonIcon icon={cashOutline} slot="start" />
-            <IonLabel>Monthly Revenue</IonLabel>
+          <IonItem button onClick={() => setActiveTab("latereturnpenalty")}>
+            <IonIcon icon={gridOutline} slot="start" />
+            <IonLabel>LateReturnPenalty</IonLabel>
           </IonItem>
-          <IonItem button onClick={() => setActiveTab("reports")}>
-            <IonIcon icon={barChartOutline} slot="start" />
-            <IonLabel>Reports</IonLabel>
+             <IonItem button onClick={() => setActiveTab("generatereports")}>
+            <IonIcon icon={printOutline} slot="start" />
+            <IonLabel>GenerateReports</IonLabel>
           </IonItem>
         </IonList>
       </IonContent>

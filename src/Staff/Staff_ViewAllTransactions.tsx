@@ -16,7 +16,7 @@ interface Transaction {
   equipment_name?: string;
 }
 
-const TransactionsTab: React.FC = () => {
+const Staff_ViewAllTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorToast, setErrorToast] = useState<string | null>(null);
@@ -83,7 +83,6 @@ const TransactionsTab: React.FC = () => {
     <IonPage>
       <IonContent className="ion-padding">
         <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>View All Transactions</h2>
-        <p>List of all transactions with Booking ID, Equipment, User, and payment proof images.</p>
         <p style={{ fontWeight: 600 }}>Total Transactions: {filteredTransactions.length}</p>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
@@ -187,4 +186,4 @@ const TransactionsTab: React.FC = () => {
   );
 };
 
-export default TransactionsTab;
+export default Staff_ViewAllTransactions;

@@ -14,12 +14,11 @@ interface Booking {
   user_id: string;
 }
 
-const Staff_BookingsTab: React.FC = () => {
+const Staff_ViewBookingCalendar: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Fetch bookings from Supabase
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
@@ -38,7 +37,6 @@ const Staff_BookingsTab: React.FC = () => {
 
     fetchBookings();
 
-    // ✅ Realtime subscription para auto update
     const channel = supabase
       .channel("bookings-changes")
       .on(
@@ -56,21 +54,18 @@ const Staff_BookingsTab: React.FC = () => {
     };
   }, []);
 
-  // Filter bookings per selected date
   const bookingsForDate = bookings.filter(
     (b) => new Date(b.start_date).toDateString() === selectedDate.toDateString()
   );
 
   return (
     <IonContent className="ion-padding">
-      <h2>📅 Booking Management</h2>
-      <p>Select a date to view bookings.</p>
+      <h2>Booking Management</h2>
 
       {loading ? (
         <IonSpinner name="crescent" />
       ) : (
         <>
-          {/* Calendar */}
           <div className="calendar-container">
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
@@ -87,7 +82,6 @@ const Staff_BookingsTab: React.FC = () => {
             />
           </div>
 
-          {/* Booking list */}
           <div style={{ marginTop: "16px" }}>
             <h3>
               Bookings on {selectedDate.toDateString()} (
@@ -122,7 +116,6 @@ const Staff_BookingsTab: React.FC = () => {
         </>
       )}
 
-      {/* Styles */}
       <style>{`
         .calendar-container {
           display: flex;
@@ -174,4 +167,4 @@ const Staff_BookingsTab: React.FC = () => {
   );
 };
 
-export default Staff_BookingsTab;
+export default  Staff_ViewBookingCalendar;

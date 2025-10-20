@@ -10,104 +10,309 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
+  IonSpinner,
+  IonSelect,
+  IonSelectOption,
+  IonItem,
+  IonLabel,
 } from "@ionic/react";
 import StaffHeaderBar from "../components/Staff_StaffHeaderBar";
 import StaffSidebar from "../components/Staff_StaffSidebar";
 import { supabase } from "../utils/supabaseClient";
 
-import DashboardCards from "./DashboardCards";
+import GenerateReports from "../components/Staff_GenerateReports ";
 import Staff_UsersTab from "../components/Staff_UsersTab";
-import ReportsTab from "../components/Staff_ReportsTab";
-import MonthlyRevenueTab from "./MonthlyRevenueTab";
-import Staff_BookingsTab from "../components/Staff_BookingsTab";
-import TransactionsTab from "./TransactionsTab";
+import LateReturnPenalty from "../components/Staff_LateReturnPenalty";
+import ViewBookingCalendar from "../components/Staff_ViewBookingCalendar";
+import ViewAllTransactions from "./Staff_ViewAllTransactions";
 import ManageRentalBookings from "./ManageRentalBookings";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 
 const StaffDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [totalEquipment, setTotalEquipment] = useState(0);
-  const [todayBookings, setTodayBookings] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalUsers, setTotalUsers] = useState(0);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { count: equipmentCount } = await supabase
-          .from("equipment")
-          .select("*", { count: "exact", head: true });
-        setTotalEquipment(equipmentCount || 0);
-
-        const today = new Date().toISOString().split("T")[0];
-        const { count: bookingsCount } = await supabase
-          .from("bookings")
-          .select("*", { count: "exact", head: true })
-          .eq("date", today);
-        setTodayBookings(bookingsCount || 0);
-
-        const { data: revenueData } = await supabase
-          .from("transactions")
-          .select("amount");
-        if (revenueData) {
-          const revenueSum = revenueData.reduce(
-            (acc, cur) => acc + Number(cur.amount),
-            0
-          );
+   const [activeTab, setActiveTab] = useState("dashboard");
+    const [totalEquipment, setTotalEquipment] = useState(0);
+    const [todayBookings, setTodayBookings] = useState(0);
+    const [totalRevenue, setTotalRevenue] = useState(0);
+    const [pendingBookings, setPendingBookings] = useState(0);
+    const [totalBookings, setTotalBookings] = useState(0);
+  
+    const [salesData, setSalesData] = useState<any[]>([]);
+    const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+    const [filter, setFilter] = useState<"week" | "month" | "year">("month");
+    const [topEquipments, setTopEquipments] = useState<any[]>([]);
+    const [loadingEquipments, setLoadingEquipments] = useState(true);
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const { count: equipmentCount } = await supabase
+            .from("equipment")
+            .select("*", { count: "exact", head: true });
+          setTotalEquipment(equipmentCount || 0);
+  
+          const today = new Date().toISOString().split("T")[0];
+          const { count: todayApprovedCount, error: todayApprovedError } =
+            await supabase
+              .from("bookings")
+              .select("*", { count: "exact", head: true })
+              .eq("status", "approved")
+              .gte("approved_at", `${today}T00:00:00`)
+              .lte("approved_at", `${today}T23:59:59`);
+          if (todayApprovedError) throw todayApprovedError;
+          setTodayBookings(todayApprovedCount || 0);
+  
+          const { count: totalBookingsCount, error: totalBookingsError } =
+            await supabase
+              .from("bookings")
+              .select("*", { count: "exact", head: true });
+          if (totalBookingsError) throw totalBookingsError;
+          setTotalBookings(totalBookingsCount || 0);
+  
+          const { data: approvedBookings, error: bookingsError } = await supabase
+            .from("bookings")
+            .select("id")
+            .eq("status", "approved");
+          if (bookingsError) throw bookingsError;
+  
+          const approvedBookingIds = approvedBookings?.map((b) => b.id) || [];
+          let revenueSum = 0;
+          if (approvedBookingIds.length > 0) {
+            const { data: revenueData, error: revenueError } = await supabase
+              .from("transactions")
+              .select("amount, booking_id")
+              .in("booking_id", approvedBookingIds);
+            if (revenueError) throw revenueError;
+            if (revenueData && revenueData.length > 0) {
+              revenueSum = revenueData.reduce(
+                (acc, cur) => acc + Number(cur.amount || 0),
+                0
+              );
+            }
+          }
           setTotalRevenue(revenueSum);
+  
+          const { count: pendingCount } = await supabase
+            .from("bookings")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending");
+          setPendingBookings(pendingCount || 0);
+        } catch (error) {
+          console.error("Error fetching summary data:", error);
         }
-
-        const { count: usersCount } = await supabase
-          .from("users")
-          .select("*", { count: "exact", head: true });
-        setTotalUsers(usersCount || 0);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return (
-          <IonGrid className="ion-padding">
-            <DashboardCards
-              totalEquipment={totalEquipment}
-              todayBookings={todayBookings}
-              totalRevenue={totalRevenue}
-              totalUsers={totalUsers}
-            />
-
-            <IonRow>
-              <IonCol size="12" sizeMd="10" sizeLg="5">
-                <IonCardContent style={{ height: "100%", overflow: "auto" }}>
-                  <Staff_UsersTab />
-                </IonCardContent>
-              </IonCol>
-
-              <IonCol size="12" sizeMd="5" sizeLg="7">
-                <IonCard style={{ height: "400px" }}>
-                  <Staff_BookingsTab />
-                </IonCard>
-              </IonCol>
-            </IonRow>
-          </IonGrid>
-        );
+      };
+  
+      const fetchAnalytics = async () => {
+        try {
+          setLoadingAnalytics(true);
+          const { data: transactions, error } = await supabase
+            .from("transactions")
+            .select("id, amount, status, paid_at, booking:booking_id(equipment_name)");
+  
+          if (error) throw error;
+  
+          const now = new Date();
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth();
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+  
+          const filtered = transactions.filter((t: any) => {
+            if (t.status !== "paid") return false;
+            const date = new Date(t.paid_at);
+            if (filter === "year") return date.getFullYear() === currentYear;
+            if (filter === "month")
+              return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            if (filter === "week") return date >= startOfWeek;
+            return true;
+          });
+  
+          const groupedSales: Record<string, number> = {};
+          filtered.forEach((t: any) => {
+            const date = new Date(t.paid_at);
+            let label = "";
+            if (filter === "year") label = date.toLocaleString("default", { month: "short" });
+            else if (filter === "month") label = date.toLocaleDateString("default", { day: "numeric" });
+            else label = date.toLocaleDateString("default", { weekday: "short" });
+            groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
+          });
+  
+          const formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
+            label,
+            revenue: amount,
+          }));
+          setSalesData(formattedData);
+  
+          const revenuePerEquipment: Record<string, number> = {};
+          filtered.forEach((t: any) => {
+            const equipmentName = t.booking?.equipment_name || "Unknown Equipment";
+            revenuePerEquipment[equipmentName] = (revenuePerEquipment[equipmentName] || 0) + (t.amount || 0);
+          });
+  
+          const top = Object.entries(revenuePerEquipment)
+            .map(([name, revenue]) => ({ name, revenue }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+  
+          setTopEquipments(top);
+        } catch (err) {
+          console.error("Error fetching analytics:", err);
+        } finally {
+          setLoadingAnalytics(false);
+          setLoadingEquipments(false);
+        }
+      };
+  
+      fetchData();
+      fetchAnalytics();
+  
+      const subscription = supabase
+        .channel("bookings-updates")
+        .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+          fetchData();
+          fetchAnalytics();
+        })
+        .subscribe();
+  
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }, [filter]);
+  
+    const renderContent = () => {
+      switch (activeTab) {
+        case "dashboard":
+          return (
+            <IonGrid className="ion-padding">
+              <IonRow>
+                <IonCol size="12" sizeMd="3">
+                  <IonCard color="primary">
+                    <IonCardHeader>
+                      <IonCardTitle>Total Equipment</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                      {totalEquipment}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+  
+                <IonCol size="12" sizeMd="3">
+                  <IonCard color="success">
+                    <IonCardHeader>
+                      <IonCardTitle>Today's Bookings</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                      {todayBookings}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+  
+                <IonCol size="12" sizeMd="3">
+                  <IonCard color="tertiary">
+                    <IonCardHeader>
+                      <IonCardTitle>Pending Bookings</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                      {pendingBookings}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+  
+                <IonCol size="12" sizeMd="3">
+                  <IonCard color="warning">
+                    <IonCardHeader>
+                      <IonCardTitle>Total Revenue</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
+                      ₱{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+              </IonRow>
+  
+              <IonRow style={{ marginTop: "20px" }}>
+                <IonCol size="12" sizeMd="8">
+                  <IonCard>
+                    <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
+                      <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+                        <IonLabel>Filter:</IonLabel>
+                        <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
+                          <IonSelectOption value="week">Week</IonSelectOption>
+                          <IonSelectOption value="month">Month</IonSelectOption>
+                          <IonSelectOption value="year">Year</IonSelectOption>
+                        </IonSelect>
+                      </IonItem>
+                    </IonCardHeader>
+                    <IonCardContent>
+                      {loadingAnalytics ? (
+                        <IonSpinner name="dots" />
+                      ) : (
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={salesData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="label" />
+                            <YAxis />
+                            <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                            <Bar
+                              dataKey="revenue"
+                              fill={filter === "week" ? "#36a2eb" : filter === "month" ? "#4caf50" : "#ff9800"}
+                              radius={[8, 8, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+  
+                <IonCol size="12" sizeMd="4">
+                  <IonCard>
+                    <IonCardHeader>
+                      <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent>
+                      {loadingEquipments ? (
+                        <IonSpinner name="dots" />
+                      ) : topEquipments.length > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {topEquipments.map((item, index) => (
+                            <div key={index} style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#1e1e1e", padding: "10px 15px", borderRadius: "8px", color: "white", fontSize: "15px" }}>
+                              <span>{item.name}</span>
+                              <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>No equipment data available for this {filter}.</p>
+                      )}
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+              </IonRow>
+            </IonGrid>
+          );
+  
       case "users":
         return <Staff_UsersTab />;
-      case "reports":
-        return <ReportsTab />;
-      case "monthly revenue":
-        return <MonthlyRevenueTab />;
-      case "bookings":
-        return <Staff_BookingsTab />;
+      case "latereturnpenalty":
+        return <LateReturnPenalty />;
+      case "viewbookingcalendar":
+        return <ViewBookingCalendar/>;
       case "managerentalbookings":
         return <ManageRentalBookings />;
-      case "transactions":
-        return <TransactionsTab />;
+      case "viewalltransactions":
+        return <ViewAllTransactions/>;
+         case "generatereports":
+        return <GenerateReports/>;
       default:
         return null;
     }

@@ -23,6 +23,14 @@ import {
   chevronDownOutline,
   menuOutline,
   backspaceOutline,
+  settingsOutline,
+  gridOutline,
+  cogOutline,
+  cubeOutline,
+  repeatOutline,
+  alertOutline,
+  micOffOutline,
+  printOutline,
 } from "ionicons/icons";
 
 interface StaffSidebarProps {
@@ -46,18 +54,7 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             Admin Panel
           </IonTitle>
 
-          <IonButtons slot="end">
-            <IonButton
-              fill="clear"
-              color="medium"
-              onClick={() => {
-                const menu = document.querySelector("ion-menu");
-                if (menu) (menu as any).close();
-              }}
-            >
-              <IonIcon icon={backspaceOutline} />
-            </IonButton>
-          </IonButtons>
+          
         </IonToolbar>
       </IonHeader>
 
@@ -69,46 +66,19 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
           </IonItem>
 
           <IonItem button onClick={() => setActiveTab("manageusers")}>
-            <IonIcon icon={cashOutline} slot="start" />
+            <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>Manage Users</IonLabel>
           </IonItem>
 
-          <IonItem button onClick={() => setShowInventory(!showInventory)}>
-            <IonIcon icon={bookOutline} slot="start" />
-            <IonLabel>Inventory</IonLabel>
-            <IonIcon
-              icon={showInventory ? chevronUpOutline : chevronDownOutline}
-              slot="end"
-            />
+           <IonItem button onClick={() => setActiveTab("manageequipment")}>
+            <IonIcon icon={settingsOutline} slot="start" />
+            <IonLabel>Manage Equipment</IonLabel>
           </IonItem>
 
-          {showInventory && (
-            <div style={{ marginLeft: "2.5rem", marginTop: "0.3rem" }}>
-              <IonItem
-                button
-                lines="none"
-                onClick={() => setActiveTab("admindashboardanaltys")}
-              >
-                <IonLabel>Dashboard</IonLabel>
-              </IonItem>
-              <IonItem
-                button
-                lines="none"
-                onClick={() => setActiveTab("manageequipment")}
-              >
-                <IonLabel>Manage Equipment</IonLabel>
-              </IonItem>
-              <IonItem
-                button
-                lines="none"
-                onClick={() => setActiveTab("managerentalbookings")}
-              >
-                <IonLabel>Manage Rental Bookings</IonLabel>
-              </IonItem>
-             
-            </div>
-          )}
-
+          <IonItem button onClick={() => setActiveTab("managerentalbookings")}>
+            <IonIcon icon={barChartOutline} slot="start" />
+            <IonLabel>Manage Rental Bookings</IonLabel>
+          </IonItem>
           <IonItem button onClick={() => setActiveTab("viewcbookingcalendar")}>
             <IonIcon icon={calendarOutline} slot="start" />
             <IonLabel>View Booking Calendar</IonLabel>
@@ -118,23 +88,21 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={bookOutline} slot="start" />
             <IonLabel>View all Transactions</IonLabel>
           </IonItem>
-
-         
-
-          <IonItem button onClick={() => setActiveTab("generatereports")}>
-            <IonIcon icon={barChartOutline} slot="start" />
-            <IonLabel>Generate Reports</IonLabel>
-          </IonItem>
-
+          
           <IonItem button onClick={() => setActiveTab("users")}>
             <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>View User List</IonLabel>
           </IonItem>
 
           <IonItem button onClick={() => setActiveTab("latereturnpenalty")}>
-            <IonIcon icon={peopleOutline} slot="start" />
+            <IonIcon icon={gridOutline} slot="start" />
             <IonLabel>Late Return Penalty</IonLabel>
           </IonItem>
+           <IonItem button onClick={() => setActiveTab("generatereports")}>
+            <IonIcon icon={printOutline} slot="start" />
+            <IonLabel>Generate Reports</IonLabel>
+          </IonItem>
+
         </IonList>
       </IonContent>
     </IonMenu>

@@ -73,10 +73,9 @@ const EquipmentCatalog: React.FC = () => {
     setIsBookingOpen(true);
   };
 
-  // ✅ FIXED: Prevent duplicate bookings
   const handleBookingSubmit = async (booking: { startDate: string; endDate: string; notes: string }) => {
     try {
-      // 🔹 1. Get logged-in user
+    
       const { data: userData, error: authError } = await supabase.auth.getUser();
       if (authError || !userData?.user) {
         alert("Please log in to make a booking.");
@@ -85,7 +84,6 @@ const EquipmentCatalog: React.FC = () => {
 
       const userEmail = userData.user.email;
 
-      // 🔹 2. Look up user_id from users table
       const { data: userRecord, error: userLookupError } = await supabase
         .from("users")
         .select("user_id")
@@ -100,7 +98,7 @@ const EquipmentCatalog: React.FC = () => {
 
       const user_id = userRecord.user_id;
 
-      // 🔹 3. Check for existing active booking for same equipment
+     
       const { data: existingBooking, error: dupCheckError } = await supabase
         .from("bookings")
         .select("id")
@@ -117,7 +115,6 @@ const EquipmentCatalog: React.FC = () => {
         return;
       }
 
-      // 🔹 4. Create booking
       const { data: newBooking, error: bookingError } = await supabase
         .from("bookings")
         .insert([
@@ -136,7 +133,6 @@ const EquipmentCatalog: React.FC = () => {
 
       if (bookingError) throw bookingError;
 
-      // 🔹 5. Create transaction record
       const { error: transactionError } = await supabase.from("transactions").insert([
         {
           booking_id: newBooking.id,
