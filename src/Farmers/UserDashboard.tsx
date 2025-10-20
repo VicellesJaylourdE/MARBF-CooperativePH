@@ -12,6 +12,7 @@ import {
   IonCardContent,
   IonSpinner,
   IonToast,
+  IonButton,
 } from "@ionic/react";
 import { useState, useEffect } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
@@ -88,6 +89,7 @@ const UserDashboard: React.FC = () => {
       authListener?.subscription.unsubscribe();
     };
   }, []);
+
   useEffect(() => {
     PushNotifications.requestPermissions().then((result) => {
       if (result.receive === "granted") {
@@ -144,62 +146,104 @@ const UserDashboard: React.FC = () => {
               </p>
             ) : (
               <IonList>
-                {bookings.map((b) => (
-                  <IonCard key={b.id}>
-                    <IonCardHeader>
-                      <IonCardTitle>{b.equipment_name}</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>
-                      <IonItem>
-                        <IonLabel>
-                          <strong>Start:</strong> {b.start_date}
-                        </IonLabel>
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel>
-                          <strong>End:</strong> {b.end_date}
-                        </IonLabel>
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel>
-                          <strong>Location:</strong> {b.location || "N/A"}
-                        </IonLabel>
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel>
-                          <strong>Total:</strong> ₱{b.total_price || 0}
-                        </IonLabel>
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel>
-                          <strong>Status:</strong>{" "}
-                          <span
-                            style={{
-                              color:
-                                b.status === "approved"
-                                  ? "green"
-                                  : b.status === "declined"
-                                  ? "red"
-                                  : b.status === "pending"
-                                  ? "orange"
-                                  : "gray",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {b.status.toUpperCase()}
-                          </span>
-                        </IonLabel>
-                      </IonItem>
-                      {b.notes && (
+                {bookings.map((b) => {
+                  const canReturn =
+                    new Date(b.end_date) <= new Date() && b.status !== "returned";
+
+                  return (
+                    <IonCard key={b.id}>
+                      <IonCardHeader>
+                        <IonCardTitle>{b.equipment_name}</IonCardTitle>
+                      </IonCardHeader>
+                      <IonCardContent>
                         <IonItem>
                           <IonLabel>
-                            <strong>Notes:</strong> {b.notes}
+                            <strong>Start:</strong> {b.start_date}
                           </IonLabel>
                         </IonItem>
-                      )}
-                    </IonCardContent>
-                  </IonCard>
-                ))}
+                        <IonItem>
+                          <IonLabel>
+                            <strong>End:</strong> {b.end_date}
+                          </IonLabel>
+                        </IonItem>
+                        <IonItem>
+                          <IonLabel>
+                            <strong>Location:</strong> {b.location || "N/A"}
+                          </IonLabel>
+                        </IonItem>
+                        <IonItem>
+                          <IonLabel>
+                            <strong>Total:</strong> ₱{b.total_price || 0}
+                          </IonLabel>
+                        </IonItem>
+                        <IonItem>
+                          <IonLabel>
+                            <strong>Status:</strong>{" "}
+                            <span
+                              style={{
+                                color:
+                                  b.status === "approved"
+                                    ? "green"
+                                    : b.status === "declined"
+                                    ? "red"
+                                    : b.status === "pending"
+                                    ? "orange"
+                                    : "gray",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {b.status.toUpperCase()}
+                            </span>
+                          </IonLabel>
+                        </IonItem>
+                        {b.notes && (
+                          <IonItem>
+                            <IonLabel>
+                              <strong>Notes:</strong> {b.notes}
+                            </IonLabel>
+                          </IonItem>
+                        )}
+
+                        {canReturn && (
+                          <IonItem lines="none" className="ion-padding-top">
+                            <IonButton
+                              color="warning"
+                              onClick={async () => {
+                                try {
+                                  const { error } = await supabase
+                                    .from("bookings")
+                                    .update({ status: "returned" })
+                                    .eq("id", b.id);
+
+                                  if (error) throw error;
+
+                                  setBookings((prev) =>
+                                    prev.map((item) =>
+                                      item.id === b.id
+                                        ? { ...item, status: "returned" }
+                                        : item
+                                    )
+                                  );
+                                  setToastMsg("Booking successfully returned!");
+                                } catch (err: any) {
+                                  console.error(
+                                    "Return booking error:",
+                                    err.message
+                                  );
+                                  setToastMsg(
+                                    "Failed to return booking. Try again."
+                                  );
+                                }
+                              }}
+                            >
+                              Mark as Returned
+                            </IonButton>
+                          </IonItem>
+                        )}
+                      </IonCardContent>
+                    </IonCard>
+                  );
+                })}
               </IonList>
             )}
           </>
