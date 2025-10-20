@@ -19,7 +19,6 @@ const Admin_ViewBookingCalendar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Fetch bookings from Supabase
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
@@ -61,14 +60,11 @@ const Admin_ViewBookingCalendar: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
-      <h2>📅 Booking Management</h2>
-      <p>Select a date to view bookings.</p>
-
+      <h2>Booking Management</h2>
       {loading ? (
         <IonSpinner name="crescent" />
       ) : (
         <>
-          {/* Calendar */}
           <div className="calendar-container">
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
@@ -85,7 +81,6 @@ const Admin_ViewBookingCalendar: React.FC = () => {
             />
           </div>
 
-          {/* Booking list */}
           <div style={{ marginTop: "16px" }}>
             <h3>
               Bookings on {selectedDate.toDateString()} (
@@ -120,18 +115,17 @@ const Admin_ViewBookingCalendar: React.FC = () => {
         </>
       )}
 
-      {/* Styles */}
       <style>{`
         .calendar-container {
           display: flex;
-          justify-content: center;
+          justify-content: left;
           width: 100%;
         }
         .react-calendar {
-          width: 80%;
+          width: 90%;
           max-width: 900px;
-          font-size: 1.2rem;
-          border-radius: 8px;
+          font-size: 1.5rem;
+          border-radius: 1px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .react-calendar__navigation {

@@ -37,12 +37,10 @@ const Admin_AdminDashboardAnaltys: React.FC = () => {
   const [topEquipments, setTopEquipments] = useState<any[]>([]);
   const [loadingEquipments, setLoadingEquipments] = useState<boolean>(true);
 
-  // 👉 NEW STATES for the copied cards
   const [totalEquipment, setTotalEquipment] = useState(0);
   const [todayBookings, setTodayBookings] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
 
-  // 🔹 Fetch dashboard summary (copied from AdminDashboard)
   useEffect(() => {
     const fetchSummary = async () => {
       try {

@@ -47,7 +47,7 @@ const AdminDashboard: React.FC = () => {
   const [totalEquipment, setTotalEquipment] = useState(0);
   const [todayBookings, setTodayBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [pendingBookings, setPendingBookings] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
 
   const [salesData, setSalesData] = useState<any[]>([]);
@@ -59,14 +59,14 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Summary Cards
+        // Total Equipment
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
+        // Today's Bookings
         const today = new Date().toISOString().split("T")[0];
-
         const { count: todayApprovedCount, error: todayApprovedError } =
           await supabase
             .from("bookings")
@@ -74,36 +74,32 @@ const AdminDashboard: React.FC = () => {
             .eq("status", "approved")
             .gte("approved_at", `${today}T00:00:00`)
             .lte("approved_at", `${today}T23:59:59`);
-
         if (todayApprovedError) throw todayApprovedError;
         setTodayBookings(todayApprovedCount || 0);
 
+        // Total Bookings
         const { count: totalBookingsCount, error: totalBookingsError } =
           await supabase
             .from("bookings")
             .select("*", { count: "exact", head: true });
-
         if (totalBookingsError) throw totalBookingsError;
         setTotalBookings(totalBookingsCount || 0);
 
+        // Total Revenue
         const { data: approvedBookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("id")
           .eq("status", "approved");
-
         if (bookingsError) throw bookingsError;
 
         const approvedBookingIds = approvedBookings?.map((b) => b.id) || [];
         let revenueSum = 0;
-
         if (approvedBookingIds.length > 0) {
           const { data: revenueData, error: revenueError } = await supabase
             .from("transactions")
             .select("amount, booking_id")
             .in("booking_id", approvedBookingIds);
-
           if (revenueError) throw revenueError;
-
           if (revenueData && revenueData.length > 0) {
             revenueSum = revenueData.reduce(
               (acc, cur) => acc + Number(cur.amount || 0),
@@ -111,13 +107,14 @@ const AdminDashboard: React.FC = () => {
             );
           }
         }
-
         setTotalRevenue(revenueSum);
 
-        const { count: usersCount } = await supabase
-          .from("users")
-          .select("*", { count: "exact", head: true });
-        setTotalUsers(usersCount || 0);
+        // Pending Bookings
+        const { count: pendingCount } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending");
+        setPendingBookings(pendingCount || 0);
       } catch (error) {
         console.error("Error fetching summary data:", error);
       }
@@ -148,25 +145,20 @@ const AdminDashboard: React.FC = () => {
           return true;
         });
 
-        let totalRevenueChart = 0;
         const groupedSales: Record<string, number> = {};
-
         filtered.forEach((t: any) => {
           const date = new Date(t.paid_at);
           let label = "";
           if (filter === "year") label = date.toLocaleString("default", { month: "short" });
           else if (filter === "month") label = date.toLocaleDateString("default", { day: "numeric" });
           else label = date.toLocaleDateString("default", { weekday: "short" });
-
           groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
-          totalRevenueChart += t.amount || 0;
         });
 
         const formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
           label,
           revenue: amount,
         }));
-
         setSalesData(formattedData);
 
         // Top Equipments
@@ -211,7 +203,6 @@ const AdminDashboard: React.FC = () => {
       case "dashboard":
         return (
           <IonGrid className="ion-padding">
-            {/* 🔹 Summary Cards */}
             <IonRow>
               <IonCol size="12" sizeMd="3">
                 <IonCard color="primary">
@@ -238,10 +229,10 @@ const AdminDashboard: React.FC = () => {
               <IonCol size="12" sizeMd="3">
                 <IonCard color="tertiary">
                   <IonCardHeader>
-                    <IonCardTitle>Total Users</IonCardTitle>
+                    <IonCardTitle>Pending Bookings</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent style={{ fontSize: "22px", fontWeight: "bold" }}>
-                    {totalUsers}
+                    {pendingBookings}
                   </IonCardContent>
                 </IonCard>
               </IonCol>
@@ -258,7 +249,6 @@ const AdminDashboard: React.FC = () => {
               </IonCol>
             </IonRow>
 
-            {/* 🔹 Analytics Charts */}
             <IonRow style={{ marginTop: "20px" }}>
               <IonCol size="12" sizeMd="8">
                 <IonCard>
@@ -342,7 +332,7 @@ const AdminDashboard: React.FC = () => {
         return <Admin_LateReturnPenalty />;
       case "registermember":
         return <Admin_RegisterMember />;
-        case "admindashboardanaltys":
+      case "admindashboardanaltys":
         return <Admin_AdminDashboardAnaltys />;
       default:
         return null;

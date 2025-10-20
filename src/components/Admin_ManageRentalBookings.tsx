@@ -192,9 +192,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     <IonContent className="ion-padding">
       <div style={{ textAlign: "left", marginBottom: "1rem" }}>
         <h1 style={{ fontWeight: 600, fontSize: "1.2rem" }}>Manage Rental Bookings</h1>
-        <p style={{ color: "#666", fontSize: "0.80rem" }}>
-          View, approve, or decline rental equipment bookings.
-        </p>
       </div>
 
       {loading ? (
