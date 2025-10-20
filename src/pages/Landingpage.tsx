@@ -48,17 +48,11 @@ const LandingPage: React.FC = () => {
           <div className="ion-hide-sm-down">
             <IonButton
               fill="clear"
-              onClick={() => history.push("/login")}
+              onClick={() => history.push("/Landingpage")}
               color="warning"
             >
               Home
-            </IonButton>
-            <IonButton
-              fill="clear"
-              onClick={() => history.push("/booking")}
-              color="warning"
-            >
-              Booking
+           
             </IonButton>
   <IonButton fill="clear" onClick={scrollToSupport} color="warning">
             
@@ -100,7 +94,7 @@ const LandingPage: React.FC = () => {
           </p>
 
           <div style={{ marginTop: "1.5rem" }}>
-            <IonButton onClick={() => history.push("/Register")} color="warning">
+            <IonButton onClick={() => history.push("/Login")} color="warning">
               Start Booking
             </IonButton>
             <IonButton

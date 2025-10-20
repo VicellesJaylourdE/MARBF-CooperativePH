@@ -310,16 +310,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   </IonItem>
                 </>
               )}
-
-              <IonItem>
-                <IonLabel position="stacked">Notes (Optional)</IonLabel>
-                <IonTextarea
-                  placeholder="Any special requirements..."
-                  value={notes}
-                  onIonInput={(e) => setNotes(e.detail.value ?? "")}
-                />
-              </IonItem>
-
               <div className="ion-text-end ion-padding-top">
                 <IonButton fill="clear" onClick={onClose}>
                   Cancel

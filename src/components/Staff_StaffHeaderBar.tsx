@@ -116,7 +116,6 @@ const Staff_StaffHeaderBar: React.FC = () => {
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-            <IonIcon icon={contractOutline} style={{ marginRight: "8px" }} />
             Staff Portal
           </div>
 
