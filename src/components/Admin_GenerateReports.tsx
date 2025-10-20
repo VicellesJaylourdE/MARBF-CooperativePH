@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import {
   IonContent,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
   IonSpinner,
   IonSelect,
   IonSelectOption,
   IonItem,
   IonLabel,
+  IonButton,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 interface ReportData {
   id?: string;
@@ -28,6 +28,21 @@ interface ReportData {
   price?: number;
   user_name?: string;
 }
+
+const headerStyle: React.CSSProperties = {
+  padding: "10px",
+  fontWeight: 600,
+  fontSize: "0.95rem",
+  borderBottom: "1px solid #ddd",
+  textAlign: "center",
+};
+
+const cellStyle: React.CSSProperties = {
+  padding: "8px",
+  fontSize: "0.9rem",
+  borderBottom: "1px solid #eee",
+  textAlign: "center",
+};
 
 const Admin_GenerateReports: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -92,22 +107,79 @@ const Admin_GenerateReports: React.FC = () => {
     fetchData();
   }, [reportType]);
 
-  return (
-    <IonContent
-      className="ion-padding"
-      style={{
-        "--background": "#000",
-        color: "#fff",
-        minHeight: "100vh",
-      } as React.CSSProperties}
-    >
-      <h2 style={{ color: "#fff", fontSize: "1.6rem", marginBottom: "6px" }}>
-        Reports
-      </h2>
-      <p style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "16px" }}>
-        Generate rental and financial summaries.
-      </p>
+  const calculateDays = (start?: string, end?: string) => {
+    if (!start || !end) return "N/A";
+    return (
+      Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)) || 1
+    );
+  };
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    doc.text(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 14, 15);
+
+    const tableData = data.map((item, index) => {
+      const row: any[] = [index + 1];
+      if (reportType === "bookings") {
+        row.push(
+          item.equipment_name,
+          item.user_name,
+          calculateDays(item.start_date, item.end_date),
+          item.start_date,
+          item.end_date,
+          item.status
+        );
+      } else if (reportType === "transactions") {
+        row.push(item.user_name, item.amount, item.payment_method, item.status);
+      } else if (reportType === "equipment") {
+        row.push(item.name, item.category, item.price, item.status);
+      }
+      return row;
+    });
+
+    const headers = [["#"]];
+    if (reportType === "bookings") headers[0].push("Equipment", "User", "Days", "Start Date", "End Date", "Status");
+    if (reportType === "transactions") headers[0].push("User", "Amount", "Payment Method", "Status");
+    if (reportType === "equipment") headers[0].push("Name", "Category", "Price", "Status");
+
+    autoTable(doc, { startY: 20, head: headers, body: tableData });
+    doc.save(`${reportType}_report.pdf`);
+  };
+
+  const generateExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      data.map((item, index) => {
+        const row: any = { "#": index + 1 };
+        if (reportType === "bookings") {
+          row["Equipment"] = item.equipment_name;
+          row["User"] = item.user_name;
+          row["Days"] = calculateDays(item.start_date, item.end_date);
+          row["Start Date"] = item.start_date;
+          row["End Date"] = item.end_date;
+          row["Status"] = item.status;
+        } else if (reportType === "transactions") {
+          row["User"] = item.user_name;
+          row["Amount"] = item.amount;
+          row["Payment Method"] = item.payment_method;
+          row["Status"] = item.status;
+        } else if (reportType === "equipment") {
+          row["Name"] = item.name;
+          row["Category"] = item.category;
+          row["Price"] = item.price;
+          row["Status"] = item.status;
+        }
+        return row;
+      })
+    );
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    XLSX.writeFile(workbook, `${reportType}_report.xlsx`);
+  };
+
+  return (
+    <IonContent className="ion-padding">
+      
       <IonItem
         style={{
           "--background": "#111",
@@ -123,81 +195,78 @@ const Admin_GenerateReports: React.FC = () => {
           style={{ color: "#fff" }}
         >
           <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
-          <IonSelectOption value="transactions">
-            Transactions Report
-          </IonSelectOption>
+          <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
           <IonSelectOption value="equipment">Equipment Report</IonSelectOption>
         </IonSelect>
       </IonItem>
 
+      {/* Export Buttons */}
+      <div style={{ marginBottom: "1rem", display: "flex", gap: "10px" }}>
+        <IonButton color="primary" onClick={generatePDF}>
+          Generate PDF
+        </IonButton>
+        <IonButton color="success" onClick={generateExcel}>
+          Export Excel
+        </IonButton>
+      </div>
+
       {loading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "30px",
-          }}
-        >
+        <div className="ion-text-center ion-padding">
           <IonSpinner name="crescent" />
         </div>
+      ) : data.length === 0 ? (
+        <div style={{ textAlign: "center", color: "#666" }}>No data found.</div>
       ) : (
-        <div style={{ marginTop: "20px" }}>
-          {data.length === 0 ? (
-            <p
-              style={{
-                textAlign: "center",
-                color: "#666",
-                marginTop: "20px",
-              }}
-            >
-              No data found.
-            </p>
-          ) : (
-            data.map((item, index) => (
-              <IonCard
-                key={index}
-                style={{
-                  background: "#111",
-                  borderRadius: "14px",
-                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.05)",
-                  marginBottom: "14px",
-                }}
-              >
-                <IonCardHeader>
-                  <IonCardTitle style={{ color: "#fff" }}>
-                    {index + 1}. {item.equipment_name || item.name || item.user_name || `#${item.id}`}
-                  </IonCardTitle>
-                </IonCardHeader>
-                <IonCardContent>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 2fr",
-                      rowGap: "6px",
-                      columnGap: "10px",
-                    }}
-                  >
-                    {Object.entries(item).map(([key, value]) => (
-                      <React.Fragment key={key}>
-                        <div
-                          style={{
-                            color: "#aaa",
-                            fontWeight: 600,
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          {key.replaceAll("_", " ")}
-                        </div>
-                        <div style={{ color: "#ccc", fontSize: "0.9rem" }}>
-                          {String(value)}
-                        </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </IonCardContent>
-              </IonCard>
-            ))
-          )}
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+            <thead style={{ backgroundColor: "#000000ff" }}>
+              <tr>
+                <th style={headerStyle}>#</th>
+                {reportType === "bookings" && <th style={headerStyle}>Equipment</th>}
+                <th style={headerStyle}>User</th>
+                {reportType === "bookings" && <th style={headerStyle}>Days</th>}
+                {reportType === "bookings" && <th style={headerStyle}>Start Date</th>}
+                {reportType === "bookings" && <th style={headerStyle}>End Date</th>}
+                {reportType === "equipment" && <th style={headerStyle}>Category</th>}
+                {reportType === "equipment" && <th style={headerStyle}>Price</th>}
+                {reportType === "transactions" && <th style={headerStyle}>Amount</th>}
+                {reportType === "transactions" && <th style={headerStyle}>Payment Method</th>}
+                <th style={headerStyle}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr
+                  key={item.id || index}
+                  style={{ backgroundColor: index % 2 === 0 ? "#080808ff" : "#141414ff" }}
+                >
+                  <td style={cellStyle}>{index + 1}</td>
+                  {reportType === "bookings" && <td style={cellStyle}>{item.equipment_name}</td>}
+                  <td style={cellStyle}>{item.user_name || item.name || "-"}</td>
+                  {reportType === "bookings" && (
+                    <>
+                      <td style={cellStyle}>{calculateDays(item.start_date, item.end_date)}</td>
+                      <td style={cellStyle}>{item.start_date}</td>
+                      <td style={cellStyle}>{item.end_date}</td>
+                    </>
+                  )}
+                  {reportType === "equipment" && (
+                    <>
+                      <td style={cellStyle}>{item.category}</td>
+                      <td style={cellStyle}>{item.price ? `₱${item.price.toLocaleString()}` : "-"}</td>
+                    </>
+                  )}
+                  {reportType === "transactions" && (
+                    <>
+                      <td style={cellStyle}>{item.amount ? `₱${item.amount.toLocaleString()}` : "-"}</td>
+                      <td style={cellStyle}>{item.payment_method}</td>
+                    </>
+                  )}
+                  <td style={cellStyle}>{item.status || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </IonContent>

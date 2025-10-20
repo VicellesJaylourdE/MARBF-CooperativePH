@@ -105,13 +105,7 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
               >
                 <IonLabel>Manage Rental Bookings</IonLabel>
               </IonItem>
-              <IonItem
-                button
-                lines="none"
-                onClick={() => setActiveTab("addequipment")}
-              >
-                <IonLabel>Add Equipment</IonLabel>
-              </IonItem>
+             
             </div>
           )}
 
