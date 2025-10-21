@@ -10,7 +10,6 @@
   "test.e2e": "cypress run",
   "test.unit": "vitest",
   "lint": "eslint"
-
   },
   "dependencies": {
     "@capacitor/push-notifications": "^7.0.3",
