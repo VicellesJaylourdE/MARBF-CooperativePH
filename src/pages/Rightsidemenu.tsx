@@ -16,6 +16,9 @@ import {
   informationCircleOutline,
   callOutline,
   logInOutline,
+  hourglassOutline,
+  arrowBackOutline,
+  gitCommitOutline,
 } from "ionicons/icons";
 
 const RightSideMenu: React.FC = () => {
@@ -26,16 +29,14 @@ const RightSideMenu: React.FC = () => {
       type="overlay"
       className="ion-hide-md-up custom-right-menu"
     >
-      {/* ✅ Header */}
       <IonHeader>
-        <IonToolbar color="warning">
-          <IonTitle style={{ fontWeight: "bold", color: "white" }}>
-            Coop PaBOOKid
+        <IonToolbar color="light">
+          <IonTitle style={{ fontWeight: "", color: "white" }}>
+            Menu
           </IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* ✅ Content */}
       <IonContent>
         <IonList lines="none" style={{ marginTop: "1rem" }}>
           {/* Home */}
@@ -44,13 +45,6 @@ const RightSideMenu: React.FC = () => {
             <IonLabel style={{ fontWeight: 500 }}>Home</IonLabel>
           </IonItem>
 
-          {/* Booking */}
-          <IonItem button routerLink="/booking" detail={false}>
-            <IonIcon icon={calendarOutline} slot="start" color="warning" />
-            <IonLabel style={{ fontWeight: 500 }}>Booking</IonLabel>
-          </IonItem>
-
-          {/* About Us */}
           <IonItem
             button
             detail={false}
@@ -61,11 +55,10 @@ const RightSideMenu: React.FC = () => {
               }
             }}
           >
-            <IonIcon icon={callOutline} slot="start" color="warning" />
-            <IonLabel style={{ fontWeight: 500 }}>about us</IonLabel>
+            <IonIcon icon={gitCommitOutline} slot="start" color="warning" />
+            <IonLabel style={{ fontWeight: 500 }}>About us</IonLabel>
           </IonItem>
 
-          {/* Contact → scroll sa CUSTOMER SUPPORT */}
           <IonItem
             button
             detail={false}
@@ -87,7 +80,6 @@ const RightSideMenu: React.FC = () => {
           </IonItem>
         </IonList>
 
-        {/* ✅ Footer */}
         <div
           style={{
             marginTop: "2rem",

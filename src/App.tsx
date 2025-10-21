@@ -1,4 +1,4 @@
-import { Redirect, Route, Switch } from "react-router-dom";
+import { Redirect, Route, Switch, useLocation } from "react-router-dom";
 import {
   IonApp,
   IonRouterOutlet,
@@ -27,29 +27,52 @@ import Menu from "./pages/Menu";
 import Register from "./pages/Register";
 import LandingPage from "./pages/Landingpage";
 import LearnMore from "./pages/LearnMore";
-import RightSideMenu from "./pages/Rightsidemenu"; // ✅ import menu
+import RightSideMenu from "./pages/Rightsidemenu";
+import AdminDashboard from "./Admin/AdminDashboard";
+import UserDashboard from "./Farmers/UserDashboard";
+import StaffDashboard from "./Staff/StaffDashboard";
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
+      <MainRouter />
+    </IonReactRouter>
+  </IonApp>
+);
+
+const MainRouter: React.FC = () => {
+  const location = useLocation();
+
+  if (location.pathname === "/") {
+    return (
       <IonSplitPane contentId="main">
         <RightSideMenu />
         <IonRouterOutlet id="main">
           <Switch>
             <Route exact path="/" component={LandingPage} />
-            
-            <Route exact path="/login" component={Login} />
-            <Route exact path="/register" component={Register} />
-            <Route exact path="/learnmore" component={LearnMore} />
-            <Route path="/MARBF-CooperativePH/app" component={Menu} />
             <Redirect to="/" />
           </Switch>
         </IonRouterOutlet>
       </IonSplitPane>
-    </IonReactRouter>
-  </IonApp>
-);
+    );
+  }
+
+  return (
+    <IonRouterOutlet id="main">
+      <Switch>
+        <Route exact path="/login" component={Login} />
+        <Route exact path="/register" component={Register} />
+        <Route exact path="/learnmore" component={LearnMore} />
+        <Route path="/MARBF-CooperativePH/app" component={Menu} />
+        <Route exact path="/admin-dashboard" component={AdminDashboard} />
+        <Route exact path="/user-dashboard" component={UserDashboard} />
+        <Route exact path="/staff-dashboard" component={StaffDashboard} />
+        <Redirect to="/" />
+      </Switch>
+    </IonRouterOutlet>
+  );
+};
 
 export default App;

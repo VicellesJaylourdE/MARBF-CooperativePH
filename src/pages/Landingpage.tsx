@@ -11,22 +11,19 @@ import {
   IonMenuButton,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import "./LandingPage.css"; // ✅ Import CSS para sa responsive About Us
+import "../theme/LandingPage.css";
 
 const LandingPage: React.FC = () => {
   const history = useHistory();
 
-  // 🔑 Ref para sa CUSTOMER SUPPORT section
   const supportRef = useRef<HTMLDivElement>(null);
 
-  // 🔑 Scroll function
   const scrollToSupport = () => {
     supportRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <IonPage id="main"> {/* ✅ importante para mo–link sa IonMenu */}
-      {/* ✅ Navbar */}
+    <IonPage id="main">
       <IonToolbar color="light">
         <div
           style={{
@@ -36,7 +33,7 @@ const LandingPage: React.FC = () => {
             padding: "0 1rem",
           }}
         >
-          {/* 🚜 Logo + Title */}
+        
           <div style={{ display: "flex", alignItems: "center" }}>
             <IonTitle
               style={{
@@ -48,27 +45,19 @@ const LandingPage: React.FC = () => {
             </IonTitle>
           </div>
 
-          {/* ✅ Desktop nav buttons */}
           <div className="ion-hide-sm-down">
             <IonButton
               fill="clear"
-              onClick={() => history.push("/login")}
+              onClick={() => history.push("/Landingpage")}
               color="warning"
             >
               Home
-            </IonButton>
-            <IonButton
-              fill="clear"
-              onClick={() => history.push("/booking")}
-              color="warning"
-            >
-              Booking
+           
             </IonButton>
   <IonButton fill="clear" onClick={scrollToSupport} color="warning">
             
               About Us
             </IonButton>
-            {/* 🔑 Gi-ilisan: scrollToSupport() instead of history.push */}
             <IonButton fill="clear" onClick={scrollToSupport} color="warning">
               Contact
             </IonButton>
@@ -77,14 +66,14 @@ const LandingPage: React.FC = () => {
             </IonButton>
           </div>
 
-          {/* ✅ Mobile menu button (naka-right side na) */}
+       
           <div className="ion-hide-md-up">
             <IonMenuButton slot="end" autoHide={false} />
           </div>
         </div>
       </IonToolbar>
 
-      {/* ✅ Content */}
+    
       <IonContent className="ion-padding" fullscreen>
         <div
           style={{
@@ -199,18 +188,7 @@ const LandingPage: React.FC = () => {
             Cooperative in embracing digital transformation for better
             agricultural outcomes.
           </p>
-          <IonButton
-            style={{
-              marginTop: "1.5rem",
-              padding: "0.8rem 2rem",
-              fontSize: "1rem",
-              borderRadius: "8px",
-            }}
-            color="light"
-            onClick={() => history.push("/register")}
-          >
-            Get Started Today →
-          </IonButton>
+
         </div>
 
         {/* ✅ Footer */}
@@ -234,13 +212,11 @@ const LandingPage: React.FC = () => {
               width: "100%",
             }}
           >
-            {/* Logo + Slogan */}
             <div style={{ flex: " 1 1 100px", margin: "1rem" }}>
               <h2 style={{ fontWeight: "bold" }}>MARBF Cooperative.</h2>
               <p>Modernizing Equipment Rentals for Farmers</p>
             </div>
 
-            {/* About Us */}
             <div  ref={supportRef}
               id="support"
               style={{ flex: "1 1 100px", margin: "1rem" }}
@@ -250,7 +226,6 @@ const LandingPage: React.FC = () => {
               <p className="about-text">Philippines</p>
             </div>
 
-            {/* Support → 🔑 Gi-butangan ug id */}
             <div
               ref={supportRef}
               id="support"
@@ -262,7 +237,6 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Line */}
           <div
             style={{
               marginTop: "1rem",
