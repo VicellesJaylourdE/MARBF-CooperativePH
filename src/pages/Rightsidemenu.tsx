@@ -45,11 +45,6 @@ const RightSideMenu: React.FC = () => {
             <IonLabel style={{ fontWeight: 500 }}>Home</IonLabel>
           </IonItem>
 
-          <IonItem button routerLink="/booking" detail={false}>
-            <IonIcon icon={calendarOutline} slot="start" color="warning" />
-            <IonLabel style={{ fontWeight: 500 }}>Booking</IonLabel>
-          </IonItem>
-
           <IonItem
             button
             detail={false}

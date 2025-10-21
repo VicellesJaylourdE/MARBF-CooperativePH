@@ -57,11 +57,12 @@ const Admin_ManageUsers: React.FC = () => {
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
 
+    // Fix: IonAlert returns object, not array
     const updatedData = {
-      username: values[0],
-      user_email: values[1],
-      user_firstname: values[2],
-      user_lastname: values[3],
+      username: values.username,
+      user_email: values.user_email,
+      user_firstname: values.user_firstname,
+      user_lastname: values.user_lastname,
     };
 
     const { error } = await supabase
@@ -75,13 +76,15 @@ const Admin_ManageUsers: React.FC = () => {
           u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u
         )
       );
+    } else {
+      console.error("Update error:", error.message);
     }
+
     setShowEditAlert(false);
   };
 
   return (
     <IonContent className="ion-padding">
-   
       <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
         <h2 style={{ margin: 0 }}>Users</h2>
         <IonButton
@@ -161,7 +164,13 @@ const Admin_ManageUsers: React.FC = () => {
         ]}
         buttons={[
           { text: "Cancel", role: "cancel" },
-          { text: "Save", handler: handleEdit },
+          {
+            text: "Save",
+            handler: (data) => {
+              handleEdit(data);
+              return false; // prevents auto-close until handler finishes
+            },
+          },
         ]}
       />
 

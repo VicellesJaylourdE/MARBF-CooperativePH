@@ -49,14 +49,6 @@ const Admin_GenerateReports: React.FC = () => {
   const [reportType, setReportType] = useState<string>("bookings");
   const [data, setData] = useState<ReportData[]>([]);
 
-  // OTP states
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [inputOtp, setInputOtp] = useState("");
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -118,68 +110,13 @@ const Admin_GenerateReports: React.FC = () => {
   const calculateDays = (start?: string, end?: string) => {
     if (!start || !end) return "N/A";
     return (
-      Math.ceil(
-        (new Date(end).getTime() - new Date(start).getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) || 1
+      Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)) || 1
     );
   };
 
-  // 🔐 Send OTP to email
-  const sendOtp = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !user?.email) {
-      alert("Unable to get user email. Please log in again.");
-      return;
-    }
-
-    const email = user.email;
-    setUserEmail(email);
-    const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
-    const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
-    setOtpCode(code);
-    setOtpExpiresAt(expiry);
-    setOtpSent(true);
-
-    // store OTP to a log table (simulated email)
-    await supabase.from("email_logs").insert({
-      email: email,
-      subject: "Your OTP Code",
-      message: `Your OTP code is ${code}. It will expire in 5 minutes.`,
-    });
-
-    alert(`OTP sent to ${email}. Check your inbox.`);
-  };
-
-  // 🔍 Verify OTP input
-  const verifyOtp = () => {
-    if (!otpCode) return alert("No OTP generated.");
-    if (otpExpiresAt && Date.now() > otpExpiresAt) {
-      setOtpSent(false);
-      setOtpCode("");
-      alert("OTP expired. Please request a new one.");
-      return;
-    }
-
-    if (inputOtp === otpCode) {
-      setOtpVerified(true);
-      alert("✅ OTP verified! You can now download the report.");
-    } else {
-      alert("❌ Invalid OTP. Please try again.");
-    }
-  };
-
-  // 📄 PDF generation
   const generatePDF = () => {
     const doc = new jsPDF();
-    doc.text(
-      `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
-      14,
-      15
-    );
+    doc.text(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 14, 15);
 
     const tableData = data.map((item, index) => {
       const row: any[] = [index + 1];
@@ -201,25 +138,14 @@ const Admin_GenerateReports: React.FC = () => {
     });
 
     const headers = [["#"]];
-    if (reportType === "bookings")
-      headers[0].push(
-        "Equipment",
-        "User",
-        "Days",
-        "Start Date",
-        "End Date",
-        "Status"
-      );
-    if (reportType === "transactions")
-      headers[0].push("User", "Amount", "Payment Method", "Status");
-    if (reportType === "equipment")
-      headers[0].push("Name", "Category", "Price", "Status");
+    if (reportType === "bookings") headers[0].push("Equipment", "User", "Days", "Start Date", "End Date", "Status");
+    if (reportType === "transactions") headers[0].push("User", "Amount", "Payment Method", "Status");
+    if (reportType === "equipment") headers[0].push("Name", "Category", "Price", "Status");
 
     autoTable(doc, { startY: 20, head: headers, body: tableData });
     doc.save(`${reportType}_report.pdf`);
   };
 
-  // 📊 Excel generation
   const generateExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       data.map((item, index) => {
@@ -253,6 +179,7 @@ const Admin_GenerateReports: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
+      
       <IonItem
         style={{
           "--background": "#111",
@@ -268,51 +195,19 @@ const Admin_GenerateReports: React.FC = () => {
           style={{ color: "#fff" }}
         >
           <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
-          <IonSelectOption value="transactions">
-            Transactions Report
-          </IonSelectOption>
+          <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
           <IonSelectOption value="equipment">Equipment Report</IonSelectOption>
         </IonSelect>
       </IonItem>
 
-      {/* 🔐 OTP + Export Buttons */}
+      {/* Export Buttons */}
       <div style={{ marginBottom: "1rem", display: "flex", gap: "10px" }}>
-        {!otpSent && !otpVerified && (
-          <IonButton color="warning" onClick={sendOtp}>
-            Send OTP
-          </IonButton>
-        )}
-
-        {otpSent && !otpVerified && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              value={inputOtp}
-              onChange={(e) => setInputOtp(e.target.value)}
-              style={{
-                padding: "6px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-                color: "#000",
-              }}
-            />
-            <IonButton color="tertiary" onClick={verifyOtp}>
-              Verify
-            </IonButton>
-          </div>
-        )}
-
-        {otpVerified && (
-          <>
-            <IonButton color="primary" onClick={generatePDF}>
-              Generate PDF
-            </IonButton>
-            <IonButton color="success" onClick={generateExcel}>
-              Export Excel
-            </IonButton>
-          </>
-        )}
+        <IonButton color="primary" onClick={generatePDF}>
+          Generate PDF
+        </IonButton>
+        <IonButton color="success" onClick={generateExcel}>
+          Export Excel
+        </IonButton>
       </div>
 
       {loading ? (
@@ -323,41 +218,19 @@ const Admin_GenerateReports: React.FC = () => {
         <div style={{ textAlign: "center", color: "#666" }}>No data found.</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              minWidth: "900px",
-            }}
-          >
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
             <thead style={{ backgroundColor: "#000000ff" }}>
               <tr>
                 <th style={headerStyle}>#</th>
-                {reportType === "bookings" && (
-                  <th style={headerStyle}>Equipment</th>
-                )}
+                {reportType === "bookings" && <th style={headerStyle}>Equipment</th>}
                 <th style={headerStyle}>User</th>
-                {reportType === "bookings" && (
-                  <th style={headerStyle}>Days</th>
-                )}
-                {reportType === "bookings" && (
-                  <th style={headerStyle}>Start Date</th>
-                )}
-                {reportType === "bookings" && (
-                  <th style={headerStyle}>End Date</th>
-                )}
-                {reportType === "equipment" && (
-                  <th style={headerStyle}>Category</th>
-                )}
-                {reportType === "equipment" && (
-                  <th style={headerStyle}>Price</th>
-                )}
-                {reportType === "transactions" && (
-                  <th style={headerStyle}>Amount</th>
-                )}
-                {reportType === "transactions" && (
-                  <th style={headerStyle}>Payment Method</th>
-                )}
+                {reportType === "bookings" && <th style={headerStyle}>Days</th>}
+                {reportType === "bookings" && <th style={headerStyle}>Start Date</th>}
+                {reportType === "bookings" && <th style={headerStyle}>End Date</th>}
+                {reportType === "equipment" && <th style={headerStyle}>Category</th>}
+                {reportType === "equipment" && <th style={headerStyle}>Price</th>}
+                {reportType === "transactions" && <th style={headerStyle}>Amount</th>}
+                {reportType === "transactions" && <th style={headerStyle}>Payment Method</th>}
                 <th style={headerStyle}>Status</th>
               </tr>
             </thead>
@@ -365,21 +238,14 @@ const Admin_GenerateReports: React.FC = () => {
               {data.map((item, index) => (
                 <tr
                   key={item.id || index}
-                  style={{
-                    backgroundColor:
-                      index % 2 === 0 ? "#080808ff" : "#141414ff",
-                  }}
+                  style={{ backgroundColor: index % 2 === 0 ? "#080808ff" : "#141414ff" }}
                 >
                   <td style={cellStyle}>{index + 1}</td>
-                  {reportType === "bookings" && (
-                    <td style={cellStyle}>{item.equipment_name}</td>
-                  )}
+                  {reportType === "bookings" && <td style={cellStyle}>{item.equipment_name}</td>}
                   <td style={cellStyle}>{item.user_name || item.name || "-"}</td>
                   {reportType === "bookings" && (
                     <>
-                      <td style={cellStyle}>
-                        {calculateDays(item.start_date, item.end_date)}
-                      </td>
+                      <td style={cellStyle}>{calculateDays(item.start_date, item.end_date)}</td>
                       <td style={cellStyle}>{item.start_date}</td>
                       <td style={cellStyle}>{item.end_date}</td>
                     </>
@@ -387,20 +253,12 @@ const Admin_GenerateReports: React.FC = () => {
                   {reportType === "equipment" && (
                     <>
                       <td style={cellStyle}>{item.category}</td>
-                      <td style={cellStyle}>
-                        {item.price
-                          ? `₱${item.price.toLocaleString()}`
-                          : "-"}
-                      </td>
+                      <td style={cellStyle}>{item.price ? `₱${item.price.toLocaleString()}` : "-"}</td>
                     </>
                   )}
                   {reportType === "transactions" && (
                     <>
-                      <td style={cellStyle}>
-                        {item.amount
-                          ? `₱${item.amount.toLocaleString()}`
-                          : "-"}
-                      </td>
+                      <td style={cellStyle}>{item.amount ? `₱${item.amount.toLocaleString()}` : "-"}</td>
                       <td style={cellStyle}>{item.payment_method}</td>
                     </>
                   )}

@@ -82,7 +82,7 @@ const Admin_LateReturnPenalty: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
-      <h2>📅 Late Return Penalty Report</h2>
+      <h2>Late Return Penalty Report</h2>
 
       {loading ? (
         <div className="flex justify-center items-center mt-5">
