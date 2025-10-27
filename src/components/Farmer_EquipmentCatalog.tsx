@@ -19,6 +19,7 @@ interface Equipment {
   name: string;
   category: string;
   price: number;
+  price_type?: "hectare" | "kilo"; // added price type
   status?: string;
   available?: boolean;
   image_url?: string;
@@ -30,13 +31,14 @@ const EquipmentCatalog: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number>(0);
+  const [selectedPriceType, setSelectedPriceType] = useState<"hectare" | "kilo">("hectare");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("equipment")
-      .select("id, name, category, status, price, image_url");
+      .select("id, name, category, status, price, price_type, image_url");
 
     if (error) {
       console.error("Error fetching equipment:", error);
@@ -67,15 +69,15 @@ const EquipmentCatalog: React.FC = () => {
     };
   }, []);
 
-  const openBooking = (eqName: string, eqPrice: number) => {
+  const openBooking = (eqName: string, eqPrice: number, eqPriceType: "hectare" | "kilo") => {
     setSelectedEquipment(eqName);
     setSelectedPrice(eqPrice);
+    setSelectedPriceType(eqPriceType);
     setIsBookingOpen(true);
   };
 
   const handleBookingSubmit = async (booking: { startDate: string; endDate: string; notes: string }) => {
     try {
-    
       const { data: userData, error: authError } = await supabase.auth.getUser();
       if (authError || !userData?.user) {
         alert("Please log in to make a booking.");
@@ -98,7 +100,6 @@ const EquipmentCatalog: React.FC = () => {
 
       const user_id = userRecord.user_id;
 
-     
       const { data: existingBooking, error: dupCheckError } = await supabase
         .from("bookings")
         .select("id")
@@ -226,7 +227,7 @@ const EquipmentCatalog: React.FC = () => {
                       <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
                       <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
                       <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
-                        <strong>₱{eq.price}</strong> / day
+                        <strong>₱{eq.price}</strong> / {eq.price_type || "hectare"}
                       </p>
 
                       <IonBadge
@@ -241,7 +242,7 @@ const EquipmentCatalog: React.FC = () => {
                         size="small"
                         color={getStatusColor(eq)}
                         disabled={!(eq.status === "available" || eq.available)}
-                        onClick={() => openBooking(eq.name, eq.price)}
+                        onClick={() => openBooking(eq.name, eq.price, eq.price_type || "hectare")}
                         style={{ marginTop: "6px" }}
                       >
                         {eq.status === "available" || eq.available ? "Book Now" : "Unavailable"}
@@ -260,6 +261,7 @@ const EquipmentCatalog: React.FC = () => {
         onSubmit={handleBookingSubmit}
         equipmentName={selectedEquipment || ""}
         price={selectedPrice}
+        priceType={selectedPriceType} // passing price type to modal
       />
     </div>
   );

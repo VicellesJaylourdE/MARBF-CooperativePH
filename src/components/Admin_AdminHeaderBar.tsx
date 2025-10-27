@@ -247,7 +247,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
                   if (error) {
                     console.error("Logout error:", error.message);
                   } else {
-                    window.location.href = "/MARBF-CooperativePH";
+                    window.location.href = "/";
                   }
                 }}
               >

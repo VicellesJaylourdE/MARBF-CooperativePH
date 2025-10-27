@@ -26,6 +26,7 @@ interface Equipment {
   name: string;
   category: string;
   price: number;
+  price_type: "hectare" | "kilo";
   status: string;
   image_url?: string;
 }
@@ -34,6 +35,7 @@ const Admin_Manageequipment: React.FC = () => {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState<number | null>(null);
+  const [priceType, setPriceType] = useState<"hectare" | "kilo">("hectare");
   const [status, setStatus] = useState("available");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -48,7 +50,6 @@ const Admin_Manageequipment: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch equipment list
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -82,7 +83,6 @@ const Admin_Manageequipment: React.FC = () => {
     fetchEquipment();
   }, []);
 
-  // Handle image selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -92,7 +92,6 @@ const Admin_Manageequipment: React.FC = () => {
     }
   };
 
-  // Add equipment
   const handleAddEquipment = async () => {
     if (!name || !price || !category) {
       setAlertMessage("⚠️ Please fill all required fields");
@@ -113,10 +112,7 @@ const Admin_Manageequipment: React.FC = () => {
         .from("user-avatars")
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
-      if (uploadError) {
-        setAlertMessage(`Image upload failed: ${uploadError.message}`);
-        setShowAlert(true);
-      } else {
+      if (!uploadError) {
         const { data: urlData } = supabase.storage
           .from("user-avatars")
           .getPublicUrl(filePath);
@@ -131,6 +127,7 @@ const Admin_Manageequipment: React.FC = () => {
           name,
           category,
           price,
+          price_type: priceType,
           status,
           image_url: imageUrl,
         },
@@ -145,6 +142,7 @@ const Admin_Manageequipment: React.FC = () => {
       setName("");
       setCategory("");
       setPrice(null);
+      setPriceType("hectare");
       setStatus("available");
       setImageFile(null);
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -156,7 +154,6 @@ const Admin_Manageequipment: React.FC = () => {
     setUploading(false);
   };
 
-  // Delete equipment
   const handleDeleteEquipment = async (id: string) => {
     const confirmDelete = window.confirm(
       "🗑️ Are you sure you want to delete this equipment?"
@@ -165,17 +162,15 @@ const Admin_Manageequipment: React.FC = () => {
 
     const { error } = await supabase.from("equipment").delete().eq("id", id);
 
-    if (error) {
-      setAlertMessage(`Error deleting equipment: ${error.message}`);
-      setShowAlert(true);
-    } else {
+    if (!error) {
       setEquipment(equipment.filter((eq) => eq.id !== id));
       setAlertMessage("✅ Equipment deleted!");
-      setShowAlert(true);
+    } else {
+      setAlertMessage(`Error deleting equipment: ${error.message}`);
     }
+    setShowAlert(true);
   };
 
-  // Edit equipment
   const handleEdit = (eq: Equipment) => {
     setEditingId(eq.id);
     setEditData({ ...eq });
@@ -194,14 +189,12 @@ const Admin_Manageequipment: React.FC = () => {
         name: editData.name,
         category: editData.category,
         price: editData.price,
+        price_type: editData.price_type || "hectare",
         status: editData.status,
       })
       .eq("id", id);
 
-    if (error) {
-      setAlertMessage(`Error updating equipment: ${error.message}`);
-      setShowAlert(true);
-    } else {
+    if (!error) {
       setEquipment(
         equipment.map((eq) =>
           eq.id === id ? { ...eq, ...editData } : eq
@@ -210,8 +203,10 @@ const Admin_Manageequipment: React.FC = () => {
       setEditingId(null);
       setEditData({});
       setAlertMessage("✅ Equipment updated successfully!");
-      setShowAlert(true);
+    } else {
+      setAlertMessage(`Error updating equipment: ${error.message}`);
     }
+    setShowAlert(true);
   };
 
   return (
@@ -235,12 +230,20 @@ const Admin_Manageequipment: React.FC = () => {
           </IonItem>
 
           <IonItem>
-            <IonLabel position="stacked">Price (₱ per day)</IonLabel>
+            <IonLabel position="stacked">Price (₱ per {priceType})</IonLabel>
             <IonInput
               type="number"
               value={price ?? ""}
               onIonChange={(e) => setPrice(Number(e.detail.value!))}
             />
+          </IonItem>
+
+          <IonItem>
+            <IonLabel position="stacked">Price Type</IonLabel>
+            <IonSelect value={priceType} onIonChange={(e) => setPriceType(e.detail.value)}>
+              <IonSelectOption value="hectare">Per Hectare</IonSelectOption>
+              <IonSelectOption value="kilo">Per Kilo</IonSelectOption>
+            </IonSelect>
           </IonItem>
 
           <IonItem>
@@ -291,7 +294,7 @@ const Admin_Manageequipment: React.FC = () => {
             <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
               <IonCol>Name</IonCol>
               <IonCol>Category</IonCol>
-              <IonCol>Price (₱/day)</IonCol>
+              <IonCol>Price</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Image</IonCol>
               <IonCol>Actions</IonCol>
@@ -318,6 +321,7 @@ const Admin_Manageequipment: React.FC = () => {
                     eq.name
                   )}
                 </IonCol>
+
                 <IonCol>
                   {editingId === eq.id ? (
                     <IonInput
@@ -330,6 +334,7 @@ const Admin_Manageequipment: React.FC = () => {
                     eq.category
                   )}
                 </IonCol>
+
                 <IonCol>
                   {editingId === eq.id ? (
                     <IonInput
@@ -340,9 +345,10 @@ const Admin_Manageequipment: React.FC = () => {
                       }
                     />
                   ) : (
-                    `₱${eq.price}`
+                    `₱${eq.price} / ${eq.price_type}`
                   )}
                 </IonCol>
+
                 <IonCol>
                   {editingId === eq.id ? (
                     <IonSelect
@@ -359,6 +365,7 @@ const Admin_Manageequipment: React.FC = () => {
                     eq.status
                   )}
                 </IonCol>
+
                 <IonCol>
                   <IonImg
                     src={eq.image_url || "https://via.placeholder.com/50"}
@@ -366,6 +373,7 @@ const Admin_Manageequipment: React.FC = () => {
                     style={{ width: "50px", height: "50px", objectFit: "cover" }}
                   />
                 </IonCol>
+
                 <IonCol>
                   {editingId === eq.id ? (
                     <>

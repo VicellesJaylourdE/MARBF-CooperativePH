@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonModal,
   IonHeader,
@@ -32,9 +32,12 @@ interface BookingModalProps {
     endDate: string;
     notes: string;
     location: string;
+    quantity: number;
+    priceType: "hectare" | "kilo";
   }) => void;
   equipmentName: string;
   price: number;
+  priceType?: "hectare" | "kilo"; // added price type
   equipmentId?: string;
 }
 
@@ -44,6 +47,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   onSubmit,
   equipmentName,
   price,
+  priceType = "hectare",
   equipmentId,
 }) => {
   const [startDate, setStartDate] = useState<string>("");
@@ -54,42 +58,58 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [proofFileName, setProofFileName] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
+
   const [days, setDays] = useState<number>(0);
+  const [quantity, setQuantity] = useState<number>(1);
   const [totalPrice, setTotalPrice] = useState<number>(0);
 
-  // ✅ Reset total when changing start date
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value);
-    setDays(0);
-    setTotalPrice(0);
+  const computeTotal = (d: number, q: number) => {
+    // total depends on priceType: hectare uses days, kilo ignores days
+    const total =
+      priceType === "hectare"
+        ? d > 0 && q > 0
+          ? d * price * q
+          : 0
+        : q > 0
+        ? price * q
+        : 0;
+    setTotalPrice(total);
   };
 
-  // ✅ Compute correct total using normalized times
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    if (endDate) handleEndDateChange(endDate);
+  };
+
   const handleEndDateChange = (value: string) => {
     setEndDate(value);
-    if (startDate && value) {
-      const start = new Date(startDate);
-      const end = new Date(value);
+    if (!startDate || !value) return;
 
-      // normalize both dates to 00:00:00
-      start.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
+    const start = new Date(startDate);
+    const end = new Date(value);
 
-      const diffTime = end.getTime() - start.getTime();
-      const diffDays = diffTime / (1000 * 60 * 60 * 24) + 1;
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
 
-      if (diffDays > 0) {
-        setDays(diffDays);
-        setTotalPrice(diffDays * price);
-      } else {
-        setDays(0);
-        setTotalPrice(0);
-        setToastMsg("⚠️ End date must be after start date.");
-      }
+    const diff = end.getTime() - start.getTime();
+    const diffDays = diff / (1000 * 60 * 60 * 24) + 1;
+
+    if (diffDays > 0) {
+      setDays(diffDays);
+      computeTotal(diffDays, quantity);
+    } else {
+      setDays(0);
+      setTotalPrice(0);
+      setToastMsg("⚠️ End date must be after start date.");
     }
   };
 
-  // ✅ Handle proof upload
+  const handleQuantityChange = (value: string) => {
+    const qty = Number(value) || 0;
+    setQuantity(qty);
+    computeTotal(days, qty);
+  };
+
   const handleProofUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -113,15 +133,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
-  // ✅ Submit booking and transaction
   const handleSubmit = async () => {
-    if (!startDate || !endDate) {
-      alert("Please select start and end dates.");
-      return;
-    }
-
-    if (!paymentMethod) {
-      alert("Please select a payment method.");
+    if (priceType === "hectare" && (!startDate || !endDate || days <= 0)) {
+      alert("Please select valid start and end dates.");
       return;
     }
 
@@ -159,6 +173,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
             location,
             status: "pending",
             total_price: totalPrice,
+            quantity,
+            price_type: priceType, // save price type
           },
         ])
         .select()
@@ -181,14 +197,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
       if (transactionError) throw transactionError;
 
-      onSubmit({ startDate, endDate, notes, location });
+      onSubmit({ startDate, endDate, notes, location, quantity, priceType });
       setToastMsg("Booking submitted successfully!");
-      setStartDate("");
-      setEndDate("");
-      setNotes("");
-      setLocation("");
-      setPaymentMethod("gcash");
-      setProofFileName("");
       onClose();
     } catch (err: any) {
       console.error("Booking error:", err.message);
@@ -215,39 +225,74 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </IonCardHeader>
 
             <IonCardContent>
-              <IonGrid>
-                <IonRow>
-                  <IonCol>
+              {priceType === "hectare" && (
+                <IonGrid>
+                  <IonRow>
+                    <IonCol>
+                      <IonItem>
+                        <IonLabel position="stacked">Start Date</IonLabel>
+                        <IonInput
+                          type="date"
+                          value={startDate}
+                          onIonInput={(e) => handleStartDateChange(e.detail.value ?? "")}
+                        />
+                      </IonItem>
+                    </IonCol>
+                    <IonCol>
+                      <IonItem>
+                        <IonLabel position="stacked">End Date</IonLabel>
+                        <IonInput
+                          type="date"
+                          value={endDate}
+                          onIonInput={(e) => handleEndDateChange(e.detail.value ?? "")}
+                        />
+                      </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
+              )}
+
+              <IonItem className="ion-margin-top">
+                <IonLabel position="stacked">
+                  {priceType === "hectare" ? "Hectares" : "Kilos"} (Quantity)
+                </IonLabel>
+                <IonInput
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onIonInput={(e) => handleQuantityChange(e.detail.value ?? "1")}
+                />
+              </IonItem>
+
+              {((priceType === "hectare" && startDate && endDate && days > 0) ||
+                priceType === "kilo") && (
+                <>
+                  {priceType === "hectare" && (
                     <IonItem>
-                      <IonLabel position="stacked">Start Date</IonLabel>
-                      <IonInput
-                        type="date"
-                        value={startDate}
-                        onIonInput={(e) =>
-                          handleStartDateChange(e.detail.value ?? "")
-                        }
-                      />
+                      <IonLabel>
+                        ✅ <strong>Days:</strong> {days}
+                      </IonLabel>
                     </IonItem>
-                  </IonCol>
-                  <IonCol>
-                    <IonItem>
-                      <IonLabel position="stacked">End Date</IonLabel>
-                      <IonInput
-                        type="date"
-                        value={endDate}
-                        onIonInput={(e) =>
-                          handleEndDateChange(e.detail.value ?? "")
-                        }
-                      />
-                    </IonItem>
-                  </IonCol>
-                </IonRow>
-              </IonGrid>
+                  )}
+
+                  <IonItem>
+                    <IonLabel>
+                      💰 <strong>Price per {priceType}:</strong> ₱{price}
+                    </IonLabel>
+                  </IonItem>
+
+                  <IonItem>
+                    <IonLabel>
+                      <strong>Total:</strong> ₱{totalPrice}
+                    </IonLabel>
+                  </IonItem>
+                </>
+              )}
 
               <IonItem>
                 <IonLabel position="stacked">Location</IonLabel>
                 <IonInput
-                  placeholder="Enter location or pickup point"
+                  placeholder="Enter location"
                   value={location}
                   onIonInput={(e) => setLocation(e.detail.value ?? "")}
                 />
@@ -256,60 +301,40 @@ const BookingModal: React.FC<BookingModalProps> = ({
               <IonItem>
                 <IonLabel position="stacked">Payment Method</IonLabel>
                 <IonSelect
-                  placeholder="Select payment method"
                   value={paymentMethod}
                   onIonChange={(e) => setPaymentMethod(e.detail.value)}
                 >
-                  <IonSelectOption value="gcash">Gcash</IonSelectOption>
+                  <IonSelectOption value="gcash">GCash</IonSelectOption>
                   <IonSelectOption value="cash">Cash</IonSelectOption>
                 </IonSelect>
               </IonItem>
 
               {paymentMethod === "gcash" && (
-                <IonCard className="ion-margin-top">
-                  <IonCardHeader>
-                    <IonCardTitle>GCash Payment Details</IonCardTitle>
-                  </IonCardHeader>
-                  <IonCardContent>
-                    <p>
-                      📱 <strong>Number:</strong> 09639539761
-                      <br />
-                      👤 <strong>Name:</strong> Jay Vicelles
-                    </p>
-                    <p>Please send your payment to the above GCash account.</p>
-                  </IonCardContent>
-                </IonCard>
-              )}
-
-              {paymentMethod === "gcash" && (
-                <IonItem>
-                  <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProofUpload}
-                    disabled={uploading}
-                  />
-                </IonItem>
-              )}
-
-              {startDate && endDate && days > 0 && (
                 <>
+                  <IonCard className="ion-margin-top">
+                    <IonCardHeader>
+                      <IonCardTitle>GCash Payment Details</IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent>
+                      <p>
+                        📱 <strong>Number:</strong> 09639539761 <br />
+                        👤 <strong>Name:</strong> Jay Vicelles
+                      </p>
+                    </IonCardContent>
+                  </IonCard>
+
                   <IonItem>
-                    <IonLabel>
-                      <strong>Price per day:</strong> ₱{price}
-                    </IonLabel>
-                  </IonItem>
-                  <IonItem>
-                    <IonLabel>
-                      <strong>
-                        Total ({days} day{days > 1 ? "s" : ""}):
-                      </strong>{" "}
-                      ₱{totalPrice}
-                    </IonLabel>
+                    <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProofUpload}
+                      disabled={uploading}
+                    />
                   </IonItem>
                 </>
               )}
+
               <div className="ion-text-end ion-padding-top">
                 <IonButton fill="clear" onClick={onClose}>
                   Cancel
