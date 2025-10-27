@@ -7,7 +7,6 @@ import {
   IonContent,
   IonItem,
   IonLabel,
-  IonTextarea,
   IonButtons,
   IonButton,
   IonGrid,
@@ -37,7 +36,7 @@ interface BookingModalProps {
   }) => void;
   equipmentName: string;
   price: number;
-  priceType?: "hectare" | "kilo"; // added price type
+  priceType?: "hectare" | "kilo";
   equipmentId?: string;
 }
 
@@ -64,12 +63,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [totalPrice, setTotalPrice] = useState<number>(0);
 
   const computeTotal = (d: number, q: number) => {
-    // total depends on priceType: hectare uses days, kilo ignores days
     const total =
       priceType === "hectare"
         ? d > 0 && q > 0
           ? d * price * q
           : 0
+        : d > 0 && q > 0
+        ? price * q * d
         : q > 0
         ? price * q
         : 0;
@@ -134,16 +134,26 @@ const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (priceType === "hectare" && (!startDate || !endDate || days <= 0)) {
+    // Check valid dates
+    if (!startDate || !endDate || days <= 0) {
       alert("Please select valid start and end dates.");
       return;
     }
 
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    // Check location
+    if (!location || location.trim() === "") {
+      alert("⚠️ Please enter a location.");
+      return;
+    }
 
+    // Check proof for GCash
+    if (paymentMethod === "gcash" && !proofFileName) {
+      alert("⚠️ Please upload proof of GCash payment.");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert("You must be logged in to book equipment.");
         return;
@@ -174,7 +184,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             status: "pending",
             total_price: totalPrice,
             quantity,
-            price_type: priceType, // save price type
+            price_type: priceType,
           },
         ])
         .select()
@@ -225,32 +235,34 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </IonCardHeader>
 
             <IonCardContent>
-              {priceType === "hectare" && (
-                <IonGrid>
-                  <IonRow>
-                    <IonCol>
-                      <IonItem>
-                        <IonLabel position="stacked">Start Date</IonLabel>
-                        <IonInput
-                          type="date"
-                          value={startDate}
-                          onIonInput={(e) => handleStartDateChange(e.detail.value ?? "")}
-                        />
-                      </IonItem>
-                    </IonCol>
-                    <IonCol>
-                      <IonItem>
-                        <IonLabel position="stacked">End Date</IonLabel>
-                        <IonInput
-                          type="date"
-                          value={endDate}
-                          onIonInput={(e) => handleEndDateChange(e.detail.value ?? "")}
-                        />
-                      </IonItem>
-                    </IonCol>
-                  </IonRow>
-                </IonGrid>
-              )}
+              <IonGrid>
+                <IonRow>
+                  <IonCol>
+                    <IonItem>
+                      <IonLabel position="stacked">Start Date</IonLabel>
+                      <IonInput
+                        type="date"
+                        value={startDate}
+                        onIonInput={(e) =>
+                          handleStartDateChange(e.detail.value ?? "")
+                        }
+                      />
+                    </IonItem>
+                  </IonCol>
+                  <IonCol>
+                    <IonItem>
+                      <IonLabel position="stacked">End Date</IonLabel>
+                      <IonInput
+                        type="date"
+                        value={endDate}
+                        onIonInput={(e) =>
+                          handleEndDateChange(e.detail.value ?? "")
+                        }
+                      />
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
 
               <IonItem className="ion-margin-top">
                 <IonLabel position="stacked">
@@ -264,8 +276,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </IonItem>
 
-              {((priceType === "hectare" && startDate && endDate && days > 0) ||
-                priceType === "kilo") && (
+              {startDate && endDate && (
                 <>
                   {priceType === "hectare" && (
                     <IonItem>

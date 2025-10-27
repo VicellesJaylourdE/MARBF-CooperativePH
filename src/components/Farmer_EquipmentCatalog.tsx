@@ -261,7 +261,7 @@ const EquipmentCatalog: React.FC = () => {
         onSubmit={handleBookingSubmit}
         equipmentName={selectedEquipment || ""}
         price={selectedPrice}
-        priceType={selectedPriceType} // passing price type to modal
+        priceType={selectedPriceType}
       />
     </div>
   );
