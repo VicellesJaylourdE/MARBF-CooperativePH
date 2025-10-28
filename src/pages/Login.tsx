@@ -11,8 +11,7 @@ import {
   useIonRouter,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
-import logo from "../assets/logo.png"; // cooperative logo
-
+import logo from "../assets/logo.png"; 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({
   message,
   isOpen,
@@ -76,7 +75,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    // ✅ Successful login
     setShowToast(true);
 
     setTimeout(() => {
@@ -146,7 +144,6 @@ const Login: React.FC = () => {
                     Forgot Password?
                   </span>
 
-                  {/* ✅ Login Button with Spinner Inside */}
                   <IonButton
                     onClick={doLogin}
                     expand="block"
@@ -168,7 +165,6 @@ const Login: React.FC = () => {
                     )}
                   </IonButton>
 
-                  {/* Sign Up */}
                   <p className="signup-text">
                     Don’t have an account?{" "}
                     <span

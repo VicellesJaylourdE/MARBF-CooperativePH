@@ -6,12 +6,14 @@ import {
   IonButton,
   IonAlert,
   IonModal,
+  useIonRouter,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
 import logo from "../assets/logo.png";
 
 const RegisterAll: React.FC = () => {
+  const navigation = useIonRouter();
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -21,7 +23,7 @@ const RegisterAll: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [agreed, setAgreed] = useState(false); // ✅ New state for terms checkbox
+  const [agreed, setAgreed] = useState(false);
 
   const doRegister = async () => {
     try {
@@ -79,7 +81,7 @@ const RegisterAll: React.FC = () => {
                   <IonButton
                     fill="clear"
                     className="back-button"
-                    routerLink="/login"
+                    onClick={() => navigation.push("/login")}
                   >
                     ←
                   </IonButton>
@@ -144,7 +146,6 @@ const RegisterAll: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* ✅ Terms and Conditions */}
                   <div className="terms-container">
                     <input
                       type="checkbox"
@@ -154,9 +155,12 @@ const RegisterAll: React.FC = () => {
                     />
                     <label htmlFor="terms">
                       I agree to the{" "}
-                      <a href="/terms" target="_blank">
+                      <span
+                        style={{ color: "#0078d7", cursor: "pointer" }}
+                        onClick={() => navigation.push("/terms")}
+                      >
                         Terms and Conditions
-                      </a>
+                      </span>
                     </label>
                   </div>
 
@@ -165,16 +169,20 @@ const RegisterAll: React.FC = () => {
                     fill="solid"
                     className="register-btn"
                     onClick={doRegister}
-                    disabled={loading || !agreed} // ✅ Disable until checked
+                    disabled={loading || !agreed}
                   >
                     {loading ? "Registering..." : "Register"}
                   </IonButton>
 
                   <p className="signup-text">
                     Already have an account?{" "}
-                    <a href="/login" className="signup-link">
+                    <span
+                      className="signup-link"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => navigation.push("/login")}
+                    >
                       Log In
-                    </a>
+                    </span>
                   </p>
                 </div>
               </div>
@@ -199,7 +207,7 @@ const RegisterAll: React.FC = () => {
             <p>You can now log in with your account.</p>
             <IonButton
               expand="block"
-              routerLink="/login"
+              onClick={() => navigation.push("/login")}
               style={{ marginTop: "1rem" }}
             >
               Go to Login
@@ -208,196 +216,28 @@ const RegisterAll: React.FC = () => {
         </IonModal>
       </IonContent>
 
-      <style>
-        {`
-          .background-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            background: url('/assets/bg-farm.jpg') no-repeat center center/cover;
-          }
-
-          .overlay {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-
-          .register-layout {
-            display: flex;
-            width: 85%;
-            max-width: 850px;
-            height: 85vh;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-          }
-
-          .left-panel {
-            flex: 1;
-            background: #ffd500ff;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 30px;
-          }
-
-          .coop-logo {
-            width: 140px;
-            margin-bottom: 15px;
-          }
-
-          .left-panel h2 {
-            font-size: 18px;
-            font-weight: 500;
-            line-height: 1.4;
-            max-width: 300px;
-          }
-
-          .right-panel {
-            flex: 1;
-            background: #ffffffd9;
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-
-          .register-box {
-            width: 90%;
-            max-width: 300px;
-            text-align: left;
-          }
-
-          .back-button {
-            padding: 0;
-            margin-bottom: 0px;
-            font-size: 20px;
-            color: #FCB53B;
-          }
-
-          .welcome {
-            font-size: 20px;
-            font-weight: 600;
-            color: #FCB53B;
-            margin-bottom: 5px;
-          }
-
-          .instruction {
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 20px;
-          }
-
-          .label {
-            display: block;
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 4px;
-          }
-
-          .input {
-            width: 100%;
-            margin-bottom: 12px;
-            --highlight-color-focused: #555555ff;
-            --border-color: #000000ff;
-            --color: #333;
-          }
-
-          .name-row {
-            display: flex;
-            gap: 10px;
-          }
-
-          .name-field {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-          }
-
-          .register-btn {
-            --background: #FCB53B;
-            --color: white;
-            border-radius: 6px;
-            width: 100%;
-            margin-top: 10px;
-          }
-
-          .signup-text {
-            font-size: 12px;
-            color: #333;
-            text-align: center;
-            margin-top: 10px;
-          }
-
-          .signup-link {
-            color: #0078d7;
-            text-decoration: none;
-            font-weight: 500;
-          }
-
-          .signup-link:hover {
-            text-decoration: underline;
-          }
-
-          /* ✅ Terms container */
-          .terms-container {
-            font-size: 12px;
-            color: #333;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-
-          .terms-container a {
-            color: #0078d7;
-            text-decoration: none;
-          }
-
-          .terms-container a:hover {
-            text-decoration: underline;
-          }
-
-          @media (max-width: 768px) {
-            .register-layout {
-              flex-direction: column;
-              width: 90%;
-              height: auto;
-            }
-
-            .left-panel {
-              display: none;
-            }
-
-            .right-panel {
-              padding: 25px;
-              border-radius: 12px;
-            }
-
-            .register-box {
-              width: 100%;
-              max-width: 300px;
-            }
-
-            .name-row {
-              display: flex;
-              flex-direction: row;
-              gap: 8px;
-            }
-
-            .name-field {
-              flex: 1;
-            }
-          }
-        `}
-      </style>
+      <style>{`
+        .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
+        .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
+        .register-layout { display: flex; width: 85%; max-width: 850px; height: 85vh; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .left-panel { flex: 1; background: #ffd500ff; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
+        .coop-logo { width: 140px; margin-bottom: 15px; }
+        .left-panel h2 { font-size: 18px; font-weight: 500; line-height: 1.4; max-width: 300px; }
+        .right-panel { flex: 1; background: #ffffffd9; backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; }
+        .register-box { width: 90%; max-width: 300px; text-align: left; }
+        .back-button { padding: 0; margin-bottom: 0px; font-size: 20px; color: #FCB53B; }
+        .welcome { font-size: 20px; font-weight: 600; color: #FCB53B; margin-bottom: 5px; }
+        .instruction { font-size: 13px; color: #555; margin-bottom: 20px; }
+        .label { display: block; font-size: 13px; color: #333; margin-bottom: 4px; }
+        .input { width: 100%; margin-bottom: 12px; --highlight-color-focused: #555555ff; --border-color: #000000ff; --color: #333; }
+        .name-row { display: flex; gap: 10px; }
+        .name-field { flex: 1; display: flex; flex-direction: column; }
+        .register-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-top: 10px; }
+        .signup-text { font-size: 12px; color: #333; text-align: center; margin-top: 10px; }
+        .signup-link { color: #0078d7; text-decoration: none; font-weight: 500; }
+        .terms-container { font-size: 12px; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        @media (max-width: 768px) { .register-layout { flex-direction: column; width: 90%; height: auto; } .left-panel { display: none; } .right-panel { padding: 25px; border-radius: 12px; } .register-box { width: 100%; max-width: 300px; } .name-row { display: flex; flex-direction: row; gap: 8px; } .name-field { flex: 1; } }
+      `}</style>
     </IonPage>
   );
 };
