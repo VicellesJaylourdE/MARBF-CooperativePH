@@ -6,11 +6,10 @@ import {
   IonButton,
   IonAlert,
   IonModal,
-  IonInputPasswordToggle,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
-import logo from "../assets/logo.png"; // same logo used in login
+import logo from "../assets/logo.png";
 
 const RegisterAll: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -22,6 +21,7 @@ const RegisterAll: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false); // ✅ New state for terms checkbox
 
   const doRegister = async () => {
     try {
@@ -76,7 +76,11 @@ const RegisterAll: React.FC = () => {
 
               <div className="right-panel">
                 <div className="register-box">
-                  <IonButton fill="clear" className="back-button" routerLink="/login">
+                  <IonButton
+                    fill="clear"
+                    className="back-button"
+                    routerLink="/login"
+                  >
                     ←
                   </IonButton>
 
@@ -136,10 +140,24 @@ const RegisterAll: React.FC = () => {
                         className="input"
                         value={password}
                         onIonChange={(e) => setPassword(e.detail.value!)}
-                      >
-                        <IonInputPasswordToggle slot="end" />
-                      </IonInput>
+                      />
                     </div>
+                  </div>
+
+                  {/* ✅ Terms and Conditions */}
+                  <div className="terms-container">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                    />
+                    <label htmlFor="terms">
+                      I agree to the{" "}
+                      <a href="/terms" target="_blank">
+                        Terms and Conditions
+                      </a>
+                    </label>
                   </div>
 
                   <IonButton
@@ -147,7 +165,7 @@ const RegisterAll: React.FC = () => {
                     fill="solid"
                     className="register-btn"
                     onClick={doRegister}
-                    disabled={loading}
+                    disabled={loading || !agreed} // ✅ Disable until checked
                   >
                     {loading ? "Registering..." : "Register"}
                   </IonButton>
@@ -179,7 +197,11 @@ const RegisterAll: React.FC = () => {
           <IonContent className="ion-padding">
             <h2>Registration Successful!</h2>
             <p>You can now log in with your account.</p>
-            <IonButton expand="block" routerLink="/login" style={{ marginTop: "1rem" }}>
+            <IonButton
+              expand="block"
+              routerLink="/login"
+              style={{ marginTop: "1rem" }}
+            >
               Go to Login
             </IonButton>
           </IonContent>
@@ -288,7 +310,6 @@ const RegisterAll: React.FC = () => {
             --color: #333;
           }
 
-          /* 👇 STYLE FOR ABAY LAYOUTS */
           .name-row {
             display: flex;
             gap: 10px;
@@ -325,6 +346,25 @@ const RegisterAll: React.FC = () => {
             text-decoration: underline;
           }
 
+          /* ✅ Terms container */
+          .terms-container {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .terms-container a {
+            color: #0078d7;
+            text-decoration: none;
+          }
+
+          .terms-container a:hover {
+            text-decoration: underline;
+          }
+
           @media (max-width: 768px) {
             .register-layout {
               flex-direction: column;
@@ -343,12 +383,17 @@ const RegisterAll: React.FC = () => {
 
             .register-box {
               width: 100%;
-              max-width: 280px;
+              max-width: 300px;
             }
 
             .name-row {
-              flex-direction: column;
-              gap: 0;
+              display: flex;
+              flex-direction: row;
+              gap: 8px;
+            }
+
+            .name-field {
+              flex: 1;
             }
           }
         `}
