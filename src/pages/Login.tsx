@@ -137,9 +137,14 @@ const Login: React.FC = () => {
                     <IonInputPasswordToggle slot="end" />
                   </IonInput>
 
-                  <a href="/forgot-password" className="forgot">
+                  {/* Forgot Password */}
+                  <span
+                    className="forgot"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigation.push("/forgot-password")}
+                  >
                     Forgot Password?
-                  </a>
+                  </span>
 
                   {/* ✅ Login Button with Spinner Inside */}
                   <IonButton
@@ -151,7 +156,11 @@ const Login: React.FC = () => {
                   >
                     {loading ? (
                       <>
-                        <IonSpinner name="crescent" color="light" style={{ marginRight: "8px" }} />
+                        <IonSpinner
+                          name="crescent"
+                          color="light"
+                          style={{ marginRight: "8px" }}
+                        />
                         Logging in...
                       </>
                     ) : (
@@ -159,11 +168,16 @@ const Login: React.FC = () => {
                     )}
                   </IonButton>
 
+                  {/* Sign Up */}
                   <p className="signup-text">
                     Don’t have an account?{" "}
-                    <a href="/registerall" className="signup-link">
+                    <span
+                      className="signup-link"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => navigation.push("/registerall")}
+                    >
                       Sign Up
-                    </a>
+                    </span>
                   </p>
                 </div>
               </div>
@@ -186,189 +200,27 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
-      <style>
-        {`
-          /* Background Wrapper */
-          .background-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            background: url('/assets/bg-farm.jpg') no-repeat center center/cover;
-          }
-
-          .overlay {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-
-          /* Layout Container */
-          .login-layout {
-            display: flex;
-            width: 85%;
-            max-width: 850px;
-            height: 80vh;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-          }
-
-          /* LEFT PANEL */
-          .left-panel {
-            flex: 1;
-            background: #ffd500ff;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 30px;
-          }
-
-          .coop-logo {
-            width: 140px;
-            margin-bottom: 15px;
-          }
-
-          .left-panel h2 {
-            font-size: 18px;
-            font-weight: 500;
-            line-height: 1.4;
-            max-width: 300px;
-          }
-
-          /* RIGHT PANEL */
-          .right-panel {
-            flex: 1;
-            background: #ffffffd9;
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-
-          /* LOGIN BOX (Form) */
-          .login-box {
-            width: 90%;
-            max-width: 300px;
-            text-align: left;
-          }
-
-          .back-button {
-            padding: 0;
-            margin-bottom: 15px;
-            font-size: 20px;
-            color: #FCB53B;
-          }
-
-          .welcome {
-            font-size: 20px;
-            font-weight: 600;
-            color: #FCB53B;
-            margin-bottom: 5px;
-          }
-
-          .instruction {
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 20px;
-          }
-
-          .label {
-            display: block;
-            text-align: left;
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 4px;
-          }
-
-          .input {
-            width: 100%;
-            margin-bottom: 12px;
-            --highlight-color-focused: #555555ff;
-            --border-color: #000000ff;
-            --color: #333;
-          }
-
-          .forgot {
-            display: block;
-            text-align: right;
-            font-size: 12px;
-            color: #0078d7;
-            margin-bottom: 12px;
-            text-decoration: none;
-          }
-
-          .forgot:hover {
-            text-decoration: underline;
-          }
-
-          .login-btn {
-            --background: #FCB53B;
-            --color: white;
-            border-radius: 6px;
-            width: 100%;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .signup-text {
-            font-size: 12px;
-            color: #333;
-            text-align: center;
-            margin-top: 10px;
-          }
-
-          .signup-link {
-            color: #0078d7;
-            text-decoration: none;
-            font-weight: 500;
-          }
-
-          .signup-link:hover {
-            text-decoration: underline;
-          }
-
-          /* Responsive */
-          @media (max-width: 768px) {
-            .login-layout {
-              flex-direction: column;
-              width: 90%;
-              height: auto;
-            }
-
-            /* Layout Container */
-          .login-layout {
-            display: flex;
-            width: 75%;
-            max-width: 850px;
-            height: 80vh;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-          }
-            .left-panel {
-              display: none;
-            }
-
-            .right-panel {
-              padding: 25px;
-              border-radius: 12px;
-            }
-
-            .login-box {
-              width: 100%;
-              max-width: 280px;
-            }
-          }
-        `}
-      </style>
+      {/* Styles (unchanged) */}
+      <style>{`
+        .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
+        .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
+        .login-layout { display: flex; width: 85%; max-width: 850px; height: 80vh; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .left-panel { flex: 1; background: #ffd500ff; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
+        .coop-logo { width: 140px; margin-bottom: 15px; }
+        .left-panel h2 { font-size: 18px; font-weight: 500; line-height: 1.4; max-width: 300px; }
+        .right-panel { flex: 1; background: #ffffffd9; backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; }
+        .login-box { width: 90%; max-width: 300px; text-align: left; }
+        .back-button { padding: 0; margin-bottom: 15px; font-size: 20px; color: #FCB53B; }
+        .welcome { font-size: 20px; font-weight: 600; color: #FCB53B; margin-bottom: 5px; }
+        .instruction { font-size: 13px; color: #555; margin-bottom: 20px; }
+        .label { display: block; text-align: left; font-size: 13px; color: #333; margin-bottom: 4px; }
+        .input { width: 100%; margin-bottom: 12px; --highlight-color-focused: #555555ff; --border-color: #000000ff; --color: #333; }
+        .forgot { display: block; text-align: right; font-size: 12px; color: #0078d7; margin-bottom: 12px; text-decoration: none; }
+        .login-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
+        .signup-text { font-size: 12px; color: #333; text-align: center; margin-top: 10px; }
+        .signup-link { color: #0078d7; text-decoration: none; font-weight: 500; }
+        @media (max-width: 768px) { .login-layout { flex-direction: column; width: 90%; height: auto; } .left-panel { display: none; } .right-panel { padding: 25px; border-radius: 12px; } .login-box { width: 100%; max-width: 280px; } }
+      `}</style>
     </IonPage>
   );
 };
