@@ -35,7 +35,7 @@ const LearnMore: React.FC = () => {
             }}
             onClick={() => history.push("/")}
           >
-            🚜 MARBF Cooperative.
+          MARBF Cooperative.
           </IonButton>
         </div>
       </IonToolbar>
@@ -57,23 +57,43 @@ const LearnMore: React.FC = () => {
             equipment booking and cooperative management.
           </p>
         </div>
-
-        <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
-          <h2 style={{ fontWeight: "bold", marginBottom: "1rem" }}>🌱 Our Mission</h2>
-          <p style={{ maxWidth: "700px", margin: "0 auto", color: "#555" }}>
-          Commits to serve our members and the community towards having a better standard of living.
+         <div
+          style={{
+            backgroundColor: "#ffffffff",
+            color: "#000000ff",
+            padding: "4rem 1rem",
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
+        🌱 Our Mission
+          </h2>
+          <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
+              Commits to serve our members and the community towards having a better standard of living.
           </p>
-
-          <h2 style={{ fontWeight: "bold", margin: "2rem 0 1rem" }}>🌍 Our Vision</h2>
-          <p style={{ maxWidth: "700px", margin: "0 auto", color: "#555" }}>
-           We must for ourselves a strong and viable cooperative that can uplift its members from
+          
+        </div>
+        <div
+          style={{
+            backgroundColor: "#FCB53B",
+            color: "#000000ff",
+            padding: "4rem 1rem",
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
+           🌍 Our Vision
+          </h2>
+          <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
+             We must for ourselves a strong and viable cooperative that can uplift its members from
 poverty, expand opportunities, generate jobs and be sustainable in all our undertakings.
           </p>
+          
         </div>
 <div
           style={{
-            backgroundColor: "#FCB53B",
-            color: "#fff",
+            backgroundColor: "#ffffffff",
+            color: "#000000ff",
             padding: "4rem 1rem",
             textAlign: "center",
           }}
@@ -85,27 +105,6 @@ poverty, expand opportunities, generate jobs and be sustainable in all our under
            to battle poverty with discipline, to create projects and livelihoods for additional family income, to give equal opportunities to our
 members, to set as a good example.
           </p>
-          
-        </div>
-         
-           
-
-        <div
-          style={{
-            backgroundColor: "#000000ff",
-            color: "#fff",
-            padding: "4rem 1rem",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
-            Join Our Journey Towards Smarter Farming
-          </h2>
-          <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
-            MARBF Cooperative. is not just a system — it’s a movement to uplift
-            farmers and cooperatives with digital innovation.
-          </p>
-          
         </div>
 
         <div

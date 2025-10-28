@@ -10,8 +10,7 @@ import {
   useIonRouter,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
-
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.png"; // cooperative logo
 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({
   message,
@@ -83,71 +82,75 @@ const Login: React.FC = () => {
 
   return (
     <IonPage>
-      <IonContent
-      
-      >
-        <div className="login-layout">
-          {/* Desktop left-panel */}
-          <div className="left-panel">
-            <img src={logo} alt="Logo" className="logo" />
-            <h2>Mantibugao Agrarian Reform Beneficiaries Farmers’ Cooperative</h2>
-          </div>
+      <IonContent fullscreen>
+        <div className="background-wrapper">
+          <div className="overlay">
+            <div className="login-layout">
+              <div className="left-panel">
+                <img src={logo} alt="Cooperative Logo" className="coop-logo" />
+                <h2>Mantibugao Agrarian Reform Beneficiaries Farmers’ Cooperative</h2>
+              </div>
 
-          {/* Right side form */}
-          <div className="right-panel">
-            <div className="login-card">
-              {/* Logo inside form (mobile only) */}
-              <img src={logo} alt="Logo" className="logo mobile-logo" />
+              <div className="right-panel">
+                <div className="login-box">
+                  <IonButton
+                    fill="clear"
+                    className="back-button"
+                    onClick={() => navigation.push("/Landingpage")}
+                  >
+                    ←
+                  </IonButton>
 
-              <h1 className="login-title">Welcome back!</h1>
-              <p className="login-subtitle">
-                Sign in with your email and password
-              </p>
+                  <h2 className="welcome">Welcome Back!</h2>
+                  <p className="instruction">Sign in with your email and password</p>
 
-              <label className="label">Email Address</label>
-              <IonInput
-                placeholder="Your Email"
-                type="email"
-                fill="outline"
-                className="input-field"
-                value={email}
-                onIonChange={(e) => setEmail(e.detail.value!)}
-              />
+                  <label className="label">Email Address</label>
+                  <IonInput
+                    placeholder="Your Email"
+                    type="email"
+                    fill="outline"
+                    className="input"
+                    value={email}
+                    onIonChange={(e) => setEmail(e.detail.value!)}
+                  />
 
-              <label className="label">Password</label>
-              <IonInput
-                placeholder="Enter your password"
-                type="password"
-                fill="outline"
-                className="input-field"
-                value={password}
-                onIonChange={(e) => setPassword(e.detail.value!)}
-              >
-                <IonInputPasswordToggle slot="end" />
-              </IonInput>
+                  <label className="label">Password</label>
+                  <IonInput
+                    placeholder="Enter your password"
+                    type="password"
+                    fill="outline"
+                    className="input"
+                    value={password}
+                    onIonChange={(e) => setPassword(e.detail.value!)}
+                  >
+                    <IonInputPasswordToggle slot="end" />
+                  </IonInput>
 
-              <IonButton
-                onClick={doLogin}
-                expand="block"
-                fill="solid"
-                className="login-btn"
-              >
-                Sign In
-              </IonButton>
+                  <a href="/forgot-password" className="forgot">
+                    Forgot Password?
+                  </a>
 
-              <IonButton
-                routerLink="/MARBF-CooperativePH"
-                expand="block"
-                fill="clear"
-                className="register-btn"
-              >
-                Back to Homepage
-              </IonButton>
+                  <IonButton
+                    onClick={doLogin}
+                    expand="block"
+                    fill="solid"
+                    className="login-btn"
+                  >
+                    Login
+                  </IonButton>
+
+                  <p className="signup-text">
+                    Don’t have an account?{" "}
+                    <a href="/register" className="signup-link">
+                      Sign Up
+                    </a>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Alerts & Toast */}
         <AlertBox
           message={alertMessage}
           isOpen={showAlert}
@@ -163,113 +166,184 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
-      {/* STYLE */}
       <style>
         {`
+          /* Background Wrapper */
+          .background-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: url('/assets/bg-farm.jpg') no-repeat center center/cover;
+          }
+
+          .overlay {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+
+          /* Layout Container */
           .login-layout {
             display: flex;
-            flex-direction: row;
-            height: 100%;
-            width: 100%;
+            width: 85%;
+            max-width: 850px;
+            height: 80vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
           }
+
+          /* LEFT PANEL */
           .left-panel {
             flex: 1;
+            background: #d6b40bff;
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 50px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            padding: 30px;
           }
-          .left-panel .logo {
-            width: 250px;
-            margin-bottom: 20px;
+
+          .coop-logo {
+            width: 140px;
+            margin-bottom: 15px;
           }
+
+          .left-panel h2 {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.4;
+            max-width: 300px;
+          }
+
+          /* RIGHT PANEL */
           .right-panel {
             flex: 1;
+            background: #ffffffd9;
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 40px;
           }
-          .login-card {
-            width: 360px;
-            padding: 25px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-         .login-title {
-          font-size: 22px;
-          font-weight: bold;
-          color: black;
-          margin-bottom: 5px; /* tighter spacing */
-          } 
 
-          .login-subtitle {
-          font-size: 14px;
-          color: #333;
-          text-align: center;
-          margin-bottom: 30px; /* reduced spacing */
+          /* LOGIN BOX (Form) */
+          .login-box {
+            width: 90%;
+            max-width: 300px;
+            text-align: left;
           }
-          .label {
-            align-self: flex-start;
+
+          .back-button {
+            padding: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #FCB53B;
+          }
+
+          .welcome {
+            font-size: 20px;
+            font-weight: 600;
+            color: #FCB53B;
             margin-bottom: 5px;
-            font-size: 14px;
-            color: #333;
           }
-          .input-field {
+
+          .instruction {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 20px;
+          }
+
+          .label {
+            display: block;
+            text-align: left;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+          }
+
+          .input {
             width: 100%;
             margin-bottom: 12px;
-            --highlight-color-focused: #8b8888ff;
-            --border-color: #1976d2;
-            --color: black;
+            --highlight-color-focused: #555555ff;
+            --border-color: #000000ff;
+            --color: #333;
           }
+
+          .forgot {
+            display: block;
+            text-align: right;
+            font-size: 12px;
+            color: #0078d7;
+            margin-bottom: 12px;
+            text-decoration: none;
+          }
+
+          .forgot:hover {
+            text-decoration: underline;
+          }
+
           .login-btn {
             --background: #FCB53B;
             --color: white;
+            border-radius: 6px;
             width: 100%;
-            margin-top: 10px;
-          }
-          .register-btn {
-            --color: #FCB53B;
-            margin-top: 8px;
-            font-weight: bold;
-            text-transform: none;
+            margin-bottom: 15px;
           }
 
-          /* Hide mobile logo by default */
-          .mobile-logo {
-            display: none;
+          /* Centered signup text */
+          .signup-text {
+            font-size: 12px;
+            color: #333;
+            text-align: center; /* Center horizontally */
+            margin-top: 10px;
+          }
+
+          .signup-link {
+            color: #0078d7;
+            text-decoration: none;
+            font-weight: 500;
+          }
+
+          .signup-link:hover {
+            text-decoration: underline;
           }
 
           /* Responsive */
           @media (max-width: 768px) {
             .login-layout {
               flex-direction: column;
-              align-items: center;
-              text-align: left;
+              width: 90%;
+              height: auto;
             }
+
+            /* Layout Container */
+          .login-layout {
+            display: flex;
+            width: 75%;
+            max-width: 850px;
+            height: 80vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+          }
+
             .left-panel {
-              display: none; /* Hide left side on mobile */
+              display: none;
             }
-            .mobile-logo {
-              display: block;
-              width: 50px;
-              margin-bottom: 1px;
-            }
+
             .right-panel {
-              padding: 20px;
-              width: 100%;
+              padding: 25px;
+              border-radius: 12px;
             }
-            .login-card {
+
+            .login-box {
               width: 100%;
-              max-width: 360px;
+              max-width: 280px;
             }
           }
         `}

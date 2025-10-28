@@ -11,16 +11,12 @@ interface Booking {
   location: string | null;
   status: string;
   total_price: number | null;
-  quantity: number;
-  price_type: "hectare" | "kilo";
   user_name?: string;
   transaction?: {
     id: string;
     status: string;
     amount: number;
     paid_at: string | null;
-    quantity?: number;
-    price_type?: "hectare" | "kilo";
   }[];
 }
 
@@ -57,7 +53,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
         .from("bookings")
         .select(`
           *,
-          transaction:transactions!booking_id(id, status, amount, paid_at, quantity, price_type)
+          transaction:transactions!booking_id(id, status, amount, paid_at)
         `)
         .order("start_date", { ascending: false });
 
@@ -93,9 +89,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
     bookingId: string,
     newStatus: string,
     userId: number,
-    totalPrice: number | null,
-    quantity: number,
-    priceType: "hectare" | "kilo"
+    totalPrice: number | null
   ) => {
     try {
       setProcessingIds((prev) => [...prev, bookingId]);
@@ -129,8 +123,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
               amount: totalPrice,
               status: "unpaid",
               payment_method: "gcash",
-              quantity,
-              price_type: priceType,
               created_at: new Date().toISOString(),
             },
           ]);
@@ -262,13 +254,12 @@ const Admin_ManageRentalBookings: React.FC = () => {
         <div style={{ textAlign: "center", color: "#666" }}>No bookings found.</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
             <thead style={{ backgroundColor: "#000000ff" }}>
               <tr>
                 <th style={headerStyle}>#</th>
                 <th style={headerStyle}>Equipment</th>
                 <th style={headerStyle}>Booked By</th>
-                <th style={headerStyle}>Qty / Type</th>
                 <th style={headerStyle}>Days</th>
                 <th style={headerStyle}>Start Date</th>
                 <th style={headerStyle}>End Date</th>
@@ -289,12 +280,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
 
                 const isProcessing = processingIds.includes(booking.id);
 
-                // Calculate days for both hectare and kilo
-                const days = Math.ceil(
-                  (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                ) || 1;
-
                 return (
                   <tr
                     key={booking.id}
@@ -306,9 +291,11 @@ const Admin_ManageRentalBookings: React.FC = () => {
                     <td style={cellStyle}>{booking.equipment_name}</td>
                     <td style={cellStyle}>{booking.user_name}</td>
                     <td style={cellStyle}>
-                      {booking.quantity} {booking.price_type === "hectare" ? "ha" : "kg"}
+                      {Math.ceil(
+                        (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      ) || 1}
                     </td>
-                    <td style={cellStyle}>{days}</td>
                     <td style={cellStyle}>{booking.start_date}</td>
                     <td style={cellStyle}>{booking.end_date}</td>
                     <td style={cellStyle}>{booking.location || "N/A"}</td>
@@ -364,9 +351,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                                 booking.id,
                                 "approved",
                                 booking.user_id,
-                                booking.total_price,
-                                booking.quantity,
-                                booking.price_type
+                                booking.total_price
                               )
                             }
                           >
@@ -381,9 +366,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                                 booking.id,
                                 "declined",
                                 booking.user_id,
-                                booking.total_price,
-                                booking.quantity,
-                                booking.price_type
+                                booking.total_price
                               )
                             }
                           >
