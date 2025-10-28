@@ -25,6 +25,7 @@ import "./theme/variables.css";
 import Login from "./pages/Login";
 import Menu from "./pages/Menu";
 import Register from "./pages/Register";
+import RegisterAll from "./pages/RegisterAll";
 import LandingPage from "./pages/Landingpage";
 import LearnMore from "./pages/LearnMore";
 import RightSideMenu from "./pages/Rightsidemenu";
@@ -64,6 +65,7 @@ const MainRouter: React.FC = () => {
       <Switch>
         <Route exact path="/login" component={Login} />
         <Route exact path="/register" component={Register} />
+         <Route exact path="/registerall" component={RegisterAll} />
         <Route exact path="/learnmore" component={LearnMore} />
         <Route path="/MARBF-CooperativePH/app" component={Menu} />
         <Route exact path="/admin-dashboard" component={AdminDashboard} />

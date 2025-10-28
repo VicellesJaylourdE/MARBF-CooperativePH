@@ -103,11 +103,11 @@ const Admin_LateReturnPenalty: React.FC = () => {
                   width: "100%",
                   borderCollapse: "collapse",
                   textAlign: "left",
-                  border: "1px solid #000000ff",
+                  border: "1px solid #ffffffff",
                 }}
               >
                 <thead>
-                  <tr style={{ backgroundColor: "#000000ff" }}>
+                  <tr style={{ backgroundColor: "#ffffffff" }}>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>#</th>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>User ID</th>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>Booking ID</th>
@@ -120,7 +120,7 @@ const Admin_LateReturnPenalty: React.FC = () => {
                     <tr
                       key={item.id}
                       style={{
-                        backgroundColor: index % 2 === 0 ? "#000000ff" : "#000000ff",
+                        backgroundColor: index % 2 === 0 ? "#ffffffff" : "#ffffffff",
                       }}
                     >
                       <td style={{ border: "1px solid #080808ff", padding: "8px" }}>{index + 1}</td>

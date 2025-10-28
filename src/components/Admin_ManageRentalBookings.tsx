@@ -24,14 +24,14 @@ const headerStyle: React.CSSProperties = {
   padding: "10px",
   fontWeight: 600,
   fontSize: "0.95rem",
-  borderBottom: "1px solid #ddd",
+  borderBottom: "1px solid #000000ff",
   textAlign: "center",
 };
 
 const cellStyle: React.CSSProperties = {
   padding: "8px",
   fontSize: "0.9rem",
-  borderBottom: "1px solid #eee",
+  borderBottom: "1px solid #000000ff",
   textAlign: "center",
 };
 
@@ -255,7 +255,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
-            <thead style={{ backgroundColor: "#000000ff" }}>
+            <thead style={{ backgroundColor: "#fffafaff" }}>
               <tr>
                 <th style={headerStyle}>#</th>
                 <th style={headerStyle}>Equipment</th>
@@ -284,7 +284,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                   <tr
                     key={booking.id}
                     style={{
-                      backgroundColor: index % 2 === 0 ? "#080808ff" : "#141414ff",
+                      backgroundColor: index % 2 === 0 ? "#fffdfdff" : "#ffffffff",
                     }}
                   >
                     <td style={cellStyle}>{index + 1}</td>
@@ -306,7 +306,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                       <IonBadge
                         style={{
                           backgroundColor: getStatusColor(booking.status),
-                          color: "#000000ff",
+                          color: "#ffffffff",
                           fontWeight: 600,
                           padding: "0.35em 0.6em",
                           borderRadius: "12px",
@@ -320,7 +320,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                         <IonBadge
                           style={{
                             backgroundColor: getPaymentColor(booking.transaction[0].status),
-                            color: "#000000ff",
+                            color: "#ffffffff",
                             fontWeight: 600,
                             padding: "0.35em 0.6em",
                             borderRadius: "12px",

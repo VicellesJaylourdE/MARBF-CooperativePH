@@ -7,6 +7,7 @@ import {
   IonInputPasswordToggle,
   IonPage,
   IonToast,
+  IonSpinner,
   useIonRouter,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
@@ -35,22 +36,29 @@ const Login: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const doLogin = async () => {
+    setLoading(true);
+    setAlertMessage("");
+    setShowAlert(false);
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      setAlertMessage(error.message);
+      setLoading(false);
+      setAlertMessage("⚠️ " + error.message);
       setShowAlert(true);
       return;
     }
 
     const user = data.user;
     if (!user) {
-      setAlertMessage("User not found.");
+      setLoading(false);
+      setAlertMessage("❌ User not found. Please check your credentials.");
       setShowAlert(true);
       return;
     }
@@ -62,14 +70,17 @@ const Login: React.FC = () => {
       .single();
 
     if (userError || !userData) {
-      setAlertMessage("Unable to fetch user role.");
+      setLoading(false);
+      setAlertMessage("⚠️ Unable to fetch user role. Please try again.");
       setShowAlert(true);
       return;
     }
 
+    // ✅ Successful login
     setShowToast(true);
 
     setTimeout(() => {
+      setLoading(false);
       if (userData.role === "admin") {
         navigation.push("/admin-dashboard", "forward", "replace");
       } else if (userData.role === "staff") {
@@ -77,7 +88,7 @@ const Login: React.FC = () => {
       } else {
         navigation.push("/user-dashboard", "forward", "replace");
       }
-    }, 300);
+    }, 1000);
   };
 
   return (
@@ -130,18 +141,27 @@ const Login: React.FC = () => {
                     Forgot Password?
                   </a>
 
+                  {/* ✅ Login Button with Spinner Inside */}
                   <IonButton
                     onClick={doLogin}
                     expand="block"
                     fill="solid"
                     className="login-btn"
+                    disabled={loading}
                   >
-                    Login
+                    {loading ? (
+                      <>
+                        <IonSpinner name="crescent" color="light" style={{ marginRight: "8px" }} />
+                        Logging in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
                   </IonButton>
 
                   <p className="signup-text">
                     Don’t have an account?{" "}
-                    <a href="/register" className="signup-link">
+                    <a href="/registerall" className="signup-link">
                       Sign Up
                     </a>
                   </p>
@@ -159,7 +179,7 @@ const Login: React.FC = () => {
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
-          message="Login successful! Redirecting..."
+          message="✅ Login successful! Redirecting..."
           duration={1500}
           position="top"
           color="success"
@@ -199,7 +219,7 @@ const Login: React.FC = () => {
           /* LEFT PANEL */
           .left-panel {
             flex: 1;
-            background: #d6b40bff;
+            background: #ffd500ff;
             color: white;
             display: flex;
             flex-direction: column;
@@ -293,13 +313,15 @@ const Login: React.FC = () => {
             border-radius: 6px;
             width: 100%;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
 
-          /* Centered signup text */
           .signup-text {
             font-size: 12px;
             color: #333;
-            text-align: center; /* Center horizontally */
+            text-align: center;
             margin-top: 10px;
           }
 
@@ -331,7 +353,6 @@ const Login: React.FC = () => {
             overflow: hidden;
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
           }
-
             .left-panel {
               display: none;
             }

@@ -45,11 +45,10 @@ const LearnMore: React.FC = () => {
           style={{
             textAlign: "center",
             padding: "3rem 1rem",
-              backgroundColor: "#FCB53B",
           }}
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
-            About <span style={{ color: "#ffffffff" }}>MARBF Cooperative</span>
+            About <span style={{ color: "#FCB53B" }}>MARBF Cooperative</span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#555" }}>
             A digital initiative by the Mantibugao Agrarian Reform Beneficiaries
@@ -59,7 +58,7 @@ const LearnMore: React.FC = () => {
         </div>
          <div
           style={{
-            backgroundColor: "#ffffffff",
+            backgroundColor: "#FCB53B",
             color: "#000000ff",
             padding: "4rem 1rem",
             textAlign: "center",
@@ -75,7 +74,7 @@ const LearnMore: React.FC = () => {
         </div>
         <div
           style={{
-            backgroundColor: "#FCB53B",
+            backgroundColor: "#ffffffff",
             color: "#000000ff",
             padding: "4rem 1rem",
             textAlign: "center",
@@ -92,7 +91,7 @@ poverty, expand opportunities, generate jobs and be sustainable in all our under
         </div>
 <div
           style={{
-            backgroundColor: "#ffffffff",
+            backgroundColor: "#FCB53B",
             color: "#000000ff",
             padding: "4rem 1rem",
             textAlign: "center",

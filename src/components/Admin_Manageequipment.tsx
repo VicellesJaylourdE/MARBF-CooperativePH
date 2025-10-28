@@ -305,7 +305,7 @@ const Admin_Manageequipment: React.FC = () => {
                 key={eq.id}
                 style={{
                   borderBottom: "1px solid #b8b8b8ff",
-                  backgroundColor: index % 2 === 0 ? "#191919ff" : "#000000ff",
+                  backgroundColor: index % 2 === 0 ? "#ffffffff" : "#ffffffff",
                   alignItems: "center",
                 }}
               >

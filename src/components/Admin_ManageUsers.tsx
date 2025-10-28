@@ -57,7 +57,6 @@ const Admin_ManageUsers: React.FC = () => {
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
 
-    // Fix: IonAlert returns object, not array
     const updatedData = {
       username: values.username,
       user_email: values.user_email,
@@ -103,7 +102,7 @@ const Admin_ManageUsers: React.FC = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#000000ff" }}>
+            <thead style={{ backgroundColor: "#ffffffff" }}>
               <tr>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Username</th>
@@ -151,7 +150,6 @@ const Admin_ManageUsers: React.FC = () => {
         </div>
       )}
 
-      {/* Edit User Alert */}
       <IonAlert
         isOpen={showEditAlert}
         onDidDismiss={() => setShowEditAlert(false)}
@@ -201,7 +199,7 @@ const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #000000ff",
 };
 
-const rowEven: React.CSSProperties = { backgroundColor: "#000000ff" };
-const rowOdd: React.CSSProperties = { backgroundColor: "#000000ff" };
+const rowEven: React.CSSProperties = { backgroundColor: "#ffffffff" };
+const rowOdd: React.CSSProperties = { backgroundColor: "#ffffffff" };
 
 export default Admin_ManageUsers;
