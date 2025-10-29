@@ -32,7 +32,8 @@ import RightSideMenu from "./pages/Rightsidemenu";
 import AdminDashboard from "./Admin/AdminDashboard";
 import UserDashboard from "./Farmers/UserDashboard";
 import StaffDashboard from "./Staff/StaffDashboard";
-
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOtp from "./pages/VerifyOtp";
 setupIonicReact();
 
 const App: React.FC = () => (
@@ -64,6 +65,8 @@ const MainRouter: React.FC = () => {
     <IonRouterOutlet id="main">
       <Switch>
         <Route exact path="/login" component={Login} />
+        <Route path="/forgot-password" component={ForgotPassword} exact />
+       <Route path="/verify-otp" component={VerifyOtp} exact />
         <Route exact path="/register" component={Register} />
          <Route exact path="/registerall" component={RegisterAll} />
         <Route exact path="/learnmore" component={LearnMore} />

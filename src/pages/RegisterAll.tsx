@@ -11,6 +11,7 @@ import {
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
 import logo from "../assets/logo.png";
+import { colorFill } from "ionicons/icons";
 
 const RegisterAll: React.FC = () => {
   const navigation = useIonRouter();
@@ -24,6 +25,9 @@ const RegisterAll: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+
+  // 🔹 New state for Terms & Conditions modal
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const doRegister = async () => {
     try {
@@ -157,7 +161,7 @@ const RegisterAll: React.FC = () => {
                       I agree to the{" "}
                       <span
                         style={{ color: "#0078d7", cursor: "pointer" }}
-                        onClick={() => navigation.push("/terms")}
+                        onClick={() => setShowTermsModal(true)} // 🔹 Opens modal
                       >
                         Terms and Conditions
                       </span>
@@ -190,6 +194,7 @@ const RegisterAll: React.FC = () => {
           </div>
         </div>
 
+        {/* 🔹 Error Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
@@ -198,6 +203,7 @@ const RegisterAll: React.FC = () => {
           buttons={["OK"]}
         />
 
+        {/* 🔹 Success Modal */}
         <IonModal
           isOpen={showSuccessModal}
           onDidDismiss={() => setShowSuccessModal(false)}
@@ -214,19 +220,59 @@ const RegisterAll: React.FC = () => {
             </IonButton>
           </IonContent>
         </IonModal>
+
+        {/* 🔹 Terms and Conditions Modal */}
+        <IonModal
+          isOpen={showTermsModal}
+          onDidDismiss={() => setShowTermsModal(false)}
+        >
+          <IonContent className="ion-padding" scrollY={true}>
+            <h2>Terms and Conditions</h2>
+            <p>
+              Welcome to Mantibugao Agrarian Reform Beneficiaries Farmers’
+              Cooperative. By creating an account, you agree to the following
+              terms and conditions:
+            </p>
+
+            <ul>
+              <li>
+                Your personal data will be collected and stored securely for
+                cooperative-related activities only.
+              </li>
+              <li>
+                Do not share your account password with anyone. You are
+                responsible for maintaining your account’s security.
+              </li>
+              <li>
+                Misuse, abuse, or any attempt to access restricted data will
+                result in account suspension.
+              </li>
+              <li>
+                The cooperative reserves the right to update these terms at
+                any time without prior notice.
+              </li>
+              <li>
+                Continued use of this system signifies your acceptance of any
+                changes made.
+              </li>
+            </ul>
+
+            <IonButton
+              expand="block"
+              onClick={() => setShowTermsModal(false)}
+              style={{ marginTop: "1rem"}}
+            >
+              Close
+            </IonButton>
+          </IonContent>
+        </IonModal>
       </IonContent>
 
+      {/* 🔹 Styles */}
       <style>{`
         .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
         .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
-        .register-layout { 
-        display: flex; 
-        width: 85%; 
-        max-width: 850px;
-         height: 85vh;
-          border-radius: 12px;
-           overflow: hidden; 
-           box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .register-layout { display: flex; width: 85%; max-width: 850px; height: 85vh; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
         .left-panel { flex: 1; background: #ffd500ff; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
         .coop-logo { width: 140px; margin-bottom: 15px; }
         .left-panel h2 { font-size: 18px; font-weight: 500; line-height: 1.4; max-width: 300px; }
@@ -243,36 +289,14 @@ const RegisterAll: React.FC = () => {
         .signup-text { font-size: 12px; color: #333; text-align: center; margin-top: 10px; }
         .signup-link { color: #0078d7; text-decoration: none; font-weight: 500; }
         .terms-container { font-size: 12px; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        @media (max-width: 768px)
-         { 
-        .register-layout { 
-        flex-direction: column; 
-        width: 90%; height: auto; 
-        } 
-         .register-layout { 
-        display: flex; 
-        width: 80%; 
-        max-width: 850px;
-         height: 90vh;
-          border-radius: 12px;
-           overflow: hidden; 
-           box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
-        .left-panel { 
-        display: none; 
-        } 
-        .right-panel { 
-        padding: 25px;
-         border-radius: 12px;
-          } 
-         .register-box {
-          width: 100%;
-           max-width: 300px;
-            } 
-           .name-row { 
-           display: flex;
-            flex-direction: row;
-             gap: 8px; }
-              .name-field { flex: 1; } }
+        @media (max-width: 768px) { 
+          .register-layout { flex-direction: column; width: 90%; height: auto; } 
+          .left-panel { display: none; } 
+          .right-panel { padding: 25px; border-radius: 12px; } 
+          .register-box { width: 100%; max-width: 300px; } 
+          .name-row { display: flex; flex-direction: row; gap: 8px; }
+          .name-field { flex: 1; }
+        }
       `}</style>
     </IonPage>
   );
