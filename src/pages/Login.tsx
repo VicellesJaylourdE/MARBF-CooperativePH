@@ -165,16 +165,7 @@ const Login: React.FC = () => {
                     )}
                   </IonButton>
 
-                  <p className="signup-text">
-                    Don’t have an account?{" "}
-                    <span
-                      className="signup-link"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => navigation.push("/registerall")}
-                    >
-                      Sign Up
-                    </span>
-                  </p>
+                
                 </div>
               </div>
             </div>
