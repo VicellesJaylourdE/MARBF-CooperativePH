@@ -270,7 +270,15 @@ const Login: React.FC = () => {
       <style>{`
         .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
         .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
-        .login-layout { display: flex; width: 85%; max-width: 850px; height: 80vh; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .login-layout { 
+        display: flex;
+         width: 85%; 
+         max-width: 850px; 
+         height: 80vh; 
+         border-radius: 12px;
+          overflow: hidden;
+           box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            }
         .left-panel { flex: 1; background: #ffd500ff; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
         .coop-logo { width: 140px; margin-bottom: 15px; }
         .left-panel h2 { font-size: 18px; font-weight: 500; line-height: 1.4; max-width: 300px; }
@@ -285,6 +293,15 @@ const Login: React.FC = () => {
         .login-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
         @media (max-width: 768px) {
           .login-layout { flex-direction: column; width: 90%; height: auto; }
+          .login-layout { 
+        display: flex;
+         width: 75%; 
+         max-width: 850px; 
+         height: 78vh; 
+         border-radius: 12px;
+          overflow: hidden;
+           box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            }
           .left-panel { display: none; }
           .right-panel { padding: 25px; border-radius: 12px; }
           .login-box { width: 100%; max-width: 280px; }
