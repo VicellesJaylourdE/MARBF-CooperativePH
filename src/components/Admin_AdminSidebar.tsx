@@ -48,7 +48,7 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             style={{
               fontWeight: 600,
               fontSize: "1.2rem",
-              color: "#ffffffff",
+              color: "#000000ff",
             }}
           >
             Admin Panel

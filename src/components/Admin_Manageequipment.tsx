@@ -291,7 +291,7 @@ const Admin_Manageequipment: React.FC = () => {
           <IonSpinner name="dots" />
         ) : (
           <IonGrid className="table-grid">
-            <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccccccff" }}>
+            <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
               <IonCol>Name</IonCol>
               <IonCol>Category</IonCol>
               <IonCol>Price</IonCol>

@@ -144,7 +144,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
                 <div
                   style={{
                     backgroundColor: "#2a62f3",
-                    color: "#fff",
+                    color: "#ffffffff",
                     width: "100%",
                     height: "100%",
                     borderRadius: "50%",

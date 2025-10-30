@@ -18,6 +18,7 @@ const Admin_ManageUsers: React.FC = () => {
   const [showEditAlert, setShowEditAlert] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch all users
   useEffect(() => {
@@ -58,7 +59,6 @@ const Admin_ManageUsers: React.FC = () => {
       user_lastname: values.user_lastname,
     };
 
-    // Only update password if not empty
     if (values.password && values.password.trim() !== "") {
       updatedData.password = values.password;
     }
@@ -79,6 +79,16 @@ const Admin_ManageUsers: React.FC = () => {
     setShowEditAlert(false);
   };
 
+  // Filtered users based on search term
+  const filteredUsers = users.filter(
+    (user) =>
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${user.user_firstname || ""} ${user.user_lastname || ""}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <IonContent className="ion-padding">
       {/* Header Section */}
@@ -89,10 +99,26 @@ const Admin_ManageUsers: React.FC = () => {
         </IonButton>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "6px 10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            width: "250px",
+          }}
+        />
+      </div>
+
       {/* Table Section */}
       {loading ? (
         <IonText>Loading users...</IonText>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <IonText>No users found.</IonText>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -107,7 +133,7 @@ const Admin_ManageUsers: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, index) => (
+              {filteredUsers.map((user, index) => (
                 <tr key={user.user_id} style={index % 2 === 0 ? rowEven : rowOdd}>
                   <td style={tdStyle}>{index + 1}</td>
                   <td style={tdStyle}>{user.username}</td>
@@ -126,7 +152,7 @@ const Admin_ManageUsers: React.FC = () => {
                       }}
                       style={{
                         marginRight: "0.5rem",
-                        backgroundColor: "#f0f0f0", // box background
+                        backgroundColor: "#f0f0f0",
                         borderRadius: "6px",
                         padding: "4px",
                         minWidth: "36px",
@@ -143,7 +169,7 @@ const Admin_ManageUsers: React.FC = () => {
                         setShowDeleteAlert(true);
                       }}
                       style={{
-                        backgroundColor: "#f8d7da", // box background
+                        backgroundColor: "#f8d7da",
                         borderRadius: "6px",
                         padding: "4px",
                         minWidth: "36px",
@@ -222,20 +248,17 @@ const Admin_ManageUsers: React.FC = () => {
           box-shadow: 0 6px 20px rgba(0,0,0,0.2);
           font-family: 'Poppins', sans-serif;
         }
-
         .edit-user-alert .alert-title {
           font-size: 18px;
           font-weight: 600;
           color: #000000ff;
           margin-bottom: 8px;
         }
-
         .edit-user-alert .alert-input-group {
           display: flex;
           flex-direction: column;
           margin-bottom: 12px;
         }
-
         .edit-user-alert .alert-input {
           border: 1px solid #00000088;
           border-radius: 6px;
@@ -245,23 +268,19 @@ const Admin_ManageUsers: React.FC = () => {
           background: #ffffff;
           transition: 0.2s all;
         }
-
         .edit-user-alert .alert-input:focus {
           border-color: #787775ff;
           box-shadow: 0 0 3px #fcb53b77;
         }
-
         .edit-user-alert .alert-input::placeholder {
           color: #555;
           opacity: 0.9;
         }
-
         .edit-user-alert button.alert-button {
           color: #fcb53b;
           font-weight: 600;
           text-transform: uppercase;
         }
-
         .edit-user-alert button.alert-button.role-cancel {
           color: #555;
         }

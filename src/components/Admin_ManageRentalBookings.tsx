@@ -40,6 +40,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState(""); // <-- Search state
 
   useEffect(() => {
     fetchBookings();
@@ -240,17 +241,40 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  return (
-    <IonContent className="ion-padding">
-      <div style={{ textAlign: "left", marginBottom: "1rem" }}>
-        <h1 style={{ fontWeight: 600, fontSize: "1.2rem" }}>Manage Rental Bookings</h1>
-      </div>
+  const filteredBookings = bookings.filter(
+    (b) =>
+      b.equipment_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.user_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
+  return (
+    
+    <IonContent className="ion-padding">
+      <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "1.2rem", margin: 0 }}>Manage Rental Bookings</h1>
+      </div>
+      
+      {/* Search Bar */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "6px 10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            width: "250px",
+          }}
+        />
+      </div>
+       
       {loading ? (
         <div className="ion-text-center ion-padding">
           <IonSpinner name="crescent" />
         </div>
-      ) : bookings.length === 0 ? (
+      ) : filteredBookings.length === 0 ? (
         <div style={{ textAlign: "center", color: "#666" }}>No bookings found.</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -271,7 +295,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {bookings.map((booking, index) => {
+              {filteredBookings.map((booking, index) => {
                 const canReturn =
                   booking.status === "approved" &&
                   booking.transaction &&
