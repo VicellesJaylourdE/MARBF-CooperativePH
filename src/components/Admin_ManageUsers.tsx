@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  IonContent,
-  IonButton,
-  IonText,
-  IonAlert,
-} from "@ionic/react";
+import { IonContent, IonButton, IonText, IonAlert, IonIcon } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
+import { pencil, trash } from "ionicons/icons";
 
 interface User {
   user_id: number;
@@ -23,6 +19,7 @@ const Admin_ManageUsers: React.FC = () => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
+  // Fetch all users
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -42,27 +39,29 @@ const Admin_ManageUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Delete user
   const handleDelete = async () => {
     if (!userToDelete) return;
-
-    const { error } = await supabase
-      .from("users")
-      .delete()
-      .eq("user_id", userToDelete);
-
+    const { error } = await supabase.from("users").delete().eq("user_id", userToDelete);
     if (!error) setUsers(users.filter((u) => u.user_id !== userToDelete));
     setShowDeleteAlert(false);
   };
 
+  // Edit user
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
 
-    const updatedData = {
+    const updatedData: any = {
       username: values.username,
       user_email: values.user_email,
       user_firstname: values.user_firstname,
       user_lastname: values.user_lastname,
     };
+
+    // Only update password if not empty
+    if (values.password && values.password.trim() !== "") {
+      updatedData.password = values.password;
+    }
 
     const { error } = await supabase
       .from("users")
@@ -71,9 +70,7 @@ const Admin_ManageUsers: React.FC = () => {
 
     if (!error) {
       setUsers((prev) =>
-        prev.map((u) =>
-          u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u
-        )
+        prev.map((u) => (u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u))
       );
     } else {
       console.error("Update error:", error.message);
@@ -84,17 +81,15 @@ const Admin_ManageUsers: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
+      {/* Header Section */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
         <h2 style={{ margin: 0 }}>Users</h2>
-        <IonButton
-          color="primary"
-          style={{ marginLeft: "auto" }}
-          routerLink="/register"
-        >
+        <IonButton color="primary" style={{ marginLeft: "auto" }} routerLink="/register">
           Add Member
         </IonButton>
       </div>
 
+      {/* Table Section */}
       {loading ? (
         <IonText>Loading users...</IonText>
       ) : users.length === 0 ? (
@@ -123,24 +118,38 @@ const Admin_ManageUsers: React.FC = () => {
                   <td style={tdStyle}>
                     <IonButton
                       color="primary"
+                      fill="clear"
                       size="small"
                       onClick={() => {
                         setEditingUser(user);
                         setShowEditAlert(true);
                       }}
-                      style={{ marginRight: "0.5rem" }}
+                      style={{
+                        marginRight: "0.5rem",
+                        backgroundColor: "#f0f0f0", // box background
+                        borderRadius: "6px",
+                        padding: "4px",
+                        minWidth: "36px",
+                      }}
                     >
-                      Edit
+                      <IonIcon icon={pencil} />
                     </IonButton>
                     <IonButton
                       color="danger"
+                      fill="clear"
                       size="small"
                       onClick={() => {
                         setUserToDelete(user.user_id);
                         setShowDeleteAlert(true);
                       }}
+                      style={{
+                        backgroundColor: "#f8d7da", // box background
+                        borderRadius: "6px",
+                        padding: "4px",
+                        minWidth: "36px",
+                      }}
                     >
-                      Remove
+                      <IonIcon icon={trash} />
                     </IonButton>
                   </td>
                 </tr>
@@ -150,15 +159,37 @@ const Admin_ManageUsers: React.FC = () => {
         </div>
       )}
 
+      {/* ========== EDIT ALERT ========== */}
       <IonAlert
         isOpen={showEditAlert}
         onDidDismiss={() => setShowEditAlert(false)}
         header="Edit User"
+        cssClass="edit-user-alert"
         inputs={[
-          { name: "username", type: "text", placeholder: "Username", value: editingUser?.username || "" },
-          { name: "user_email", type: "email", placeholder: "Email", value: editingUser?.user_email || "" },
-          { name: "user_firstname", type: "text", placeholder: "First Name", value: editingUser?.user_firstname || "" },
-          { name: "user_lastname", type: "text", placeholder: "Last Name", value: editingUser?.user_lastname || "" },
+          {
+            name: "username",
+            type: "text",
+            placeholder: "👤 Username",
+            value: editingUser?.username || "",
+          },
+          {
+            name: "user_email",
+            type: "email",
+            placeholder: "📧 Email",
+            value: editingUser?.user_email || "",
+          },
+          {
+            name: "user_firstname",
+            type: "text",
+            placeholder: "🪪 First Name",
+            value: editingUser?.user_firstname || "",
+          },
+          {
+            name: "user_lastname",
+            type: "text",
+            placeholder: "🪪 Last Name",
+            value: editingUser?.user_lastname || "",
+          },
         ]}
         buttons={[
           { text: "Cancel", role: "cancel" },
@@ -166,13 +197,13 @@ const Admin_ManageUsers: React.FC = () => {
             text: "Save",
             handler: (data) => {
               handleEdit(data);
-              return false; // prevents auto-close until handler finishes
+              return false;
             },
           },
         ]}
       />
 
-      {/* Delete Confirmation Alert */}
+      {/* ========== DELETE ALERT ========== */}
       <IonAlert
         isOpen={showDeleteAlert}
         onDidDismiss={() => setShowDeleteAlert(false)}
@@ -183,11 +214,63 @@ const Admin_ManageUsers: React.FC = () => {
           { text: "Delete", handler: handleDelete },
         ]}
       />
+
+      <style>{`
+        .edit-user-alert .alert-wrapper {
+          border-radius: 12px;
+          background: #ffffff;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+          font-family: 'Poppins', sans-serif;
+        }
+
+        .edit-user-alert .alert-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #000000ff;
+          margin-bottom: 8px;
+        }
+
+        .edit-user-alert .alert-input-group {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 12px;
+        }
+
+        .edit-user-alert .alert-input {
+          border: 1px solid #00000088;
+          border-radius: 6px;
+          padding: 8px 10px;
+          font-size: 14px;
+          color: #222;
+          background: #ffffff;
+          transition: 0.2s all;
+        }
+
+        .edit-user-alert .alert-input:focus {
+          border-color: #787775ff;
+          box-shadow: 0 0 3px #fcb53b77;
+        }
+
+        .edit-user-alert .alert-input::placeholder {
+          color: #555;
+          opacity: 0.9;
+        }
+
+        .edit-user-alert button.alert-button {
+          color: #fcb53b;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .edit-user-alert button.alert-button.role-cancel {
+          color: #555;
+        }
+      `}</style>
     </IonContent>
   );
 };
 
-// Styles for Excel-style table
+// Table styles
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "8px",
