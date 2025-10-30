@@ -16,10 +16,8 @@ import {
   IonItem,
   IonLabel,
 } from "@ionic/react";
-import StaffHeaderBar from "../components/Admin_AdminHeaderBar";
-import StaffSidebar from "../components/Admin_AdminSidebar";
-import { supabase } from "../utils/supabaseClient";
 
+import { supabase } from "../utils/supabaseClient";
 import Admin_UsersTab from "../components/Admin_UsersTab";
 import Admin_GenerateReports from "../components/Admin_GenerateReports";
 import Staff_BookingsTab from "../components/Staff_ViewBookingCalendar";
@@ -40,6 +38,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import Admin_AdminHeaderBar from "../components/Admin_AdminHeaderBar";
+import Admin_AdminSidebar from "../components/Admin_AdminSidebar";
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [totalEquipment, setTotalEquipment] = useState(0);
@@ -333,9 +333,9 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <IonSplitPane contentId="staff-main" when={false}>
-      <StaffSidebar setActiveTab={setActiveTab} />
+      <Admin_AdminSidebar setActiveTab={setActiveTab} />
       <IonPage id="staff-main">
-        <StaffHeaderBar />
+        <Admin_AdminHeaderBar />
         <IonContent scrollY={true}>{renderContent()}</IonContent>
       </IonPage>
     </IonSplitPane>

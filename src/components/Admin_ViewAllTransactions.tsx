@@ -1,26 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { IonContent, IonPage, IonGrid, IonRow, IonCol, IonSpinner, IonToast, IonSelect, IonSelectOption } from "@ionic/react";
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  IonContent,
+  IonPage,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonSpinner,
+  IonToast,
+  IonSelect,
+  IonSelectOption,
+} from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
 interface Transaction {
   id: string;
   booking_id: string | null;
   user_id: number | null;
-  user_name?: string; // Added for display
+  user_name?: string;
+  equipment_name?: string;
   amount: number;
   status: "unpaid" | "paid" | "cancelled";
   payment_method: "cash" | "gcash" | null;
   proof_url: string | null;
+  quantity?: number;
+  price_type?: "hectare" | "kilo";
   paid_at: string | null;
   created_at: string;
-  equipment_name?: string;
+  updated_at: string;
 }
 
 const Admin_ViewAllTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorToast, setErrorToast] = useState<string | null>(null);
-
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPayment, setFilterPayment] = useState<string>("all");
 
@@ -34,37 +46,38 @@ const Admin_ViewAllTransactions: React.FC = () => {
 
       const { data: transData, error: transError } = await supabase
         .from("transactions")
-        .select("*")
+        .select(`
+          *,
+          bookings(id, equipment_name),
+          users(user_id, username)
+        `)
         .order("created_at", { ascending: false });
 
       if (transError) throw transError;
+      if (!transData) {
+        setTransactions([]);
+        return;
+      }
 
-      const bookingIds = Array.from(new Set(transData?.map((t) => t.booking_id).filter(Boolean)));
-      const userIds = Array.from(new Set(transData?.map((t) => t.user_id).filter(Boolean)));
+      // Map transactions directly; proof_url is public
+      const mappedTransactions: Transaction[] = transData.map((t: any) => ({
+        id: t.id,
+        booking_id: t.booking_id,
+        user_id: t.user_id,
+        amount: t.amount,
+        status: t.status,
+        payment_method: t.payment_method,
+        proof_url: t.proof_url || null, // use as-is, must be public URL
+        quantity: t.quantity ?? 1,
+        price_type: t.price_type,
+        paid_at: t.paid_at,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        equipment_name: t.bookings?.equipment_name || "-",
+        user_name: t.users?.username || "-",
+      }));
 
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from("bookings")
-        .select("id, equipment_name")
-        .in("id", bookingIds);
-      if (bookingsError) throw bookingsError;
-
-      const { data: usersData, error: usersError } = await supabase
-        .from("users")
-        .select("user_id, username")
-        .in("user_id", userIds);
-      if (usersError) throw usersError;
-
-      const merged = transData.map((t) => {
-        const booking = bookingsData?.find((b) => b.id === t.booking_id);
-        const user = usersData?.find((u) => u.user_id === t.user_id);
-        return {
-          ...t,
-          equipment_name: booking?.equipment_name || "-",
-          user_name: user?.username || "-",
-        };
-      });
-
-      setTransactions(merged || []);
+      setTransactions(mappedTransactions);
     } catch (err: any) {
       console.error(err);
       setErrorToast(err.message);
@@ -73,20 +86,21 @@ const Admin_ViewAllTransactions: React.FC = () => {
     }
   };
 
-  const filteredTransactions = transactions.filter((t) => {
-    const statusMatch = filterStatus === "all" || t.status === filterStatus;
-    const paymentMatch = filterPayment === "all" || t.payment_method === filterPayment;
-    return statusMatch && paymentMatch;
-  });
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      const statusMatch = filterStatus === "all" || t.status === filterStatus;
+      const paymentMatch = filterPayment === "all" || t.payment_method === filterPayment;
+      return statusMatch && paymentMatch;
+    });
+  }, [transactions, filterStatus, filterPayment]);
 
   return (
     <IonPage>
       <IonContent className="ion-padding">
         <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>View All Transactions</h2>
-        <p>List of all transactions with Booking ID, Equipment, User, and payment proof images.</p>
+        <p>List of all transactions with Booking, User, Quantity, Price Type, and payment proof images.</p>
         <p style={{ fontWeight: 600 }}>Total Transactions: {filteredTransactions.length}</p>
 
-        {/* Filters */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
           <IonSelect value={filterStatus} placeholder="Filter by Status" onIonChange={(e) => setFilterStatus(e.detail.value)}>
             <IonSelectOption value="all">All Status</IonSelectOption>
@@ -119,15 +133,18 @@ const Admin_ViewAllTransactions: React.FC = () => {
                 fontSize: "0.9rem",
               }}
             >
-              <IonCol>#</IonCol> {/* Number Column */}
+              <IonCol>#</IonCol>
               <IonCol>Equipment</IonCol>
-              <IonCol>Bookid By</IonCol>
+              <IonCol>Booked By</IonCol>
+              <IonCol>Quantity</IonCol>
+              <IonCol>Price Type</IonCol>
               <IonCol>Amount</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Payment Method</IonCol>
               <IonCol>Proof</IonCol>
               <IonCol>Paid At</IonCol>
               <IonCol>Created At</IonCol>
+              <IonCol>Updated At</IonCol>
             </IonRow>
 
             {filteredTransactions.map((t, index) => (
@@ -139,9 +156,11 @@ const Admin_ViewAllTransactions: React.FC = () => {
                   fontSize: "0.85rem",
                 }}
               >
-                <IonCol>{index + 1}</IonCol> {/* Number */}
-                <IonCol>{t.equipment_name || "-"}</IonCol>
-                <IonCol>{t.user_name || "-"}</IonCol>
+                <IonCol>{index + 1}</IonCol>
+                <IonCol>{t.equipment_name}</IonCol>
+                <IonCol>{t.user_name}</IonCol>
+                <IonCol>{t.quantity}</IonCol>
+                <IonCol>{t.price_type || "-"}</IonCol>
                 <IonCol>₱{Number(t.amount).toFixed(2)}</IonCol>
                 <IonCol
                   style={{
@@ -171,6 +190,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
                 </IonCol>
                 <IonCol>{t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}</IonCol>
                 <IonCol>{new Date(t.created_at).toLocaleString()}</IonCol>
+                <IonCol>{new Date(t.updated_at).toLocaleString()}</IonCol>
               </IonRow>
             ))}
           </IonGrid>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   IonModal,
   IonHeader,
@@ -54,7 +54,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [notes, setNotes] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("gcash");
-  const [proofFileName, setProofFileName] = useState<string>("");
+  const [proofUrl, setProofUrl] = useState<string>(""); // <- store URL now
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
 
@@ -110,20 +110,27 @@ const BookingModal: React.FC<BookingModalProps> = ({
     computeTotal(days, qty);
   };
 
-  const handleProofUpload = async (e: any) => {
-    const file = e.target.files[0];
+  const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
+
     try {
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
 
-      const { error } = await supabase.storage
+      // Upload file
+      const { error: uploadError } = await supabase.storage
         .from("payment_proofs")
         .upload(`payment_proofs/${fileName}`, file);
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
-      setProofFileName(file.name);
+      // Get public URL
+      const { data } = supabase.storage
+        .from("payment_proofs")
+        .getPublicUrl(`payment_proofs/${fileName}`);
+
+      setProofUrl(data.publicUrl);
       setToastMsg(`Uploaded: ${file.name}`);
     } catch (err: any) {
       console.error("Upload error:", err.message);
@@ -134,20 +141,17 @@ const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Check valid dates
     if (!startDate || !endDate || days <= 0) {
       alert("Please select valid start and end dates.");
       return;
     }
 
-    // Check location
     if (!location || location.trim() === "") {
       alert("⚠️ Please enter a location.");
       return;
     }
 
-    // Check proof for GCash
-    if (paymentMethod === "gcash" && !proofFileName) {
+    if (paymentMethod === "gcash" && !proofUrl) {
       alert("⚠️ Please upload proof of GCash payment.");
       return;
     }
@@ -201,7 +205,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             amount: totalPrice,
             status: "unpaid",
             payment_method: paymentMethod,
-            proof_url: proofFileName || null,
+            proof_url: proofUrl || null,
           },
         ]);
 

@@ -255,7 +255,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
-            <thead style={{ backgroundColor: "#fffafaff" }}>
+            <thead style={{ backgroundColor: "#f59701ff" }}>
               <tr>
                 <th style={headerStyle}>#</th>
                 <th style={headerStyle}>Equipment</th>

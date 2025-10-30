@@ -97,7 +97,7 @@ const Admin_ManageUsers: React.FC = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#ffffffff" }}>
+            <thead style={{ backgroundColor: "#c78e13ff" }}>
               <tr>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Username</th>
