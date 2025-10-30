@@ -59,36 +59,9 @@ const Admin_GenerateReports: React.FC = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
 
-  // Logged-in user
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-
-  // Fetch current user and role
+  // Fetch data only after OTP verification
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      setCurrentUser(user);
-      setEmail(user?.email || "");
-
-      if (user) {
-        const { data: userData, error } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-
-        if (!error && userData) {
-          setCurrentUserRole(userData.role); // "admin" expected
-        }
-      }
-    };
-    getUser();
-  }, []);
-
-  // Fetch report data
-  useEffect(() => {
-    if (!otpVerified || currentUserRole !== "admin") return;
+    if (!otpVerified) return;
 
     const fetchData = async () => {
       try {
@@ -120,13 +93,13 @@ const Admin_GenerateReports: React.FC = () => {
 
         const { data: usersData, error: usersError } = await supabase
           .from("users")
-          .select("id, username, user_firstname, user_lastname");
+          .select("user_id, username, user_firstname, user_lastname");
 
         if (usersError) throw usersError;
 
         const merged = fetchedData?.map((item) => {
           if (!item.user_id) return item;
-          const user = usersData?.find((u) => u.id === item.user_id);
+          const user = usersData?.find((u) => u.user_id === item.user_id);
           return {
             ...item,
             user_name: user
@@ -145,7 +118,7 @@ const Admin_GenerateReports: React.FC = () => {
     };
 
     fetchData();
-  }, [reportType, otpVerified, currentUserRole]);
+  }, [reportType, otpVerified]);
 
   const calculateDays = (start?: string, end?: string) => {
     if (!start || !end) return "N/A";
@@ -244,7 +217,7 @@ const Admin_GenerateReports: React.FC = () => {
     const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) setToastMessage("OTP verification failed: " + error.message);
     else {
-      setToastMessage("OTP verified!");
+      setToastMessage("OTP verified! You can now access reports.");
       setOtpVerified(true);
     }
     setShowToast(true);
@@ -256,11 +229,12 @@ const Admin_GenerateReports: React.FC = () => {
       {!otpVerified && (
         <>
           <IonItem>
-            <IonLabel>Email:</IonLabel>
+            <IonLabel position="stacked">Email</IonLabel>
             <IonInput
+              type="email"
+              placeholder="Enter your email"
               value={email}
               onIonChange={(e) => setEmail(e.detail.value!)}
-              placeholder="Enter your email"
             />
           </IonItem>
 
@@ -289,8 +263,8 @@ const Admin_GenerateReports: React.FC = () => {
         </>
       )}
 
-      {/* Report Section for Admin Only */}
-      {otpVerified && currentUserRole === "admin" ? (
+      {/* Original component – wala giusab */}
+      {otpVerified && (
         <>
           <IonItem
             style={{
@@ -381,11 +355,7 @@ const Admin_GenerateReports: React.FC = () => {
             </div>
           )}
         </>
-      ) : otpVerified && currentUserRole !== "admin" ? (
-        <div style={{ textAlign: "center", color: "red", marginTop: "20px" }}>
-          ❌ You do not have permission to access this page.
-        </div>
-      ) : null}
+      )}
 
       <IonToast
         isOpen={showToast}
