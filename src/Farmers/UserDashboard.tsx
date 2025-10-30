@@ -55,7 +55,19 @@ const UserDashboard: React.FC = () => {
 
       const { data, error } = await supabase
         .from("bookings")
-        .select("*")
+        .select(`
+          *,
+          transactions (
+            amount,
+            status,
+            payment_method,
+            proof_url,
+            gcash_ref_no,
+            quantity,
+            price_type,
+            paid_at
+          )
+        `)
         .eq("user_id", userData.user_id)
         .order("created_at", { ascending: false });
 
@@ -141,14 +153,27 @@ const UserDashboard: React.FC = () => {
                 <IonSpinner name="crescent" />
               </div>
             ) : bookings.length === 0 ? (
-              <p className="ion-text-center ion-padding">
-                📖 No bookings found yet.
-              </p>
+              <p className="ion-text-center ion-padding">📖 No bookings found yet.</p>
             ) : (
               <IonList>
                 {bookings.map((b) => {
-                  const canReturn =
-                    new Date(b.end_date) <= new Date() && b.status !== "returned";
+                  const transaction = b.transactions?.[0]; // assume 1 transaction per booking
+
+                  const canReturn = (() => {
+                    const now = new Date();
+                    const endDate = new Date(b.end_date);
+
+                    if (now > endDate) return true;
+
+                    if (
+                      now.toDateString() === endDate.toDateString() &&
+                      now.getHours() >= 12
+                    ) {
+                      return true;
+                    }
+
+                    return false;
+                  })() && b.status !== "returned";
 
                   return (
                     <IonCard key={b.id}>
@@ -173,12 +198,12 @@ const UserDashboard: React.FC = () => {
                         </IonItem>
                         <IonItem>
                           <IonLabel>
-                            <strong>Total:</strong> ₱{b.total_price || 0}
+                            <strong>Total:</strong> ₱{transaction?.amount || b.total_price || 0}
                           </IonLabel>
                         </IonItem>
                         <IonItem>
                           <IonLabel>
-                            <strong>Status:</strong>{" "}
+                            <strong>Booking Status:</strong>{" "}
                             <span
                               style={{
                                 color:
@@ -188,6 +213,8 @@ const UserDashboard: React.FC = () => {
                                     ? "red"
                                     : b.status === "pending"
                                     ? "orange"
+                                    : b.status === "returned"
+                                    ? "blue"
                                     : "gray",
                                 fontWeight: "bold",
                               }}
@@ -196,6 +223,66 @@ const UserDashboard: React.FC = () => {
                             </span>
                           </IonLabel>
                         </IonItem>
+
+                        {transaction && (
+                          <>
+                            <IonItem>
+                              <IonLabel>
+                                <strong>Payment Status:</strong>{" "}
+                                <span
+                                  style={{
+                                    color:
+                                      transaction.status === "paid"
+                                        ? "green"
+                                        : transaction.status === "unpaid"
+                                        ? "orange"
+                                        : "red",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {transaction.status.toUpperCase()}
+                                </span>
+                              </IonLabel>
+                            </IonItem>
+                            <IonItem>
+                              <IonLabel>
+                                <strong>Payment Method:</strong>{" "}
+                                {transaction.payment_method.toUpperCase()}
+                              </IonLabel>
+                            </IonItem>
+                            {transaction.gcash_ref_no && (
+                              <IonItem>
+                                <IonLabel>
+                                  <strong>GCash Ref #:</strong> {transaction.gcash_ref_no}
+                                </IonLabel>
+                              </IonItem>
+                            )}
+                            {transaction.proof_url && (
+                              <IonItem>
+                                <IonLabel>
+                                  <strong>Proof:</strong>{" "}
+                                  <a href={transaction.proof_url} target="_blank" rel="noopener noreferrer">
+                                    View
+                                  </a>
+                                </IonLabel>
+                              </IonItem>
+                            )}
+                            {transaction.paid_at && (
+                              <IonItem>
+                                <IonLabel>
+                                  <strong>Paid At:</strong>{" "}
+                                  {new Date(transaction.paid_at).toLocaleString()}
+                                </IonLabel>
+                              </IonItem>
+                            )}
+                            <IonItem>
+                              <IonLabel>
+                                <strong>Quantity:</strong> {transaction.quantity} {transaction.price_type}
+                              </IonLabel>
+                            </IonItem>
+                          </>
+                        )}
+
                         {b.notes && (
                           <IonItem>
                             <IonLabel>
@@ -204,7 +291,44 @@ const UserDashboard: React.FC = () => {
                           </IonItem>
                         )}
 
-                        {canReturn && (
+                        {b.status === "pending" && (
+                          <IonItem lines="none" className="ion-padding-top">
+                            <IonButton
+                              color="danger"
+                              onClick={async () => {
+                                const confirmCancel = window.confirm(
+                                  "Are you sure you want to cancel this booking?"
+                                );
+                                if (!confirmCancel) return;
+
+                                try {
+                                  const { error } = await supabase
+                                    .from("bookings")
+                                    .update({ status: "cancelled" })
+                                    .eq("id", b.id);
+
+                                  if (error) throw error;
+
+                                  setBookings((prev) =>
+                                    prev.map((item) =>
+                                      item.id === b.id
+                                        ? { ...item, status: "cancelled" }
+                                        : item
+                                    )
+                                  );
+                                  setToastMsg("Booking successfully cancelled!");
+                                } catch (err: any) {
+                                  console.error("Cancel booking error:", err.message);
+                                  setToastMsg("Failed to cancel booking. Try again.");
+                                }
+                              }}
+                            >
+                              Cancel Booking
+                            </IonButton>
+                          </IonItem>
+                        )}
+
+                        {canReturn && transaction?.status === "paid" && (
                           <IonItem lines="none" className="ion-padding-top">
                             <IonButton
                               color="warning"
@@ -226,13 +350,8 @@ const UserDashboard: React.FC = () => {
                                   );
                                   setToastMsg("Booking successfully returned!");
                                 } catch (err: any) {
-                                  console.error(
-                                    "Return booking error:",
-                                    err.message
-                                  );
-                                  setToastMsg(
-                                    "Failed to return booking. Try again."
-                                  );
+                                  console.error("Return booking error:", err.message);
+                                  setToastMsg("Failed to return booking. Try again.");
                                 }
                               }}
                             >

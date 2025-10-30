@@ -19,6 +19,7 @@ const Staff_LateReturnPenalty: React.FC = () => {
     const fetchLateReturns = async () => {
       setLoading(true);
       try {
+        // Fetch bookings that were approved or returned
         const { data: bookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("*")
@@ -26,6 +27,7 @@ const Staff_LateReturnPenalty: React.FC = () => {
 
         if (bookingsError) throw bookingsError;
 
+        // Fetch existing late returns
         const { data: existingLate, error: existingError } = await supabase
           .from("late_returns")
           .select("booking_id");
@@ -34,22 +36,32 @@ const Staff_LateReturnPenalty: React.FC = () => {
 
         const existingIds = new Set(existingLate.map((l) => l.booking_id));
 
+        // Map late returns and allow user to set penalty
         const lateToInsert = bookings
           .filter((booking) => {
             const endDate = new Date(booking.end_date);
             const returnedAt = booking.returned_at ? new Date(booking.returned_at) : null;
             return returnedAt && returnedAt > endDate && !existingIds.has(booking.id);
           })
-          .map((b) => ({
-            booking_id: b.id,
-            user_id: b.user_id,
-            penalty_amount: 100,
-          }));
+          .map((b) => {
+            // Prompt user to enter penalty amount
+            let penalty = prompt(
+              `Enter penalty amount for Booking ID ${b.id} (User ID ${b.user_id}):`,
+              "0"
+            );
+            let penaltyAmount = penalty ? parseFloat(penalty) : 0;
+            return {
+              booking_id: b.id,
+              user_id: b.user_id,
+              penalty_amount: penaltyAmount,
+            };
+          });
 
         if (lateToInsert.length > 0) {
           await supabase.from("late_returns").insert(lateToInsert);
         }
 
+        // Fetch all late returns for display
         const { data, error } = await supabase
           .from("late_returns")
           .select("*")
@@ -61,6 +73,7 @@ const Staff_LateReturnPenalty: React.FC = () => {
         const returnsData = data as LateReturn[];
         setLateReturns(returnsData);
 
+        // Calculate monthly total
         const total = returnsData
           .filter((item) => {
             const date = new Date(item.created_at);
@@ -107,7 +120,7 @@ const Staff_LateReturnPenalty: React.FC = () => {
                 }}
               >
                 <thead>
-                  <tr style={{ backgroundColor: "#000000ff" }}>
+                  <tr style={{ backgroundColor: "#000000ff", color: "#ffffff" }}>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>#</th>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>User ID</th>
                     <th style={{ border: "1px solid #000000ff", padding: "8px" }}>Booking ID</th>
@@ -120,7 +133,7 @@ const Staff_LateReturnPenalty: React.FC = () => {
                     <tr
                       key={item.id}
                       style={{
-                        backgroundColor: index % 2 === 0 ? "#000000ff" : "#000000ff",
+                        backgroundColor: index % 2 === 0 ? "#f5f5f5" : "#e0e0e0",
                       }}
                     >
                       <td style={{ border: "1px solid #080808ff", padding: "8px" }}>{index + 1}</td>

@@ -54,7 +54,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [notes, setNotes] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("gcash");
-  const [proofUrl, setProofUrl] = useState<string>(""); // <- store URL now
+  const [proofUrl, setProofUrl] = useState<string>(""); 
+  const [gcashRefNo, setGcashRefNo] = useState<string>(""); // <-- new state
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
 
@@ -151,9 +152,15 @@ const BookingModal: React.FC<BookingModalProps> = ({
       return;
     }
 
-    if (paymentMethod === "gcash" && !proofUrl) {
-      alert("⚠️ Please upload proof of GCash payment.");
-      return;
+    if (paymentMethod === "gcash") {
+      if (!proofUrl) {
+        alert("⚠️ Please upload proof of GCash payment.");
+        return;
+      }
+      if (!gcashRefNo || gcashRefNo.trim() === "") {
+        alert("⚠️ Please enter the GCash reference number.");
+        return;
+      }
     }
 
     try {
@@ -206,6 +213,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             status: "unpaid",
             payment_method: paymentMethod,
             proof_url: proofUrl || null,
+            gcash_ref_no: gcashRefNo || null, // <-- added
           },
         ]);
 
@@ -338,13 +346,22 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     </IonCardContent>
                   </IonCard>
 
-                  <IonItem>
+                  <IonItem className="ion-margin-top">
                     <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleProofUpload}
                       disabled={uploading}
+                    />
+                  </IonItem>
+
+                  <IonItem className="ion-margin-top">
+                    <IonLabel position="stacked">GCash Reference Number</IonLabel>
+                    <IonInput
+                      placeholder="Enter reference number"
+                      value={gcashRefNo}
+                      onIonInput={(e) => setGcashRefNo(e.detail.value ?? "")}
                     />
                   </IonItem>
                 </>

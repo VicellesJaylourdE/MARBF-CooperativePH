@@ -22,6 +22,7 @@ interface Transaction {
   status: "unpaid" | "paid" | "cancelled";
   payment_method: "cash" | "gcash" | null;
   proof_url: string | null;
+  gcash_ref_no?: string | null; // added field
   quantity?: number;
   price_type?: "hectare" | "kilo";
   paid_at: string | null;
@@ -59,7 +60,6 @@ const Admin_ViewAllTransactions: React.FC = () => {
         return;
       }
 
-      // Map transactions directly; proof_url is public
       const mappedTransactions: Transaction[] = transData.map((t: any) => ({
         id: t.id,
         booking_id: t.booking_id,
@@ -67,7 +67,8 @@ const Admin_ViewAllTransactions: React.FC = () => {
         amount: t.amount,
         status: t.status,
         payment_method: t.payment_method,
-        proof_url: t.proof_url || null, // use as-is, must be public URL
+        proof_url: t.proof_url || null,
+        gcash_ref_no: t.gcash_ref_no || null, // mapped GCash Ref
         quantity: t.quantity ?? 1,
         price_type: t.price_type,
         paid_at: t.paid_at,
@@ -89,7 +90,8 @@ const Admin_ViewAllTransactions: React.FC = () => {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const statusMatch = filterStatus === "all" || t.status === filterStatus;
-      const paymentMatch = filterPayment === "all" || t.payment_method === filterPayment;
+      const paymentMatch =
+        filterPayment === "all" || t.payment_method === filterPayment;
       return statusMatch && paymentMatch;
     });
   }, [transactions, filterStatus, filterPayment]);
@@ -97,19 +99,34 @@ const Admin_ViewAllTransactions: React.FC = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding">
-        <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>View All Transactions</h2>
-        <p>List of all transactions with Booking, User, Quantity, Price Type, and payment proof images.</p>
-        <p style={{ fontWeight: 600 }}>Total Transactions: {filteredTransactions.length}</p>
+        <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>
+          View All Transactions
+        </h2>
+        <p>
+          List of all transactions with Booking, User, Quantity, Price Type,
+          payment proof images, and GCash Reference Numbers.
+        </p>
+        <p style={{ fontWeight: 600 }}>
+          Total Transactions: {filteredTransactions.length}
+        </p>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
-          <IonSelect value={filterStatus} placeholder="Filter by Status" onIonChange={(e) => setFilterStatus(e.detail.value)}>
+          <IonSelect
+            value={filterStatus}
+            placeholder="Filter by Status"
+            onIonChange={(e) => setFilterStatus(e.detail.value)}
+          >
             <IonSelectOption value="all">All Status</IonSelectOption>
             <IonSelectOption value="unpaid">Unpaid</IonSelectOption>
             <IonSelectOption value="paid">Paid</IonSelectOption>
             <IonSelectOption value="cancelled">Cancelled</IonSelectOption>
           </IonSelect>
 
-          <IonSelect value={filterPayment} placeholder="Filter by Payment Method" onIonChange={(e) => setFilterPayment(e.detail.value)}>
+          <IonSelect
+            value={filterPayment}
+            placeholder="Filter by Payment Method"
+            onIonChange={(e) => setFilterPayment(e.detail.value)}
+          >
             <IonSelectOption value="all">All Methods</IonSelectOption>
             <IonSelectOption value="cash">Cash</IonSelectOption>
             <IonSelectOption value="gcash">GCash</IonSelectOption>
@@ -141,6 +158,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
               <IonCol>Amount</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Payment Method</IonCol>
+              <IonCol>GCash Ref</IonCol> {/* New column */}
               <IonCol>Proof</IonCol>
               <IonCol>Paid At</IonCol>
               <IonCol>Created At</IonCol>
@@ -164,12 +182,18 @@ const Admin_ViewAllTransactions: React.FC = () => {
                 <IonCol>₱{Number(t.amount).toFixed(2)}</IonCol>
                 <IonCol
                   style={{
-                    color: t.status === "paid" ? "green" : t.status === "cancelled" ? "red" : "#555",
+                    color:
+                      t.status === "paid"
+                        ? "green"
+                        : t.status === "cancelled"
+                        ? "red"
+                        : "#555",
                   }}
                 >
                   {t.status}
                 </IonCol>
                 <IonCol>{t.payment_method || "-"}</IonCol>
+                <IonCol>{t.gcash_ref_no || "-"}</IonCol> {/* Display GCash Ref */}
                 <IonCol>
                   {t.proof_url ? (
                     <img
@@ -188,7 +212,9 @@ const Admin_ViewAllTransactions: React.FC = () => {
                     "-"
                   )}
                 </IonCol>
-                <IonCol>{t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}</IonCol>
+                <IonCol>
+                  {t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}
+                </IonCol>
                 <IonCol>{new Date(t.created_at).toLocaleString()}</IonCol>
                 <IonCol>{new Date(t.updated_at).toLocaleString()}</IonCol>
               </IonRow>
