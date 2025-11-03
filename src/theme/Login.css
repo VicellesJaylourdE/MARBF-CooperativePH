@@ -1,0 +1,54 @@
+.login-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.left-panel {
+  flex: 1;
+  background-color: #1e90ff;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.right-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-logo {
+  width: 100px;
+  margin-bottom: 1rem;
+}
+
+.login-segment {
+  margin-bottom: 1rem;
+}
+
+.login-btn {
+  margin-top: 1rem;
+}
+
+.signup-text {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.signup-link {
+  color: #1e90ff;
+  text-decoration: none;
+  font-weight: bold;
+}

@@ -11,13 +11,8 @@ import {
   IonBadge,
   IonPopover,
   IonButtons,
-  
 } from "@ionic/react";
-import {
-  contractOutline,
-  logOutOutline,
-  notificationsOutline,
-} from "ionicons/icons";
+import { logOutOutline, notificationsOutline } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
 
 const Farmer_HeaderBar: React.FC = () => {
@@ -27,6 +22,7 @@ const Farmer_HeaderBar: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [isLogoutClicked, setIsLogoutClicked] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<string>("User");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -44,25 +40,38 @@ const Farmer_HeaderBar: React.FC = () => {
       }
 
       if (user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("users")
-          .select("username")
-          .eq("user_email", user.email)
-          .single();
+        // Determine login method
+        const method = user.email ? "Email" : user.phone ? "Phone" : "User";
+        setLoginMethod(method);
 
-        if (profileError || !profile) {
-          console.error("Profile fetch error:", profileError?.message);
+        // Fetch username based on email or phone
+        let profile: any = null;
+
+        if (user.email) {
+          const { data, error } = await supabase
+            .from("users")
+            .select("username")
+            .eq("user_email", user.email)
+            .single();
+          profile = data;
+          if (error) console.error("Email profile fetch error:", error.message);
+        } else if (user.phone) {
+          const { data, error } = await supabase
+            .from("users")
+            .select("username")
+            .eq("user_phone", user.phone)
+            .single();
+          profile = data;
+          if (error) console.error("Phone profile fetch error:", error.message);
+        }
+
+        if (!profile) {
           setUserName("User");
           setInitials("U");
         } else {
           const username = profile.username;
           setUserName(username);
-
-          const init = username
-            .split(" ")
-            .map((n: string) => n[0]?.toUpperCase())
-            .join("");
-          setInitials(init);
+          setInitials(username.split(" ").map((n: string) => n[0]?.toUpperCase()).join(""));
         }
       }
 
@@ -76,9 +85,7 @@ const Farmer_HeaderBar: React.FC = () => {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      if (!error && data) {
-        setNotifications(data);
-      }
+      if (!error && data) setNotifications(data);
     };
 
     fetchUserData();
@@ -89,9 +96,7 @@ const Farmer_HeaderBar: React.FC = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications" },
-        () => {
-          fetchNotifications();
-        }
+        () => fetchNotifications()
       )
       .subscribe();
 
@@ -107,18 +112,13 @@ const Farmer_HeaderBar: React.FC = () => {
   return (
     <IonHeader>
       <IonToolbar color="light">
-        <IonButtons slot="start">
-       
-        </IonButtons>
+        <IonButtons slot="start"></IonButtons>
 
         <IonTitle
           className="logo"
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            Farmer Portal
-          </div>
-
+          <div style={{ display: "flex", alignItems: "center" }}>Farmer Portal</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
               Welcome back, {userName}
@@ -165,7 +165,7 @@ const Farmer_HeaderBar: React.FC = () => {
                   </IonLabel>
                   <br />
                   <IonLabel color="medium" style={{ fontSize: "0.75rem" }}>
-                    User
+                    {loginMethod}
                   </IonLabel>
                 </div>
               )}
@@ -244,11 +244,8 @@ const Farmer_HeaderBar: React.FC = () => {
                   setTimeout(() => setIsLogoutClicked(false), 200);
 
                   const { error } = await supabase.auth.signOut();
-                  if (error) {
-                    console.error("Logout error:", error.message);
-                  } else {
-                    window.location.href = "/";
-                  }
+                  if (error) console.error("Logout error:", error.message);
+                  else window.location.href = "/";
                 }}
               >
                 <IonIcon icon={logOutOutline} />

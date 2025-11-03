@@ -8,8 +8,12 @@ import {
   IonPage,
   IonToast,
   IonSpinner,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
   useIonRouter,
 } from "@ionic/react";
+import bcrypt from "bcryptjs";
 import { supabase } from "../utils/supabaseClient";
 import logo from "../assets/logo.png";
 
@@ -31,7 +35,10 @@ const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
+
+  const [segment, setSegment] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -41,42 +48,81 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // STEP 1: LOGIN WITH PASSWORD
+  // STEP 1: LOGIN USING EMAIL OR PHONE
   const doLogin = async () => {
-    if (!email || !password) {
-      setAlertMessage("⚠️ Please enter both email and password.");
-      setShowAlert(true);
-      return;
-    }
-
-    setLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+    if (segment === "email") {
+      if (!email || !password) {
+        setAlertMessage("⚠️ Please enter both email and password.");
+        setShowAlert(true);
+        return;
+      }
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setLoading(false);
+        setAlertMessage("❌ " + error.message);
+        setShowAlert(true);
+        return;
+      }
+      await sendOtp("email");
       setLoading(false);
-      setAlertMessage("❌ " + error.message);
-      setShowAlert(true);
-      return;
-    }
+    } else {
+      if (!phone || !password) {
+        setAlertMessage("⚠️ Please enter both phone and password.");
+        setShowAlert(true);
+        return;
+      }
+      setLoading(true);
 
-    // If login successful, send OTP next
-    await sendOtp();
-    setLoading(false);
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("user_phone", phone)
+        .single();
+
+      if (userError || !user) {
+        setLoading(false);
+        setAlertMessage("❌ Phone number not found.");
+        setShowAlert(true);
+        return;
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.user_password);
+      if (!passwordMatch) {
+        setLoading(false);
+        setAlertMessage("❌ Incorrect password.");
+        setShowAlert(true);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) {
+        setAlertMessage("⚠️ Failed to send OTP: " + error.message);
+        setShowAlert(true);
+      } else {
+        setOtpSent(true);
+        setAlertMessage("📩 OTP sent to your phone.");
+        setShowAlert(true);
+      }
+      setLoading(false);
+    }
   };
 
   // STEP 2: SEND OTP
-  const sendOtp = async () => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+  const sendOtp = async (type: "email" | "phone") => {
+    const { error } =
+      type === "email"
+        ? await supabase.auth.signInWithOtp({ email })
+        : await supabase.auth.signInWithOtp({ phone });
     if (error) {
       setAlertMessage("⚠️ Failed to send OTP: " + error.message);
       setShowAlert(true);
     } else {
       setOtpSent(true);
-      setAlertMessage("📩 OTP sent to your email. Please check your inbox.");
+      setAlertMessage("📩 OTP sent! Please check your inbox or SMS.");
       setShowAlert(true);
     }
   };
@@ -89,11 +135,11 @@ const Login: React.FC = () => {
       return;
     }
 
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
+    const { error } = await supabase.auth.verifyOtp(
+      segment === "email"
+        ? { email, token: otp, type: "email" }
+        : { phone, token: otp, type: "sms" }
+    );
 
     if (error) {
       setAlertMessage("❌ Invalid OTP. Please try again.");
@@ -106,19 +152,42 @@ const Login: React.FC = () => {
     setAlertMessage("✅ OTP verified successfully!");
     setShowAlert(true);
 
-    // STEP 4: Redirect after OTP success
+    await fetchUser();
+  };
+
+  // STEP 4: FETCH USER DATA & REDIRECT (FIXED)
+  const fetchUser = async () => {
     const { data: userData, error: roleError } = await supabase
       .from("users")
-      .select("role")
-      .eq("user_email", email)
+      .select("*")
+      .eq(segment === "email" ? "user_email" : "user_phone", segment === "email" ? email : phone)
       .single();
 
     if (roleError || !userData) {
-      setAlertMessage("⚠️ Unable to fetch user role. Redirecting to user dashboard...");
+      setAlertMessage("⚠️ User record not found. Redirecting...");
       setShowAlert(true);
       navigation.push("/user-dashboard", "forward", "replace");
       return;
     }
+
+    // ✅ Combine full name
+    const fullName = `${userData.user_firstname || ""} ${userData.user_lastname || ""}`.trim();
+
+    // ✅ Store info properly
+    const userInfo = {
+      id: userData.user_id,
+      username: userData.username,
+      firstname: userData.user_firstname,
+      lastname: userData.user_lastname,
+      fullname: fullName,
+      email: userData.user_email,
+      phone: userData.user_phone,
+      role: userData.role,
+    };
+
+    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    setAlertMessage(`👋 Welcome back, ${fullName || userData.username}!`);
+    setShowAlert(true);
 
     setTimeout(() => {
       if (userData.role === "admin") {
@@ -152,40 +221,73 @@ const Login: React.FC = () => {
                     ←
                   </IonButton>
 
+                  <IonSegment
+                    value={segment}
+                    onIonChange={(e) => setSegment(e.detail.value as "email" | "phone")}
+                    className="segment"
+                  >
+                    <IonSegmentButton value="email">
+                      <IonLabel>Email</IonLabel>
+                    </IonSegmentButton>
+                    <IonSegmentButton value="phone">
+                      <IonLabel>Phone</IonLabel>
+                    </IonSegmentButton>
+                  </IonSegment>
+
                   {!otpSent && (
                     <>
                       <h2 className="welcome">Welcome Back!</h2>
-                      <p className="instruction">Sign in with your email and password</p>
+                      <p className="instruction">Sign in with your {segment}</p>
 
-                      <label className="label">Email Address</label>
-                      <IonInput
-                        placeholder="Your Email"
-                        type="email"
-                        fill="outline"
-                        className="input"
-                        value={email}
-                        onIonChange={(e) => setEmail(e.detail.value!)}
-                      />
+                      {segment === "email" ? (
+                        <>
+                          <label className="label">Email Address</label>
+                          <IonInput
+                            placeholder="Your Email"
+                            type="email"
+                            fill="outline"
+                            className="input"
+                            value={email}
+                            onIonChange={(e) => setEmail(e.detail.value!)}
+                          />
 
-                      <label className="label">Password</label>
-                      <IonInput
-                        placeholder="Enter your password"
-                        type="password"
-                        fill="outline"
-                        className="input"
-                        value={password}
-                        onIonChange={(e) => setPassword(e.detail.value!)}
-                      >
-                        <IonInputPasswordToggle slot="end" />
-                      </IonInput>
+                          <label className="label">Password</label>
+                          <IonInput
+                            placeholder="Enter your password"
+                            type="password"
+                            fill="outline"
+                            className="input"
+                            value={password}
+                            onIonChange={(e) => setPassword(e.detail.value!)}
+                          >
+                            <IonInputPasswordToggle slot="end" />
+                          </IonInput>
+                        </>
+                      ) : (
+                        <>
+                          <label className="label">Phone Number</label>
+                          <IonInput
+                            placeholder="Enter your phone number"
+                            type="tel"
+                            fill="outline"
+                            className="input"
+                            value={phone}
+                            onIonChange={(e) => setPhone(e.detail.value!)}
+                          />
 
-                      <span
-                        className="forgot"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => navigation.push("/forgot-password")}
-                      >
-                        Forgot Password?
-                      </span>
+                          <label className="label">Password</label>
+                          <IonInput
+                            placeholder="Enter your password"
+                            type="password"
+                            fill="outline"
+                            className="input"
+                            value={password}
+                            onIonChange={(e) => setPassword(e.detail.value!)}
+                          >
+                            <IonInputPasswordToggle slot="end" />
+                          </IonInput>
+                        </>
+                      )}
 
                       <IonButton
                         onClick={doLogin}
@@ -210,11 +312,12 @@ const Login: React.FC = () => {
                     </>
                   )}
 
-                  {/* OTP SECTION */}
                   {otpSent && !otpVerified && (
                     <>
                       <h2 className="welcome">Verify OTP</h2>
-                      <p className="instruction">We sent an OTP to {email}</p>
+                      <p className="instruction">
+                        We sent an OTP to your {segment === "email" ? "email" : "phone"}.
+                      </p>
 
                       <label className="label">Enter OTP</label>
                       <IonInput
@@ -238,7 +341,7 @@ const Login: React.FC = () => {
 
                       <IonButton
                         fill="clear"
-                        onClick={sendOtp}
+                        onClick={() => sendOtp(segment)}
                         style={{ marginTop: "8px", color: "#0078d7" }}
                       >
                         Resend OTP
@@ -266,19 +369,11 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
-      {/* Styles */}
+      {/* STYLES */}
       <style>{`
         .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
         .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
-        .login-layout { 
-        display: flex;
-         width: 85%; 
-         max-width: 850px; 
-         height: 80vh; 
-         border-radius: 12px;
-          overflow: hidden;
-           box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            }
+        .login-layout { display: flex; width: 85%; max-width: 850px; height: 80vh; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
         .left-panel { flex: 1; background: #ffd500ff; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
         .coop-logo { width: 140px; margin-bottom: 15px; }
         .left-panel h2 { font-size: 18px; font-weight: 500; line-height: 1.4; max-width: 300px; }
@@ -289,19 +384,9 @@ const Login: React.FC = () => {
         .instruction { font-size: 13px; color: #555; margin-bottom: 20px; }
         .label { display: block; text-align: left; font-size: 13px; color: #333; margin-bottom: 4px; }
         .input { width: 100%; margin-bottom: 12px; --highlight-color-focused: #555555ff; --border-color: #000000ff; --color: #333; }
-        .forgot { display: block; text-align: right; font-size: 12px; color: #0078d7; margin-bottom: 12px; text-decoration: none; }
         .login-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
         @media (max-width: 768px) {
           .login-layout { flex-direction: column; width: 90%; height: auto; }
-          .login-layout { 
-        display: flex;
-         width: 75%; 
-         max-width: 850px; 
-         height: 78vh; 
-         border-radius: 12px;
-          overflow: hidden;
-           box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            }
           .left-panel { display: none; }
           .right-panel { padding: 25px; border-radius: 12px; }
           .login-box { width: 100%; max-width: 280px; }

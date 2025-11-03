@@ -34,6 +34,8 @@ import UserDashboard from "./Farmers/UserDashboard";
 import StaffDashboard from "./Staff/StaffDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOtp from "./pages/VerifyOtp";
+import Registerphone from "./pages/Registerphone";
+
 setupIonicReact();
 
 const App: React.FC = () => (
@@ -69,6 +71,7 @@ const MainRouter: React.FC = () => {
        <Route path="/verify-otp" component={VerifyOtp} exact />
         <Route exact path="/register" component={Register} />
          <Route exact path="/registerall" component={RegisterAll} />
+         <Route exact path="/registerphone" component={Registerphone} />
         <Route exact path="/learnmore" component={LearnMore} />
         <Route path="/MARBF-CooperativePH/app" component={Menu} />
         <Route exact path="/admin-dashboard" component={AdminDashboard} />
