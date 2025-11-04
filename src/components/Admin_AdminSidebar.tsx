@@ -93,11 +93,7 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>View User List</IonLabel>
           </IonItem>
-
-          <IonItem button onClick={() => setActiveTab("latereturnpenalty")}>
-            <IonIcon icon={gridOutline} slot="start" />
-            <IonLabel>Late Return Penalty</IonLabel>
-          </IonItem>
+          
            <IonItem button onClick={() => setActiveTab("generatereports")}>
             <IonIcon icon={printOutline} slot="start" />
             <IonLabel>Generate Reports</IonLabel>

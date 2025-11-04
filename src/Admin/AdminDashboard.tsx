@@ -26,7 +26,6 @@ import Admin_ViewBookingCalendar from "../components/Admin_ViewBookingCalendar";
 import Admin_ManageRentalBookings from "../components/Admin_ManageRentalBookings";
 import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
 import Admin_ManageUsers from "../components/Admin_ManageUsers";
-import Admin_LateReturnPenalty from "../components/Admin_LateReturnPenalty";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
 import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
 import {
@@ -320,8 +319,6 @@ const AdminDashboard: React.FC = () => {
         return <Admin_ViewAllTransactions />;
       case "manageusers":
         return <Admin_ManageUsers />;
-      case "latereturnpenalty":
-        return <Admin_LateReturnPenalty />;
       case "registermember":
         return <Admin_RegisterMember />;
       case "admindashboardanaltys":
