@@ -1,4 +1,4 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import {
   IonModal,
   IonHeader,
@@ -55,7 +55,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [location, setLocation] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("gcash");
   const [proofUrl, setProofUrl] = useState<string>(""); 
-  const [gcashRefNo, setGcashRefNo] = useState<string>(""); 
+  const [gcashRefNo, setGcashRefNo] = useState<string>(""); // <-- new state
   const [uploading, setUploading] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>("");
 
@@ -111,7 +111,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     computeTotal(days, qty);
   };
 
-  // ✅ Mobile-safe file upload
   const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -120,15 +119,14 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
 
-      // Convert file to ArrayBuffer (fixes mobile upload issues)
-      const fileData = await file.arrayBuffer();
-
+      // Upload file
       const { error: uploadError } = await supabase.storage
         .from("payment_proofs")
-        .upload(`payment_proofs/${fileName}`, fileData);
+        .upload(`payment_proofs/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data } = supabase.storage
         .from("payment_proofs")
         .getPublicUrl(`payment_proofs/${fileName}`);
@@ -172,12 +170,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return;
       }
 
-      const userIdentifier = user.phone ?? user.email;
-
       const { data: profile } = await supabase
         .from("users")
         .select("user_id")
-        .or(`user_email.eq.${userIdentifier},user_phone.eq.${userIdentifier}`)
+        .eq("user_email", user.email)
         .single();
 
       if (!profile) {
@@ -217,7 +213,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             status: "unpaid",
             payment_method: paymentMethod,
             proof_url: proofUrl || null,
-            gcash_ref_no: gcashRefNo || null,
+            gcash_ref_no: gcashRefNo || null, // <-- added
           },
         ]);
 
@@ -355,7 +351,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     <input
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       onChange={handleProofUpload}
                       disabled={uploading}
                     />

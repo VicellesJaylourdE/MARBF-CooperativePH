@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import {
   IonPage,
   IonContent,
@@ -8,12 +8,18 @@ import {
   IonModal,
   IonCard,
   IonCardHeader,
-  IonCardTitle,
   IonCardContent,
   IonInputPasswordToggle,
   IonSelect,
-  IonSelectOption
+  IonSelectOption,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonIcon,
+  useIonRouter
 } from '@ionic/react';
+import { arrowBackOutline } from 'ionicons/icons';
 import { supabase } from '../utils/supabaseClient';
 import bcrypt from 'bcryptjs';
 
@@ -27,6 +33,8 @@ const Register: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const router = useIonRouter();
 
   const doRegister = async () => {
     try {
@@ -60,13 +68,22 @@ const Register: React.FC = () => {
 
   return (
     <IonPage>
+      <IonHeader>
+        <IonToolbar color="warning">
+            <IonButton
+                    fill="clear"
+                    className="back-button"
+                    onClick={() => router.push("/admin-dashboard")}
+                  >
+                    ←
+                  </IonButton>
+        </IonToolbar>
+      </IonHeader>
+
       <IonContent className="ion-padding">
         <IonCard>
-          <IonCardHeader>
-            <IonCardTitle>Register Member</IonCardTitle>
-          </IonCardHeader>
+          <IonCardHeader> Register</IonCardHeader>
           <IonCardContent>
-            {/* Excel-style table container */}
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
@@ -80,52 +97,43 @@ const Register: React.FC = () => {
                       />
                     </td>
                   </tr>
-
                   <tr style={rowStyle}>
-                    <td style={cellStyle}><strong>First Name</strong></td>
+                    <td style={cellStyle}><strong>Full Name</strong></td>
                     <td style={cellStyle}>
-                      <IonInput
-                        placeholder="First Name"
-                        value={firstName}
-                        onIonChange={(e) => setFirstName(e.detail.value!)}
-                      />
-                    </td>
-                  </tr>
-
-                  <tr style={rowStyle}>
-                    <td style={cellStyle}><strong>Last Name</strong></td>
-                    <td style={cellStyle}>
-                      <IonInput
-                        placeholder="Last Name"
-                        value={lastName}
-                        onIonChange={(e) => setLastName(e.detail.value!)}
-                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <IonInput
+                          placeholder="First Name"
+                          value={firstName}
+                          onIonChange={(e) => setFirstName(e.detail.value!)}
+                        />
+                        <IonInput
+                          placeholder="Last Name"
+                          value={lastName}
+                          onIonChange={(e) => setLastName(e.detail.value!)}
+                        />
+                      </div>
                     </td>
                   </tr>
 
                   <tr style={rowStyle}>
                     <td style={cellStyle}><strong>Email</strong></td>
                     <td style={cellStyle}>
-                      <IonInput
-                        placeholder="Email"
-                        type="email"
-                        value={email}
-                        onIonChange={(e) => setEmail(e.detail.value!)}
-                      />
-                    </td>
-                  </tr>
-
-                  <tr style={rowStyle}>
-                    <td style={cellStyle}><strong>Password</strong></td>
-                    <td style={cellStyle}>
-                      <IonInput
-                        placeholder="Password"
-                        type="password"
-                        value={password}
-                        onIonChange={(e) => setPassword(e.detail.value!)}
-                      >
-                        <IonInputPasswordToggle slot="end" />
-                      </IonInput>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <IonInput
+                          placeholder="Email"
+                          type="email"
+                          value={email}
+                          onIonChange={(e) => setEmail(e.detail.value!)}
+                        />
+                        <IonInput
+                          placeholder="Password"
+                          type="password"
+                          value={password}
+                          onIonChange={(e) => setPassword(e.detail.value!)}
+                        >
+                          <IonInputPasswordToggle slot="end" color="warning" />
+                        </IonInput>
+                      </div>
                     </td>
                   </tr>
 
@@ -147,7 +155,7 @@ const Register: React.FC = () => {
               </table>
             </div>
 
-            <IonButton expand="block" onClick={doRegister} style={{ marginTop: '1rem' }}>
+            <IonButton expand="block" onClick={doRegister} style={{ marginTop: '1rem' }} color="warning">
               Register
             </IonButton>
           </IonCardContent>

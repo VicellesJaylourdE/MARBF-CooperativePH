@@ -48,7 +48,6 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // STEP 1: LOGIN USING EMAIL OR PHONE
   const doLogin = async () => {
     if (segment === "email") {
       if (!email || !password) {
@@ -111,7 +110,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // STEP 2: SEND OTP
   const sendOtp = async (type: "email" | "phone") => {
     const { error } =
       type === "email"
@@ -127,7 +125,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // STEP 3: VERIFY OTP
   const verifyOtp = async () => {
     if (!otp) {
       setAlertMessage("⚠️ Please enter the OTP.");
@@ -155,7 +152,6 @@ const Login: React.FC = () => {
     await fetchUser();
   };
 
-  // STEP 4: FETCH USER DATA & REDIRECT (FIXED)
   const fetchUser = async () => {
     const { data: userData, error: roleError } = await supabase
       .from("users")
@@ -170,10 +166,8 @@ const Login: React.FC = () => {
       return;
     }
 
-    // ✅ Combine full name
     const fullName = `${userData.user_firstname || ""} ${userData.user_lastname || ""}`.trim();
 
-    // ✅ Store info properly
     const userInfo = {
       id: userData.user_id,
       username: userData.username,
@@ -262,6 +256,14 @@ const Login: React.FC = () => {
                           >
                             <IonInputPasswordToggle slot="end" />
                           </IonInput>
+
+                          <span
+                            className="forgot"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigation.push("/forgot-password")}
+                          >
+                            Forgot Password?
+                          </span>
                         </>
                       ) : (
                         <>
@@ -309,6 +311,17 @@ const Login: React.FC = () => {
                           "Login"
                         )}
                       </IonButton>
+
+                      {/* 🆕 Added Signup Link */}
+                      <div className="signup-link">
+                        <span>Don't have an account? </span>
+                        <a
+                          onClick={() => navigation.push("/registerone")}
+                          style={{ color: "#0078d7", cursor: "pointer", fontWeight: 500 }}
+                        >
+                          Sign up
+                        </a>
+                      </div>
                     </>
                   )}
 
@@ -354,11 +367,7 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        <AlertBox
-          message={alertMessage}
-          isOpen={showAlert}
-          onClose={() => setShowAlert(false)}
-        />
+        <AlertBox message={alertMessage} isOpen={showAlert} onClose={() => setShowAlert(false)} />
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
@@ -369,7 +378,6 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
-      {/* STYLES */}
       <style>{`
         .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
         .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
@@ -384,7 +392,9 @@ const Login: React.FC = () => {
         .instruction { font-size: 13px; color: #555; margin-bottom: 20px; }
         .label { display: block; text-align: left; font-size: 13px; color: #333; margin-bottom: 4px; }
         .input { width: 100%; margin-bottom: 12px; --highlight-color-focused: #555555ff; --border-color: #000000ff; --color: #333; }
-        .login-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
+        .forgot { display: block; text-align: right; font-size: 12px; color: #0078d7; margin-bottom: 12px; text-decoration: none; }
+        .login-btn { --background: #FCB53B; --color: white; border-radius: 6px; width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
+        .signup-link { text-align: center; font-size: 13px; color: #333; }
         @media (max-width: 768px) {
           .login-layout { flex-direction: column; width: 90%; height: auto; }
           .left-panel { display: none; }

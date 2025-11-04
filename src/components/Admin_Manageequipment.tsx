@@ -47,6 +47,7 @@ const Admin_Manageequipment: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Equipment>>({});
+  const [searchTerm, setSearchTerm] = useState(""); // <-- Search state
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -287,6 +288,8 @@ const Admin_Manageequipment: React.FC = () => {
         </IonList>
 
         <h2 style={{ marginTop: "20px" }}>Equipment List</h2>
+        
+        
         {loading ? (
           <IonSpinner name="dots" />
         ) : (

@@ -7,7 +7,6 @@ import {
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
-/* Ionic CSS imports */
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/normalize.css";
 import "@ionic/react/css/structure.css";
@@ -35,6 +34,7 @@ import StaffDashboard from "./Staff/StaffDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOtp from "./pages/VerifyOtp";
 import Registerphone from "./pages/Registerphone";
+import RegisterOne from "./pages/RegisterOne";
 
 setupIonicReact();
 
@@ -70,6 +70,7 @@ const MainRouter: React.FC = () => {
         <Route path="/forgot-password" component={ForgotPassword} exact />
        <Route path="/verify-otp" component={VerifyOtp} exact />
         <Route exact path="/register" component={Register} />
+          <Route exact path="/registerone" component={RegisterOne} />
          <Route exact path="/registerall" component={RegisterAll} />
          <Route exact path="/registerphone" component={Registerphone} />
         <Route exact path="/learnmore" component={LearnMore} />

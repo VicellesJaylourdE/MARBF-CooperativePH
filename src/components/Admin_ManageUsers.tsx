@@ -20,7 +20,6 @@ const Admin_ManageUsers: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch all users
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -40,7 +39,6 @@ const Admin_ManageUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Delete user
   const handleDelete = async () => {
     if (!userToDelete) return;
     const { error } = await supabase.from("users").delete().eq("user_id", userToDelete);
@@ -48,7 +46,6 @@ const Admin_ManageUsers: React.FC = () => {
     setShowDeleteAlert(false);
   };
 
-  // Edit user
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
 
@@ -78,8 +75,6 @@ const Admin_ManageUsers: React.FC = () => {
 
     setShowEditAlert(false);
   };
-
-  // Filtered users based on search term
   const filteredUsers = users.filter(
     (user) =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,11 +86,10 @@ const Admin_ManageUsers: React.FC = () => {
 
   return (
     <IonContent className="ion-padding">
-      {/* Header Section */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem"  }}>
         <h2 style={{ margin: 0 }}>Users</h2>
-        <IonButton color="primary" style={{ marginLeft: "auto" }} routerLink="/register">
-          Add Member
+        <IonButton color="warning" style={{ marginLeft: "auto"  }} routerLink="/register" >
+          Add Farmer
         </IonButton>
       </div>
 

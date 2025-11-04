@@ -35,7 +35,6 @@ const Registerphone: React.FC = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  // 🔹 Step 1: Send OTP to phone
   const sendOtpPhone = async () => {
     if (!phoneNumber) {
       setAlertMessage("⚠️ Please enter your phone number.");
@@ -58,7 +57,6 @@ const Registerphone: React.FC = () => {
     setShowAlert(true);
   };
 
-  // 🔹 Step 2: Verify OTP
   const verifyOtpPhone = async () => {
     if (!otp) {
       setAlertMessage("⚠️ Please enter the OTP.");
@@ -82,7 +80,6 @@ const Registerphone: React.FC = () => {
     setShowAlert(true);
   };
 
-  // 🔹 Step 3: Complete registration after OTP verification
   const doRegister = async () => {
     if (!otpVerified) {
       setAlertMessage("⚠️ Please verify your phone number first.");
