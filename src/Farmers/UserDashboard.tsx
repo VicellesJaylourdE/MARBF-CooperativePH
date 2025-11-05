@@ -115,6 +115,20 @@ const UserDashboard: React.FC = () => {
                     return (now > end || (now.toDateString() === end.toDateString() && now.getHours() >= 12)) && b.status !== "returned";
                   })();
 
+                  const getStatusColor = (status: string) => {
+                    if (status === "approved") return "green";
+                    if (status === "pending") return "orange";
+                    if (status === "declined") return "red";
+                    if (status === "returned") return "blue";
+                    return "gray";
+                  };
+
+                  const getPaymentColor = (status: string) => {
+                    if (status === "paid") return "green";
+                    if (status === "unpaid") return "orange";
+                    return "red";
+                  };
+
                   return (
                     <IonCard key={b.id} className="receipt-card">
                       <div className="receipt-header">{b.equipment_name}</div>
@@ -136,24 +150,14 @@ const UserDashboard: React.FC = () => {
 
                       <div className="receipt-row">
                         <span className="receipt-label">Status:</span>
-                        <span style={{ color:
-                          b.status === "approved" ? "green" :
-                          b.status === "pending" ? "orange" :
-                          b.status === "declined" ? "red" :
-                          b.status === "returned" ? "blue" : "gray"
-                        }}>
-                          {b.status.toUpperCase()}
-                        </span>
+                        <span style={{ color: getStatusColor(b.status) }}>{b.status.toUpperCase()}</span>
                       </div>
 
                       {transaction && (
                         <>
                           <div className="receipt-row">
                             <span className="receipt-label">Payment:</span>
-                            <span style={{ color:
-                              transaction.status === "paid" ? "green" :
-                              transaction.status === "unpaid" ? "orange" : "red"
-                            }}>
+                            <span style={{ color: getPaymentColor(transaction.status) }}>
                               {transaction.status.toUpperCase()}
                             </span>
                           </div>
@@ -197,15 +201,12 @@ const UserDashboard: React.FC = () => {
                         Total: ₱{transaction?.amount || b.total_price || 0}
                       </div>
 
-                      {/* CANCEL BUTTON LEFT SIDE ONLY */}
+                      {/* CANCEL BUTTON LEFT SIDE */}
                       {b.status === "pending" && (
                         <IonButton
                           color="danger"
                           className="ion-margin-top"
-                          style={{
-                            marginRight: "auto",
-                            width: "fit-content",
-                          }}
+                          style={{ marginRight: "auto", width: "fit-content" }}
                           onClick={async () => {
                             if (!window.confirm("Cancel this booking?")) return;
                             await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
@@ -216,12 +217,17 @@ const UserDashboard: React.FC = () => {
                         </IonButton>
                       )}
 
+                      {/* MARK AS RETURNED LEFT SIDE */}
                       {canReturn && transaction?.status === "paid" && (
-                        <IonButton expand="block" color="warning" className="ion-margin-top"
+                        <IonButton
+                          color="warning"
+                          className="ion-margin-top"
+                          style={{ marginRight: "auto", width: "fit-content" }}
                           onClick={async () => {
                             await supabase.from("bookings").update({ status: "returned" }).eq("id", b.id);
                             fetchBookings();
-                          }}>
+                          }}
+                        >
                           Mark as Returned
                         </IonButton>
                       )}
@@ -235,7 +241,12 @@ const UserDashboard: React.FC = () => {
 
         {segment === "calendar" && <CalendarView />}
 
-        <IonToast isOpen={!!toastMsg} message={toastMsg} duration={2000} onDidDismiss={() => setToastMsg("")} />
+        <IonToast
+          isOpen={!!toastMsg}
+          message={toastMsg}
+          duration={2000}
+          onDidDismiss={() => setToastMsg("")}
+        />
       </IonContent>
     </IonPage>
   );

@@ -39,6 +39,7 @@ import {
 } from "recharts";
 import Admin_AdminHeaderBar from "../components/Admin_AdminHeaderBar";
 import Admin_AdminSidebar from "../components/Admin_AdminSidebar";
+
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [totalEquipment, setTotalEquipment] = useState(0);
@@ -53,14 +54,19 @@ const AdminDashboard: React.FC = () => {
   const [topEquipments, setTopEquipments] = useState<any[]>([]);
   const [loadingEquipments, setLoadingEquipments] = useState(true);
 
+  const [equipmentCountData, setEquipmentCountData] = useState<any[]>([]);
+  const [loadingEquipmentCount, setLoadingEquipmentCount] = useState(true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Total Equipment
         const { count: equipmentCount } = await supabase
           .from("equipment")
           .select("*", { count: "exact", head: true });
         setTotalEquipment(equipmentCount || 0);
 
+        // Today's Bookings
         const today = new Date().toISOString().split("T")[0];
         const { count: todayApprovedCount, error: todayApprovedError } =
           await supabase
@@ -72,6 +78,7 @@ const AdminDashboard: React.FC = () => {
         if (todayApprovedError) throw todayApprovedError;
         setTodayBookings(todayApprovedCount || 0);
 
+        // Total Bookings
         const { count: totalBookingsCount, error: totalBookingsError } =
           await supabase
             .from("bookings")
@@ -79,6 +86,7 @@ const AdminDashboard: React.FC = () => {
         if (totalBookingsError) throw totalBookingsError;
         setTotalBookings(totalBookingsCount || 0);
 
+        // Total Revenue
         const { data: approvedBookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("id")
@@ -102,6 +110,7 @@ const AdminDashboard: React.FC = () => {
         }
         setTotalRevenue(revenueSum);
 
+        // Pending Bookings
         const { count: pendingCount } = await supabase
           .from("bookings")
           .select("*", { count: "exact", head: true })
@@ -115,61 +124,100 @@ const AdminDashboard: React.FC = () => {
     const fetchAnalytics = async () => {
       try {
         setLoadingAnalytics(true);
+
+        // Approved bookings with transactions
         const { data: transactions, error } = await supabase
           .from("transactions")
-          .select("id, amount, status, paid_at, booking:booking_id(equipment_name)");
-
+          .select(
+            "id, amount, status, paid_at, booking:booking_id(equipment_name)"
+          )
+          .eq("status", "paid");
         if (error) throw error;
 
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
 
         const filtered = transactions.filter((t: any) => {
-          if (t.status !== "paid") return false;
           const date = new Date(t.paid_at);
           if (filter === "year") return date.getFullYear() === currentYear;
-          if (filter === "month")
-            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-          if (filter === "week") return date >= startOfWeek;
+          if (filter === "month") return date.getMonth() === currentMonth;
+          if (filter === "week") {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+            return date >= startOfWeek && date <= endOfWeek;
+          }
           return true;
         });
 
-        const groupedSales: Record<string, number> = {};
-        filtered.forEach((t: any) => {
-          const date = new Date(t.paid_at);
-          let label = "";
-          if (filter === "year") label = date.toLocaleString("default", { month: "short" });
-          else if (filter === "month") label = date.toLocaleDateString("default", { day: "numeric" });
-          else label = date.toLocaleDateString("default", { weekday: "short" });
-          groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
-        });
+        // Sales Data
+        let formattedData: any[] = [];
+        if (filter === "week") {
+          const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+          const groupedSales: Record<string, number> = {};
+          weekDays.forEach((d) => (groupedSales[d] = 0));
 
-        const formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
-          label,
-          revenue: amount,
-        }));
+          filtered.forEach((t: any) => {
+            const dayLabel = new Date(t.paid_at).toLocaleDateString("en-US", {
+              weekday: "short",
+            });
+            if (groupedSales.hasOwnProperty(dayLabel)) {
+              groupedSales[dayLabel] += t.amount || 0;
+            }
+          });
+
+          formattedData = weekDays.map((d) => ({
+            label: d,
+            revenue: groupedSales[d] || 0,
+          }));
+        } else {
+          const groupedSales: Record<string, number> = {};
+          filtered.forEach((t: any) => {
+            const date = new Date(t.paid_at);
+            let label = "";
+            if (filter === "year")
+              label = date.toLocaleString("default", { month: "short" });
+            else if (filter === "month")
+              label = date.toLocaleDateString("default", { day: "numeric" });
+            groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
+          });
+          formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
+            label,
+            revenue: amount,
+          }));
+        }
         setSalesData(formattedData);
 
-        const revenuePerEquipment: Record<string, number> = {};
+        // Combine for Top Equipment & Equipment Analytics
+        const equipmentMap: Record<string, { revenue: number; count: number }> = {};
         filtered.forEach((t: any) => {
-          const equipmentName = t.booking?.equipment_name || "Unknown Equipment";
-          revenuePerEquipment[equipmentName] = (revenuePerEquipment[equipmentName] || 0) + (t.amount || 0);
+          const name = t.booking?.equipment_name || "Unknown Equipment";
+          if (!equipmentMap[name]) equipmentMap[name] = { revenue: 0, count: 0 };
+          equipmentMap[name].revenue += t.amount || 0;
+          equipmentMap[name].count += 1;
         });
 
-        const top = Object.entries(revenuePerEquipment)
-          .map(([name, revenue]) => ({ name, revenue }))
+        // Top Equipments by revenue
+        const top = Object.entries(equipmentMap)
+          .map(([name, { revenue }]) => ({ name, revenue }))
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 5);
-
         setTopEquipments(top);
+
+        // Equipment Analytics by total bookings
+        const countData = Object.entries(equipmentMap).map(([name, { count }]) => ({
+          label: name,
+          count,
+        }));
+        setEquipmentCountData(countData);
       } catch (err) {
         console.error("Error fetching analytics:", err);
       } finally {
         setLoadingAnalytics(false);
         setLoadingEquipments(false);
+        setLoadingEquipmentCount(false);
       }
     };
 
@@ -241,11 +289,12 @@ const AdminDashboard: React.FC = () => {
             </IonRow>
 
             <IonRow style={{ marginTop: "20px" }}>
-              <IonCol size="12" sizeMd="8">
+              {/* Sales Analytics */}
+              <IonCol size="12" sizeMd="6">
                 <IonCard>
                   <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
-                    <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+                    <IonItem lines="none" style={{ maxWidth: "150px", marginLeft: "auto", marginRight: 0 }}>
                       <IonLabel>Filter:</IonLabel>
                       <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
                         <IonSelectOption value="week">Week</IonSelectOption>
@@ -258,7 +307,7 @@ const AdminDashboard: React.FC = () => {
                     {loadingAnalytics ? (
                       <IonSpinner name="dots" />
                     ) : (
-                      <ResponsiveContainer width="100%" height={320}>
+                      <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={salesData}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="label" />
@@ -276,18 +325,19 @@ const AdminDashboard: React.FC = () => {
                 </IonCard>
               </IonCol>
 
-              <IonCol size="12" sizeMd="4">
+              {/* Top Equipment */}
+              <IonCol size="12" sizeMd="3">
                 <IonCard>
                   <IonCardHeader>
                     <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
                   </IonCardHeader>
-                  <IonCardContent>
+                  <IonCardContent style={{ fontSize: "14px" }}>
                     {loadingEquipments ? (
                       <IonSpinner name="dots" />
                     ) : topEquipments.length > 0 ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                         {topEquipments.map((item, index) => (
-                          <div key={index} style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#1e1e1e", padding: "10px 15px", borderRadius: "8px", color: "white", fontSize: "15px" }}>
+                          <div key={index} style={{ display: "flex", justifyContent: "space-between" }}>
                             <span>{item.name}</span>
                             <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                           </div>
@@ -295,6 +345,30 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     ) : (
                       <p>No equipment data available for this {filter}.</p>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+
+              {/* Equipment Count Chart */}
+              <IonCol size="12" sizeMd="6">
+                <IonCard>
+                  <IonCardHeader>
+                    <IonCardTitle>📊 Equipment Analytics (Total Bookings)</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    {loadingEquipmentCount ? (
+                      <IonSpinner name="dots" />
+                    ) : (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={equipmentCountData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#36a2eb" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     )}
                   </IonCardContent>
                 </IonCard>
