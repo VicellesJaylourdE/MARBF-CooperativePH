@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import {
   IonPage,
   IonSplitPane,
@@ -28,6 +28,10 @@ import Admin_ViewAllTransactions from "../components/Admin_ViewAllTransactions";
 import Admin_ManageUsers from "../components/Admin_ManageUsers";
 import Admin_RegisterMember from "../components/Admin_RegisterMember";
 import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnaltys";
+
+import Admin_AdminHeaderBar from "../components/Admin_AdminHeaderBar";
+import Admin_AdminSidebar from "../components/Admin_AdminSidebar";
+
 import {
   BarChart,
   Bar,
@@ -36,9 +40,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-import Admin_AdminHeaderBar from "../components/Admin_AdminHeaderBar";
-import Admin_AdminSidebar from "../components/Admin_AdminSidebar";
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -125,7 +130,6 @@ const AdminDashboard: React.FC = () => {
       try {
         setLoadingAnalytics(true);
 
-        // Approved bookings with transactions
         const { data: transactions, error } = await supabase
           .from("transactions")
           .select(
@@ -144,9 +148,9 @@ const AdminDashboard: React.FC = () => {
           if (filter === "month") return date.getMonth() === currentMonth;
           if (filter === "week") {
             const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+            startOfWeek.setDate(now.getDate() - now.getDay() + 1);
             const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
             return date >= startOfWeek && date <= endOfWeek;
           }
           return true;
@@ -325,24 +329,38 @@ const AdminDashboard: React.FC = () => {
                 </IonCard>
               </IonCol>
 
-              {/* Top Equipment */}
+              {/* Top Equipment (Circle/Doughnut Chart) */}
               <IonCol size="12" sizeMd="3">
                 <IonCard>
                   <IonCardHeader>
                     <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
                   </IonCardHeader>
-                  <IonCardContent style={{ fontSize: "14px" }}>
+                  <IonCardContent>
                     {loadingEquipments ? (
                       <IonSpinner name="dots" />
                     ) : topEquipments.length > 0 ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {topEquipments.map((item, index) => (
-                          <div key={index} style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>{item.name}</span>
-                            <span>₱{item.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={topEquipments}
+                            dataKey="revenue"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            innerRadius={40}
+                            label
+                          >
+                            {topEquipments.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={["#36a2eb", "#4caf50", "#ff9800", "#f39c12", "#9b59b6"][index % 5]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     ) : (
                       <p>No equipment data available for this {filter}.</p>
                     )}
