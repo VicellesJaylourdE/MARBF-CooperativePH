@@ -19,7 +19,6 @@ interface Equipment {
   name: string;
   category: string;
   price: number;
-  price_type?: "hectare" | "kilo"; // added price type
   status?: string;
   available?: boolean;
   image_url?: string;
@@ -31,14 +30,13 @@ const EquipmentCatalog: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number>(0);
-  const [selectedPriceType, setSelectedPriceType] = useState<"hectare" | "kilo">("hectare");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("equipment")
-      .select("id, name, category, status, price, price_type, image_url");
+      .select("id, name, category, status, price, image_url");
 
     if (error) {
       console.error("Error fetching equipment:", error);
@@ -57,10 +55,7 @@ const EquipmentCatalog: React.FC = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "equipment" },
-        (payload) => {
-          console.log("Change received!", payload);
-          fetchEquipment();
-        }
+        () => fetchEquipment()
       )
       .subscribe();
 
@@ -69,50 +64,44 @@ const EquipmentCatalog: React.FC = () => {
     };
   }, []);
 
-  const openBooking = (eqName: string, eqPrice: number, eqPriceType: "hectare" | "kilo") => {
+  const openBooking = (eqName: string, eqPrice: number) => {
     setSelectedEquipment(eqName);
     setSelectedPrice(eqPrice);
-    setSelectedPriceType(eqPriceType);
     setIsBookingOpen(true);
   };
 
-  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; notes: string }) => {
+  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; location: string; quantity: number; priceType: "hectare" }) => {
     try {
-      const { data: userData, error: authError } = await supabase.auth.getUser();
-      if (authError || !userData?.user) {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
         alert("Please log in to make a booking.");
         return;
       }
 
       const userEmail = userData.user.email;
 
-      const { data: userRecord, error: userLookupError } = await supabase
+      const { data: userRecord } = await supabase
         .from("users")
         .select("user_id")
         .eq("user_email", userEmail)
         .single();
 
-      if (userLookupError || !userRecord) {
-        console.error("User lookup failed:", userLookupError);
+      if (!userRecord) {
         alert("Account not found in users table.");
         return;
       }
 
       const user_id = userRecord.user_id;
 
-      const { data: existingBooking, error: dupCheckError } = await supabase
+      const { data: existingBooking } = await supabase
         .from("bookings")
         .select("id")
         .eq("user_id", user_id)
         .eq("equipment_name", selectedEquipment)
         .in("status", ["pending", "approved"]);
 
-      if (dupCheckError) {
-        console.error("Error checking duplicate booking:", dupCheckError);
-      }
-
       if (existingBooking && existingBooking.length > 0) {
-        alert("⚠️ You already have an active booking for this equipment. Please wait until it’s completed or cancelled.");
+        alert("⚠️ You already have an active booking for this equipment.");
         return;
       }
 
@@ -120,11 +109,13 @@ const EquipmentCatalog: React.FC = () => {
         .from("bookings")
         .insert([
           {
-            user_id: user_id,
+            user_id,
             equipment_name: selectedEquipment,
             start_date: booking.startDate,
             end_date: booking.endDate,
-            notes: booking.notes || "",
+            location: booking.location,
+            quantity: booking.quantity,
+            price_type: booking.priceType,
             payment_method: "gcash",
             status: "pending",
           },
@@ -137,7 +128,7 @@ const EquipmentCatalog: React.FC = () => {
       const { error: transactionError } = await supabase.from("transactions").insert([
         {
           booking_id: newBooking.id,
-          user_id: user_id,
+          user_id,
           amount: selectedPrice,
           status: "unpaid",
           payment_method: "gcash",
@@ -177,7 +168,7 @@ const EquipmentCatalog: React.FC = () => {
       <IonSearchbar
         value={searchText}
         onIonInput={(e) => setSearchText(e.detail.value!)}
-        placeholder="Search equipment by name, category, or description..."
+        placeholder="Search equipment by name or category..."
       />
 
       {loading ? (
@@ -193,33 +184,12 @@ const EquipmentCatalog: React.FC = () => {
               )
               .map((eq) => (
                 <IonCol size="6" sizeMd="3" key={eq.id}>
-                  <IonCard
-                    className="equipment-card"
-                    style={{
-                      borderRadius: "10px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        background: "#f9f9f9",
-                        height: "100px",
-                        overflow: "hidden",
-                      }}
-                    >
+                  <IonCard className="equipment-card">
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", background: "#f9f9f9", height: "100px", overflow: "hidden" }}>
                       <IonImg
                         src={eq.image_url || "https://via.placeholder.com/100?text=No+Image"}
                         alt={eq.name}
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          objectFit: "cover",
-                          borderRadius: "8px",
-                        }}
+                        style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px" }}
                       />
                     </div>
 
@@ -227,13 +197,10 @@ const EquipmentCatalog: React.FC = () => {
                       <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
                       <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
                       <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
-                        <strong>₱{eq.price}</strong> / {eq.price_type || "hectare"}
+                        <strong>₱{eq.price}</strong> / hectare
                       </p>
 
-                      <IonBadge
-                        color={getStatusColor(eq)}
-                        style={{ marginBottom: "6px", fontSize: "0.7rem" }}
-                      >
+                      <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px", fontSize: "0.7rem" }}>
                         {getStatusText(eq)}
                       </IonBadge>
 
@@ -242,7 +209,7 @@ const EquipmentCatalog: React.FC = () => {
                         size="small"
                         color={getStatusColor(eq)}
                         disabled={!(eq.status === "available" || eq.available)}
-                        onClick={() => openBooking(eq.name, eq.price, eq.price_type || "hectare")}
+                        onClick={() => openBooking(eq.name, eq.price)}
                         style={{ marginTop: "6px" }}
                       >
                         {eq.status === "available" || eq.available ? "Book Now" : "Unavailable"}
@@ -261,7 +228,6 @@ const EquipmentCatalog: React.FC = () => {
         onSubmit={handleBookingSubmit}
         equipmentName={selectedEquipment || ""}
         price={selectedPrice}
-        priceType={selectedPriceType}
       />
     </div>
   );

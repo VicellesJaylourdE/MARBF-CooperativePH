@@ -29,14 +29,12 @@ interface BookingModalProps {
   onSubmit: (booking: {
     startDate: string;
     endDate: string;
-    notes: string;
     location: string;
     quantity: number;
-    priceType: "hectare" | "kilo";
+    priceType: "hectare";
   }) => void;
   equipmentName: string;
   price: number;
-  priceType?: "hectare" | "kilo";
   equipmentId?: string;
 }
 
@@ -46,35 +44,29 @@ const BookingModal: React.FC<BookingModalProps> = ({
   onSubmit,
   equipmentName,
   price,
-  priceType = "hectare",
   equipmentId,
 }) => {
+  const priceType: "hectare" = "hectare"; // fixed
+  const [step, setStep] = useState<number>(1);
+
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("gcash");
-  const [proofUrl, setProofUrl] = useState<string>(""); 
-  const [gcashRefNo, setGcashRefNo] = useState<string>(""); // <-- new state
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [toastMsg, setToastMsg] = useState<string>("");
+  const [proofUrl, setProofUrl] = useState<string>("");
+  const [gcashRefNo, setGcashRefNo] = useState<string>("");
 
   const [days, setDays] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string>("");
+
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   const computeTotal = (d: number, q: number) => {
-    const total =
-      priceType === "hectare"
-        ? d > 0 && q > 0
-          ? d * price * q
-          : 0
-        : d > 0 && q > 0
-        ? price * q * d
-        : q > 0
-        ? price * q
-        : 0;
-    setTotalPrice(total);
+    setTotalPrice(d > 0 && q > 0 ? d * price * q : 0);
   };
 
   const handleStartDateChange = (value: string) => {
@@ -119,56 +111,38 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
 
-      // Upload file
       const { error: uploadError } = await supabase.storage
         .from("payment_proofs")
         .upload(`payment_proofs/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data } = supabase.storage
         .from("payment_proofs")
         .getPublicUrl(`payment_proofs/${fileName}`);
 
       setProofUrl(data.publicUrl);
       setToastMsg(`Uploaded: ${file.name}`);
-    } catch (err: any) {
-      console.error("Upload error:", err.message);
-      setToastMsg("Failed to upload proof. Try again.");
+    } catch {
+      setToastMsg("Failed to upload proof.");
     } finally {
       setUploading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!startDate || !endDate || days <= 0) {
-      alert("Please select valid start and end dates.");
-      return;
-    }
-
-    if (!location || location.trim() === "") {
-      alert("⚠️ Please enter a location.");
-      return;
-    }
+    if (!startDate || !endDate || days <= 0) return alert("Select valid dates.");
+    if (!location.trim()) return alert("Enter location.");
 
     if (paymentMethod === "gcash") {
-      if (!proofUrl) {
-        alert("⚠️ Please upload proof of GCash payment.");
-        return;
-      }
-      if (!gcashRefNo || gcashRefNo.trim() === "") {
-        alert("⚠️ Please enter the GCash reference number.");
-        return;
-      }
+      if (!proofUrl) return alert("Upload proof of payment.");
+      if (!gcashRefNo.trim()) return alert("Enter GCash reference number.");
+      if (isNaN(Number(gcashRefNo))) return alert("GCash reference must be numeric.");
     }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert("You must be logged in to book equipment.");
-        return;
-      }
+      if (!user) return alert("Login required.");
 
       const { data: profile } = await supabase
         .from("users")
@@ -176,12 +150,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
         .eq("user_email", user.email)
         .single();
 
-      if (!profile) {
-        alert("User record not found.");
-        return;
-      }
+      if (!profile) return alert("User record not found.");
 
-      const { data: bookingData, error: bookingError } = await supabase
+      const { data: bookingData } = await supabase
         .from("bookings")
         .insert([
           {
@@ -190,41 +161,33 @@ const BookingModal: React.FC<BookingModalProps> = ({
             equipment_name: equipmentName,
             start_date: startDate,
             end_date: endDate,
-            notes,
             location,
             status: "pending",
             total_price: totalPrice,
             quantity,
-            price_type: priceType,
+            price_type: "hectare",
           },
         ])
         .select()
         .single();
 
-      if (bookingError) throw bookingError;
+      await supabase.from("transactions").insert([
+        {
+          booking_id: bookingData.id,
+          user_id: profile.user_id,
+          amount: totalPrice,
+          status: "unpaid",
+          payment_method: paymentMethod,
+          proof_url: proofUrl || null,
+          gcash_ref_no: Number(gcashRefNo) || null,
+        },
+      ]);
 
-      const { error: transactionError } = await supabase
-        .from("transactions")
-        .insert([
-          {
-            booking_id: bookingData.id,
-            user_id: profile.user_id,
-            amount: totalPrice,
-            status: "unpaid",
-            payment_method: paymentMethod,
-            proof_url: proofUrl || null,
-            gcash_ref_no: gcashRefNo || null, // <-- added
-          },
-        ]);
-
-      if (transactionError) throw transactionError;
-
-      onSubmit({ startDate, endDate, notes, location, quantity, priceType });
-      setToastMsg("Booking submitted successfully!");
+      onSubmit({ startDate, endDate, location, quantity, priceType });
+      setToastMsg("Booking submitted!");
       onClose();
-    } catch (err: any) {
-      console.error("Booking error:", err.message);
-      setToastMsg("Failed to submit booking. Try again.");
+    } catch {
+      setToastMsg("Booking failed.");
     }
   };
 
@@ -247,137 +210,164 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </IonCardHeader>
 
             <IonCardContent>
-              <IonGrid>
-                <IonRow>
-                  <IonCol>
-                    <IonItem>
-                      <IonLabel position="stacked">Start Date</IonLabel>
-                      <IonInput
-                        type="date"
-                        value={startDate}
-                        onIonInput={(e) =>
-                          handleStartDateChange(e.detail.value ?? "")
-                        }
-                      />
-                    </IonItem>
-                  </IonCol>
-                  <IonCol>
-                    <IonItem>
-                      <IonLabel position="stacked">End Date</IonLabel>
-                      <IonInput
-                        type="date"
-                        value={endDate}
-                        onIonInput={(e) =>
-                          handleEndDateChange(e.detail.value ?? "")
-                        }
-                      />
-                    </IonItem>
-                  </IonCol>
-                </IonRow>
-              </IonGrid>
+              <div style={{ textAlign: "center", marginBottom: "10px" }}>
+                <strong>Step {step} of 4</strong>
+              </div>
 
-              <IonItem className="ion-margin-top">
-                <IonLabel position="stacked">
-                  {priceType === "hectare" ? "Hectares" : "Kilos"} (Quantity)
-                </IonLabel>
-                <IonInput
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onIonInput={(e) => handleQuantityChange(e.detail.value ?? "1")}
-                />
-              </IonItem>
+              {step === 1 && (
+                <IonGrid>
+                  <IonRow>
+                    <IonCol>
+                      <IonItem>
+                        <IonLabel position="stacked">Start Date</IonLabel>
+                        <IonInput
+                          type="date"
+                          value={startDate}
+                          onIonInput={(e) => handleStartDateChange(e.detail.value ?? "")}
+                        />
+                      </IonItem>
+                    </IonCol>
+                    <IonCol>
+                      <IonItem>
+                        <IonLabel position="stacked">End Date</IonLabel>
+                        <IonInput
+                          type="date"
+                          value={endDate}
+                          onIonInput={(e) => handleEndDateChange(e.detail.value ?? "")}
+                        />
+                      </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
+              )}
 
-              {startDate && endDate && (
+              {step === 2 && (
                 <>
-                  {priceType === "hectare" && (
-                    <IonItem>
-                      <IonLabel>
-                        ✅ <strong>Days:</strong> {days}
-                      </IonLabel>
-                    </IonItem>
+                  <IonItem className="ion-margin-top">
+                    <IonLabel position="stacked">Hectares (Quantity)</IonLabel>
+                    <IonInput
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onIonInput={(e) => handleQuantityChange(e.detail.value ?? "1")}
+                    />
+                  </IonItem>
+
+                  <IonItem className="ion-margin-top">
+                    <IonLabel position="stacked">Location</IonLabel>
+                    <IonInput
+                      placeholder="Enter location"
+                      value={location}
+                      onIonInput={(e) => setLocation(e.detail.value ?? "")}
+                    />
+                  </IonItem>
+
+                  {days > 0 && quantity > 0 && (
+                    <IonCard className="ion-margin-top" color="light">
+                      <IonCardContent>
+                        <p><strong>Computation:</strong></p>
+                        <p>Days: {days}</p>
+                        <p>Price per hectare: ₱{price}</p>
+                        <p>Quantity: {quantity}</p>
+                        <hr />
+                        <h3><strong>Total:</strong> ₱{totalPrice}</h3>
+                      </IonCardContent>
+                    </IonCard>
                   )}
-
-                  <IonItem>
-                    <IonLabel>
-                      💰 <strong>Price per {priceType}:</strong> ₱{price}
-                    </IonLabel>
-                  </IonItem>
-
-                  <IonItem>
-                    <IonLabel>
-                      <strong>Total:</strong> ₱{totalPrice}
-                    </IonLabel>
-                  </IonItem>
                 </>
               )}
 
-              <IonItem>
-                <IonLabel position="stacked">Location</IonLabel>
-                <IonInput
-                  placeholder="Enter location"
-                  value={location}
-                  onIonInput={(e) => setLocation(e.detail.value ?? "")}
-                />
-              </IonItem>
-
-              <IonItem>
-                <IonLabel position="stacked">Payment Method</IonLabel>
-                <IonSelect
-                  value={paymentMethod}
-                  onIonChange={(e) => setPaymentMethod(e.detail.value)}
-                >
-                  <IonSelectOption value="gcash">GCash</IonSelectOption>
-                  <IonSelectOption value="cash">Cash</IonSelectOption>
-                </IonSelect>
-              </IonItem>
-
-              {paymentMethod === "gcash" && (
+              {step === 3 && (
                 <>
-                  <IonCard className="ion-margin-top">
-                    <IonCardHeader>
-                      <IonCardTitle>GCash Payment Details</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>
-                      <p>
-                        📱 <strong>Number:</strong> 09639539761 <br />
-                        👤 <strong>Name:</strong> Jay Vicelles
-                      </p>
-                    </IonCardContent>
-                  </IonCard>
-
-                  <IonItem className="ion-margin-top">
-                    <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProofUpload}
-                      disabled={uploading}
-                    />
+                  <IonItem>
+                    <IonLabel position="stacked">Payment Method</IonLabel>
+                    <IonSelect
+                      value={paymentMethod}
+                      onIonChange={(e) => setPaymentMethod(e.detail.value)}
+                    >
+                      <IonSelectOption value="gcash">GCash</IonSelectOption>
+                      <IonSelectOption value="cash">Cash</IonSelectOption>
+                    </IonSelect>
                   </IonItem>
 
-                  <IonItem className="ion-margin-top">
-                    <IonLabel position="stacked">GCash Reference Number</IonLabel>
-                    <IonInput
-                      placeholder="Enter reference number"
-                      value={gcashRefNo}
-                      onIonInput={(e) => setGcashRefNo(e.detail.value ?? "")}
-                    />
-                  </IonItem>
+                  {paymentMethod === "gcash" && (
+                    <>
+                      <IonCard className="ion-margin-top">
+                        <IonCardHeader>
+                          <IonCardTitle>GCash Payment Details</IonCardTitle>
+                        </IonCardHeader>
+                        <IonCardContent>
+                          📱 Number: 09639539761 <br /> 👤 Name: Jay Vicelles
+                        </IonCardContent>
+                      </IonCard>
+
+                      <IonItem className="ion-margin-top">
+                        <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProofUpload}
+                          disabled={uploading}
+                        />
+                      </IonItem>
+
+                      <IonItem className="ion-margin-top">
+                        <IonLabel position="stacked">GCash Reference Number</IonLabel>
+                        <IonInput
+                          placeholder="Enter reference number"
+                          value={gcashRefNo}
+                          onIonInput={(e) => setGcashRefNo(e.detail.value ?? "")}
+                        />
+                      </IonItem>
+                    </>
+                  )}
+
+                  {paymentMethod === "cash" && (
+                    <>
+                      <IonCard className="ion-margin-top">
+                        <IonCardHeader>
+                          <IonCardTitle>Cash Payment</IonCardTitle>
+                        </IonCardHeader>
+                        <IonCardContent>
+                          💵 Please upload proof of cash payment.
+                        </IonCardContent>
+                      </IonCard>
+
+                      <IonItem className="ion-margin-top">
+                        <IonLabel position="stacked">Upload Proof of Payment</IonLabel>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProofUpload}
+                          disabled={uploading}
+                        />
+                      </IonItem>
+                    </>
+                  )}
                 </>
+              )}
+
+              {step === 4 && (
+                <IonCard color="light">
+                  <IonCardContent>
+                    <p><strong>Equipment:</strong> {equipmentName}</p>
+                    <p><strong>Date:</strong> {startDate} - {endDate} ({days} days)</p>
+                    <p><strong>Quantity:</strong> {quantity}</p>
+                    <p><strong>Location:</strong> {location}</p>
+                    <p><strong>Payment:</strong> {paymentMethod}</p>
+                    <h3><strong>Total:</strong> ₱{totalPrice}</h3>
+                  </IonCardContent>
+                </IonCard>
               )}
 
               <div className="ion-text-end ion-padding-top">
-                <IonButton fill="clear" onClick={onClose}>
-                  Cancel
-                </IonButton>
-                <IonButton
-                  color="success"
-                  onClick={handleSubmit}
-                  disabled={uploading}
-                >
-                  {uploading ? "Uploading..." : "Submit Booking"}
-                </IonButton>
+                {step > 1 && <IonButton fill="outline" onClick={prevStep}>Back</IonButton>}
+                {step < 4 && <IonButton color="success" onClick={nextStep}>Next</IonButton>}
+                {step === 4 && (
+                  <IonButton color="success" onClick={handleSubmit} disabled={uploading}>
+                    {uploading ? "Uploading..." : "Submit Booking"}
+                  </IonButton>
+                )}
               </div>
             </IonCardContent>
           </IonCard>

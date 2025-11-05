@@ -22,9 +22,8 @@ interface Transaction {
   status: "unpaid" | "paid" | "cancelled";
   payment_method: "cash" | "gcash" | null;
   proof_url: string | null;
-  gcash_ref_no?: string | null; // added field
+  gcash_ref_no?: string | null;
   quantity?: number;
-  price_type?: "hectare" | "kilo";
   paid_at: string | null;
   created_at: string;
   updated_at: string;
@@ -68,9 +67,8 @@ const Admin_ViewAllTransactions: React.FC = () => {
         status: t.status,
         payment_method: t.payment_method,
         proof_url: t.proof_url || null,
-        gcash_ref_no: t.gcash_ref_no || null, // mapped GCash Ref
+        gcash_ref_no: t.gcash_ref_no || null,
         quantity: t.quantity ?? 1,
-        price_type: t.price_type,
         paid_at: t.paid_at,
         created_at: t.created_at,
         updated_at: t.updated_at,
@@ -103,8 +101,8 @@ const Admin_ViewAllTransactions: React.FC = () => {
           View All Transactions
         </h2>
         <p>
-          List of all transactions with Booking, User, Quantity, Price Type,
-          payment proof images, and GCash Reference Numbers.
+          List of all transactions with Booking, User, Quantity, payment proof
+          images, and GCash Reference Numbers.
         </p>
         <p style={{ fontWeight: 600 }}>
           Total Transactions: {filteredTransactions.length}
@@ -154,11 +152,11 @@ const Admin_ViewAllTransactions: React.FC = () => {
               <IonCol>Equipment</IonCol>
               <IonCol>Booked By</IonCol>
               <IonCol>Quantity</IonCol>
-              <IonCol>Price Type</IonCol>
+              {/* Removed Price Type */}
               <IonCol>Amount</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Payment Method</IonCol>
-              <IonCol>GCash Ref</IonCol> {/* New column */}
+              <IonCol>GCash Ref</IonCol>
               <IonCol>Proof</IonCol>
               <IonCol>Paid At</IonCol>
               <IonCol>Created At</IonCol>
@@ -178,7 +176,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
                 <IonCol>{t.equipment_name}</IonCol>
                 <IonCol>{t.user_name}</IonCol>
                 <IonCol>{t.quantity}</IonCol>
-                <IonCol>{t.price_type || "-"}</IonCol>
+                {/* Removed Price Type */}
                 <IonCol>₱{Number(t.amount).toFixed(2)}</IonCol>
                 <IonCol
                   style={{
@@ -193,7 +191,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
                   {t.status}
                 </IonCol>
                 <IonCol>{t.payment_method || "-"}</IonCol>
-                <IonCol>{t.gcash_ref_no || "-"}</IonCol> {/* Display GCash Ref */}
+                <IonCol>{t.gcash_ref_no || "-"}</IonCol>
                 <IonCol>
                   {t.proof_url ? (
                     <img

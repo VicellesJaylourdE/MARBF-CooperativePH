@@ -89,11 +89,10 @@ const Admin_ManageUsers: React.FC = () => {
       <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem"  }}>
         <h2 style={{ margin: 0 }}>Users</h2>
         <IonButton color="warning" style={{ marginLeft: "auto"  }} routerLink="/register" >
-          Add Farmer
+          Add User
         </IonButton>
       </div>
 
-      {/* Search Bar */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
         <input
           type="text"
@@ -109,7 +108,6 @@ const Admin_ManageUsers: React.FC = () => {
         />
       </div>
 
-      {/* Table Section */}
       {loading ? (
         <IonText>Loading users...</IonText>
       ) : filteredUsers.length === 0 ? (
@@ -179,7 +177,6 @@ const Admin_ManageUsers: React.FC = () => {
         </div>
       )}
 
-      {/* ========== EDIT ALERT ========== */}
       <IonAlert
         isOpen={showEditAlert}
         onDidDismiss={() => setShowEditAlert(false)}

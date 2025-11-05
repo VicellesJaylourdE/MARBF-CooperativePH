@@ -5,11 +5,7 @@ import {
   IonSegmentButton,
   IonLabel,
   IonList,
-  IonItem,
   IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
   IonSpinner,
   IonToast,
   IonButton,
@@ -34,26 +30,19 @@ const UserDashboard: React.FC = () => {
 
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        setToastMsg("Please log in to view your bookings.");
-        setBookings([]);
-        return;
-      }
+      if (!user) return setBookings([]);
 
-      const { data: userData, error: userTableError } = await supabase
+      const { data: userData } = await supabase
         .from("users")
         .select("user_id")
         .eq("user_email", user.email)
         .single();
 
-      if (userTableError || !userData) {
-        throw new Error("No matching user record found.");
-      }
+      if (!userData) return setBookings([]);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("bookings")
         .select(`
           *,
@@ -71,12 +60,8 @@ const UserDashboard: React.FC = () => {
         .eq("user_id", userData.user_id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-
       setBookings(data || []);
-    } catch (err: any) {
-      console.error("Error loading bookings:", err.message);
-      setToastMsg("Failed to load bookings.");
+    } catch (err) {
       setBookings([]);
     } finally {
       setLoading(false);
@@ -84,55 +69,20 @@ const UserDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (segment === "bookings") {
-      fetchBookings();
-    }
+    if (segment === "bookings") fetchBookings();
   }, [segment]);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        if (event === "SIGNED_IN") {
-          fetchBookings();
-        }
-      }
-    );
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    PushNotifications.requestPermissions().then((result) => {
-      if (result.receive === "granted") {
-        PushNotifications.register();
-      }
+    PushNotifications.requestPermissions().then((res) => {
+      if (res.receive === "granted") PushNotifications.register();
     });
-
-    PushNotifications.addListener("registration", (token) => {
-      console.log("Push registration success, token:", token.value);
-    });
-
-    PushNotifications.addListener("registrationError", (error) => {
-      console.error("Push registration error:", error);
-    });
-
-    PushNotifications.addListener(
-      "pushNotificationReceived",
-      (notification) => {
-        alert(`📢 New Notification: ${notification.title}\n${notification.body}`);
-      }
-    );
   }, []);
 
   return (
     <IonPage>
       <HeaderBar />
       <IonContent fullscreen>
-        <IonSegment
-          value={segment}
-          onIonChange={(e) => setSegment(String(e.detail.value))}
-        >
+        <IonSegment value={segment} onIonChange={(e) => setSegment(String(e.detail.value))}>
           <IonSegmentButton value="catalog">
             <IonLabel>Equipment Catalog</IonLabel>
           </IonSegmentButton>
@@ -153,213 +103,128 @@ const UserDashboard: React.FC = () => {
                 <IonSpinner name="crescent" />
               </div>
             ) : bookings.length === 0 ? (
-              <p className="ion-text-center ion-padding">📖 No bookings found yet.</p>
+              <p className="ion-text-center ion-padding">📖 No bookings yet.</p>
             ) : (
               <IonList>
                 {bookings.map((b) => {
-                  const transaction = b.transactions?.[0]; // assume 1 transaction per booking
+                  const transaction = b.transactions?.[0];
 
                   const canReturn = (() => {
                     const now = new Date();
-                    const endDate = new Date(b.end_date);
-
-                    if (now > endDate) return true;
-
-                    if (
-                      now.toDateString() === endDate.toDateString() &&
-                      now.getHours() >= 12
-                    ) {
-                      return true;
-                    }
-
-                    return false;
-                  })() && b.status !== "returned";
+                    const end = new Date(b.end_date);
+                    return (now > end || (now.toDateString() === end.toDateString() && now.getHours() >= 12)) && b.status !== "returned";
+                  })();
 
                   return (
-                    <IonCard key={b.id}>
-                      <IonCardHeader>
-                        <IonCardTitle>{b.equipment_name}</IonCardTitle>
-                      </IonCardHeader>
-                      <IonCardContent>
-                        <IonItem>
-                          <IonLabel>
-                            <strong>Start:</strong> {b.start_date}
-                          </IonLabel>
-                        </IonItem>
-                        <IonItem>
-                          <IonLabel>
-                            <strong>End:</strong> {b.end_date}
-                          </IonLabel>
-                        </IonItem>
-                        <IonItem>
-                          <IonLabel>
-                            <strong>Location:</strong> {b.location || "N/A"}
-                          </IonLabel>
-                        </IonItem>
-                        <IonItem>
-                          <IonLabel>
-                            <strong>Total:</strong> ₱{transaction?.amount || b.total_price || 0}
-                          </IonLabel>
-                        </IonItem>
-                        <IonItem>
-                          <IonLabel>
-                            <strong>Booking Status:</strong>{" "}
-                            <span
-                              style={{
-                                color:
-                                  b.status === "approved"
-                                    ? "green"
-                                    : b.status === "declined"
-                                    ? "red"
-                                    : b.status === "pending"
-                                    ? "orange"
-                                    : b.status === "returned"
-                                    ? "blue"
-                                    : "gray",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {b.status.toUpperCase()}
+                    <IonCard key={b.id} className="receipt-card">
+                      <div className="receipt-header">{b.equipment_name}</div>
+
+                      <div className="receipt-row">
+                        <span className="receipt-label">Start:</span>
+                        <span>{b.start_date}</span>
+                      </div>
+
+                      <div className="receipt-row">
+                        <span className="receipt-label">End:</span>
+                        <span>{b.end_date}</span>
+                      </div>
+
+                      <div className="receipt-row">
+                        <span className="receipt-label">Location:</span>
+                        <span>{b.location || "N/A"}</span>
+                      </div>
+
+                      <div className="receipt-row">
+                        <span className="receipt-label">Status:</span>
+                        <span style={{ color:
+                          b.status === "approved" ? "green" :
+                          b.status === "pending" ? "orange" :
+                          b.status === "declined" ? "red" :
+                          b.status === "returned" ? "blue" : "gray"
+                        }}>
+                          {b.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {transaction && (
+                        <>
+                          <div className="receipt-row">
+                            <span className="receipt-label">Payment:</span>
+                            <span style={{ color:
+                              transaction.status === "paid" ? "green" :
+                              transaction.status === "unpaid" ? "orange" : "red"
+                            }}>
+                              {transaction.status.toUpperCase()}
                             </span>
-                          </IonLabel>
-                        </IonItem>
+                          </div>
 
-                        {transaction && (
-                          <>
-                            <IonItem>
-                              <IonLabel>
-                                <strong>Payment Status:</strong>{" "}
-                                <span
-                                  style={{
-                                    color:
-                                      transaction.status === "paid"
-                                        ? "green"
-                                        : transaction.status === "unpaid"
-                                        ? "orange"
-                                        : "red",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {transaction.status.toUpperCase()}
-                                </span>
-                              </IonLabel>
-                            </IonItem>
-                            <IonItem>
-                              <IonLabel>
-                                <strong>Payment Method:</strong>{" "}
-                                {transaction.payment_method.toUpperCase()}
-                              </IonLabel>
-                            </IonItem>
-                            {transaction.gcash_ref_no && (
-                              <IonItem>
-                                <IonLabel>
-                                  <strong>GCash Ref #:</strong> {transaction.gcash_ref_no}
-                                </IonLabel>
-                              </IonItem>
-                            )}
-                            {transaction.proof_url && (
-                              <IonItem>
-                                <IonLabel>
-                                  <strong>Proof:</strong>{" "}
-                                  <a href={transaction.proof_url} target="_blank" rel="noopener noreferrer">
-                                    View
-                                  </a>
-                                </IonLabel>
-                              </IonItem>
-                            )}
-                            {transaction.paid_at && (
-                              <IonItem>
-                                <IonLabel>
-                                  <strong>Paid At:</strong>{" "}
-                                  {new Date(transaction.paid_at).toLocaleString()}
-                                </IonLabel>
-                              </IonItem>
-                            )}
-                            <IonItem>
-                              <IonLabel>
-                                <strong>Quantity:</strong> {transaction.quantity} {transaction.price_type}
-                              </IonLabel>
-                            </IonItem>
-                          </>
-                        )}
+                          <div className="receipt-row">
+                            <span className="receipt-label">Method:</span>
+                            <span>{transaction.payment_method.toUpperCase()}</span>
+                          </div>
 
-                        {b.notes && (
-                          <IonItem>
-                            <IonLabel>
-                              <strong>Notes:</strong> {b.notes}
-                            </IonLabel>
-                          </IonItem>
-                        )}
+                          {transaction.gcash_ref_no && (
+                            <div className="receipt-row">
+                              <span className="receipt-label">GCash Ref #:</span>
+                              <span>{transaction.gcash_ref_no}</span>
+                            </div>
+                          )}
 
-                        {b.status === "pending" && (
-                          <IonItem lines="none" className="ion-padding-top">
-                            <IonButton
-                              color="danger"
-                              onClick={async () => {
-                                const confirmCancel = window.confirm(
-                                  "Are you sure you want to cancel this booking?"
-                                );
-                                if (!confirmCancel) return;
+                          {transaction.proof_url && (
+                            <div className="receipt-row">
+                              <span className="receipt-label">Proof:</span>
+                              <a
+                                href={transaction.proof_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: "underline" }}
+                              >
+                                View
+                              </a>
+                            </div>
+                          )}
 
-                                try {
-                                  const { error } = await supabase
-                                    .from("bookings")
-                                    .update({ status: "cancelled" })
-                                    .eq("id", b.id);
+                          {transaction.paid_at && (
+                            <div className="receipt-row">
+                              <span className="receipt-label">Paid At:</span>
+                              <span>{new Date(transaction.paid_at).toLocaleString()}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
 
-                                  if (error) throw error;
+                      <div className="receipt-total">
+                        Total: ₱{transaction?.amount || b.total_price || 0}
+                      </div>
 
-                                  setBookings((prev) =>
-                                    prev.map((item) =>
-                                      item.id === b.id
-                                        ? { ...item, status: "cancelled" }
-                                        : item
-                                    )
-                                  );
-                                  setToastMsg("Booking successfully cancelled!");
-                                } catch (err: any) {
-                                  console.error("Cancel booking error:", err.message);
-                                  setToastMsg("Failed to cancel booking. Try again.");
-                                }
-                              }}
-                            >
-                              Cancel Booking
-                            </IonButton>
-                          </IonItem>
-                        )}
+                      {/* CANCEL BUTTON LEFT SIDE ONLY */}
+                      {b.status === "pending" && (
+                        <IonButton
+                          color="danger"
+                          className="ion-margin-top"
+                          style={{
+                            marginRight: "auto",
+                            width: "fit-content",
+                          }}
+                          onClick={async () => {
+                            if (!window.confirm("Cancel this booking?")) return;
+                            await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
+                            fetchBookings();
+                          }}
+                        >
+                          Cancel Booking
+                        </IonButton>
+                      )}
 
-                        {canReturn && transaction?.status === "paid" && (
-                          <IonItem lines="none" className="ion-padding-top">
-                            <IonButton
-                              color="warning"
-                              onClick={async () => {
-                                try {
-                                  const { error } = await supabase
-                                    .from("bookings")
-                                    .update({ status: "returned" })
-                                    .eq("id", b.id);
-
-                                  if (error) throw error;
-
-                                  setBookings((prev) =>
-                                    prev.map((item) =>
-                                      item.id === b.id
-                                        ? { ...item, status: "returned" }
-                                        : item
-                                    )
-                                  );
-                                  setToastMsg("Booking successfully returned!");
-                                } catch (err: any) {
-                                  console.error("Return booking error:", err.message);
-                                  setToastMsg("Failed to return booking. Try again.");
-                                }
-                              }}
-                            >
-                              Mark as Returned
-                            </IonButton>
-                          </IonItem>
-                        )}
-                      </IonCardContent>
+                      {canReturn && transaction?.status === "paid" && (
+                        <IonButton expand="block" color="warning" className="ion-margin-top"
+                          onClick={async () => {
+                            await supabase.from("bookings").update({ status: "returned" }).eq("id", b.id);
+                            fetchBookings();
+                          }}>
+                          Mark as Returned
+                        </IonButton>
+                      )}
                     </IonCard>
                   );
                 })}
@@ -370,12 +235,7 @@ const UserDashboard: React.FC = () => {
 
         {segment === "calendar" && <CalendarView />}
 
-        <IonToast
-          isOpen={!!toastMsg}
-          message={toastMsg}
-          duration={2000}
-          onDidDismiss={() => setToastMsg("")}
-        />
+        <IonToast isOpen={!!toastMsg} message={toastMsg} duration={2000} onDidDismiss={() => setToastMsg("")} />
       </IonContent>
     </IonPage>
   );
