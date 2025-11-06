@@ -40,11 +40,9 @@ const Farmer_HeaderBar: React.FC = () => {
       }
 
       if (user) {
-        // Determine login method
         const method = user.email ? "Email" : user.phone ? "Phone" : "User";
         setLoginMethod(method);
 
-        // Fetch username based on email or phone
         let profile: any = null;
 
         if (user.email) {
@@ -108,6 +106,37 @@ const Farmer_HeaderBar: React.FC = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  // ✅ LOGOUT WITH ACTIVITY LOG UPDATE
+  const handleLogout = async () => {
+    try {
+      const stored = localStorage.getItem("userInfo");
+      if (stored) {
+        const user = JSON.parse(stored);
+
+        const { data: lastLog } = await supabase
+          .from("activity_logs")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date_in", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (lastLog) {
+          await supabase
+            .from("activity_logs")
+            .update({ date_out: new Date() })
+            .eq("log_id", lastLog.log_id);
+        }
+      }
+
+      await supabase.auth.signOut();
+      localStorage.removeItem("userInfo");
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   return (
     <IonHeader>
@@ -182,6 +211,7 @@ const Farmer_HeaderBar: React.FC = () => {
               <IonPopover trigger="admin-notif-btn" triggerAction="click">
                 <div style={{ padding: "10px", minWidth: "250px" }}>
                   <h4 style={{ margin: "0 0 10px 0" }}>Notifications</h4>
+
                   {notifications.length === 0 ? (
                     <IonLabel>No notifications</IonLabel>
                   ) : (
@@ -204,10 +234,8 @@ const Farmer_HeaderBar: React.FC = () => {
                             background: notif.is_read ? "#f9f9f9" : "#e8f0fe",
                           }}
                         >
-                          <strong>{notif.title}</strong>
-                          <br />
-                          <IonLabel>{notif.message}</IonLabel>
-                          <br />
+                          <strong>{notif.title}</strong> <br />
+                          <IonLabel>{notif.message}</IonLabel> <br />
                           <small style={{ color: "#777" }}>
                             {new Date(notif.created_at).toLocaleString()}
                           </small>
@@ -215,38 +243,14 @@ const Farmer_HeaderBar: React.FC = () => {
                       ))}
                     </div>
                   )}
-
-                  {notifications.length > 0 && (
-                    <div style={{ marginTop: "12px", textAlign: "right" }}>
-                      <IonButton
-                        size="small"
-                        onClick={async () => {
-                          const { error } = await supabase
-                            .from("notifications")
-                            .update({ is_read: true })
-                            .eq("is_read", false);
-
-                          if (error) console.error(error.message);
-                        }}
-                      >
-                        Mark all as read
-                      </IonButton>
-                    </div>
-                  )}
                 </div>
               </IonPopover>
 
+              {/* ✅ NEW LOGOUT BUTTON WITH ACTIVITY LOG */}
               <IonButton
                 fill="clear"
                 color={isLogoutClicked ? "warning" : "medium"}
-                onClick={async () => {
-                  setIsLogoutClicked(true);
-                  setTimeout(() => setIsLogoutClicked(false), 200);
-
-                  const { error } = await supabase.auth.signOut();
-                  if (error) console.error("Logout error:", error.message);
-                  else window.location.href = "/";
-                }}
+                onClick={handleLogout}
               >
                 <IonIcon icon={logOutOutline} />
               </IonButton>

@@ -152,6 +152,7 @@ const Login: React.FC = () => {
     await fetchUser();
   };
 
+  // ✅ UPDATED WITH ACTIVITY LOGS
   const fetchUser = async () => {
     const { data: userData, error: roleError } = await supabase
       .from("users")
@@ -180,6 +181,17 @@ const Login: React.FC = () => {
     };
 
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+    // ✅ INSERT ACTIVITY LOGS (TIME IN)
+    await supabase.from("activity_logs").insert([
+      {
+        user_id: userInfo.id,
+        name: userInfo.fullname || userInfo.username,
+        role: userInfo.role,
+        date_in: new Date(),
+      },
+    ]);
+
     setAlertMessage(`👋 Welcome back, ${fullName || userData.username}!`);
     setShowAlert(true);
 
@@ -193,7 +205,7 @@ const Login: React.FC = () => {
       }
     }, 1000);
   };
-
+  
   return (
     <IonPage>
       <IonContent fullscreen>
