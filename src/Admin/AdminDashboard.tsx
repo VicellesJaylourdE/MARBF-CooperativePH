@@ -61,6 +61,9 @@ const AdminDashboard: React.FC = () => {
 
   const [equipmentCountData, setEquipmentCountData] = useState<any[]>([]);
   const [loadingEquipmentCount, setLoadingEquipmentCount] = useState(true);
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -227,6 +230,24 @@ const AdminDashboard: React.FC = () => {
 
     fetchData();
     fetchAnalytics();
+    const fetchLogs = async () => {
+  try {
+    setLoadingLogs(true);
+    const { data, error } = await supabase
+      .from("activity_logs")
+      .select("*")
+      .order("log_id", { ascending: false });
+    if (error) throw error;
+    setActivityLogs(data || []);
+  } catch (err) {
+    console.error("Error fetching activity logs:", err);
+  } finally {
+    setLoadingLogs(false);
+  }
+};
+
+fetchLogs();
+
 
     const subscription = supabase
       .channel("bookings-updates")
@@ -292,107 +313,147 @@ const AdminDashboard: React.FC = () => {
               </IonCol>
             </IonRow>
 
-            <IonRow style={{ marginTop: "20px" }}>
-              {/* Sales Analytics */}
-              <IonCol size="12" sizeMd="6">
-                <IonCard>
-                  <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
-                    <IonItem lines="none" style={{ maxWidth: "150px", marginLeft: "auto", marginRight: 0 }}>
-                      <IonLabel>Filter:</IonLabel>
-                      <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
-                        <IonSelectOption value="week">Week</IonSelectOption>
-                        <IonSelectOption value="month">Month</IonSelectOption>
-                        <IonSelectOption value="year">Year</IonSelectOption>
-                      </IonSelect>
-                    </IonItem>
-                  </IonCardHeader>
-                  <IonCardContent>
-                    {loadingAnalytics ? (
-                      <IonSpinner name="dots" />
-                    ) : (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={salesData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="label" />
-                          <YAxis />
-                          <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
-                          <Bar
-                            dataKey="revenue"
-                            fill={filter === "week" ? "#36a2eb" : filter === "month" ? "#4caf50" : "#ff9800"}
-                            radius={[8, 8, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
+     <IonRow style={{ marginTop: "20px" }}>
 
-              {/* Top Equipment (Circle/Doughnut Chart) */}
-              <IonCol size="12" sizeMd="3">
-                <IonCard>
-                  <IonCardHeader>
-                    <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
-                  </IonCardHeader>
-                  <IonCardContent>
-                    {loadingEquipments ? (
-                      <IonSpinner name="dots" />
-                    ) : topEquipments.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie
-                            data={topEquipments}
-                            dataKey="revenue"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            innerRadius={40}
-                            label
-                          >
-                            {topEquipments.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={["#36a2eb", "#4caf50", "#ff9800", "#f39c12", "#9b59b6"][index % 5]}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <p>No equipment data available for this {filter}.</p>
-                    )}
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
+  {/* LEFT SIDE - Sales Analytics + Equipment Analytics */}
+  <IonCol size="12" sizeMd="8">
 
-              {/* Equipment Count Chart */}
-              <IonCol size="12" sizeMd="6">
-                <IonCard>
-                  <IonCardHeader>
-                    <IonCardTitle>📊 Equipment Analytics (Total Bookings)</IonCardTitle>
-                  </IonCardHeader>
-                  <IonCardContent>
-                    {loadingEquipmentCount ? (
-                      <IonSpinner name="dots" />
-                    ) : (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={equipmentCountData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="label" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#36a2eb" radius={[8, 8, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            </IonRow>
+    {/* Sales Analytics */}
+    <IonCard style={{ height: "350px" }}>
+      <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
+        <IonItem lines="none" style={{ maxWidth: "150px", marginLeft: "auto", marginRight: 0 }}>
+          <IonLabel>Filter:</IonLabel>
+          <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
+            <IonSelectOption value="week">Week</IonSelectOption>
+            <IonSelectOption value="month">Month</IonSelectOption>
+            <IonSelectOption value="year">Year</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+      </IonCardHeader>
+      <IonCardContent>
+        {loadingAnalytics ? (
+          <IonSpinner name="dots" />
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={salesData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+              <Bar dataKey="revenue" fill="#36a2eb" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </IonCardContent>
+    </IonCard>
+
+    {/* Equipment Analytics */}
+    <IonCard style={{ height: "350px", marginTop: "20px" }}>
+      <IonCardHeader>
+        <IonCardTitle>📊 Equipment Analytics (Total Bookings)</IonCardTitle>
+      </IonCardHeader>
+      <IonCardContent>
+        {loadingEquipmentCount ? (
+          <IonSpinner name="dots" />
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={equipmentCountData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#36a2eb" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </IonCardContent>
+    </IonCard>
+
+  </IonCol>
+
+
+  {/* RIGHT SIDE - Top Equipment (small) + Activity Logs (big) */}
+  <IonCol size="12" sizeMd="4">
+
+    {/* Top Equipment (small card) */}
+    <IonCard style={{ height: "230px" }}>
+      <IonCardHeader>
+        <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
+      </IonCardHeader>
+      <IonCardContent>
+        {loadingEquipments ? (
+          <IonSpinner name="dots" />
+        ) : topEquipments.length > 0 ? (
+          <ResponsiveContainer width="100%" height={160}>
+            <PieChart>
+              <Pie
+                data={topEquipments}
+                dataKey="revenue"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={60}
+                innerRadius={35}
+                label
+              >
+                {topEquipments.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={["#36a2eb", "#4caf50", "#ff9800", "#f39c12", "#9b59b6"][index % 5]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <p>No equipment data available for this {filter}.</p>
+        )}
+      </IonCardContent>
+    </IonCard>
+
+    {/* Activity Logs (BIGGER CARD) */}
+    <IonCard style={{ height: "470px", marginTop: "20px" }}>
+      <IonCardHeader>
+        <IonCardTitle>📝 Activity Logs</IonCardTitle>
+      </IonCardHeader>
+      <IonCardContent style={{ overflowY: "auto" }}>
+        {loadingLogs ? (
+          <IonSpinner name="dots" />
+        ) : activityLogs.length > 0 ? (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
+                <th style={{ padding: "6px" }}>#</th>
+                <th style={{ padding: "6px" }}>Name</th>
+                <th style={{ padding: "6px" }}>Role</th>
+                <th style={{ padding: "6px" }}>Login</th>
+                <th style={{ padding: "6px" }}>Logout</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activityLogs.map((log, index) => (
+                <tr key={log.log_id} style={{ borderBottom: "1px solid #eee" }}>
+                  <td style={{ padding: "6px" }}>{index + 1}</td>
+                  <td style={{ padding: "6px" }}>{log.name}</td>
+                  <td style={{ padding: "6px" }}>{log.role}</td>
+                  <td style={{ padding: "6px" }}>{log.date_in ? new Date(log.date_in).toLocaleString() : "-"}</td>
+                  <td style={{ padding: "6px" }}>{log.date_out ? new Date(log.date_out).toLocaleString() : "— Active"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No activity logs available.</p>
+        )}
+      </IonCardContent>
+    </IonCard>
+
+  </IonCol>
+
+</IonRow>
+
+            
           </IonGrid>
+          
         );
 
       case "users":
