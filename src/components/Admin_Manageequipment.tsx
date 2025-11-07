@@ -236,7 +236,7 @@ const Admin_Manageequipment: React.FC = () => {
             </IonRow>
           )}
 
-          <IonButton expand="block" onClick={handleAddEquipment} disabled={uploading}>
+          <IonButton expand="block"  color="warning" onClick={handleAddEquipment} disabled={uploading}>
             {uploading ? "Uploading..." : "Add Equipment"}
           </IonButton>
         </IonList>
@@ -331,7 +331,7 @@ const Admin_Manageequipment: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <IonButton color="primary" size="small" onClick={() => handleEdit(eq)}>
+                      <IonButton  color="warning" size="small" onClick={() => handleEdit(eq)}>
                         Edit
                       </IonButton>
                       <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)}>

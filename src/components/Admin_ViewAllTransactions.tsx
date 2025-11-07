@@ -108,6 +108,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
           Total Transactions: {filteredTransactions.length}
         </p>
 
+        {/* Filters */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
           <IonSelect
             value={filterStatus}
@@ -138,86 +139,98 @@ const Admin_ViewAllTransactions: React.FC = () => {
         ) : filteredTransactions.length === 0 ? (
           <p className="ion-text-center">No transactions found.</p>
         ) : (
-          <IonGrid>
-            <IonRow
-              style={{
-                fontWeight: "bold",
-                background: "#030303ff",
-                color: "white",
-                padding: "8px 0",
-                fontSize: "0.9rem",
-              }}
-            >
-              <IonCol>#</IonCol>
-              <IonCol>Equipment</IonCol>
-              <IonCol>Booked By</IonCol>
-              <IonCol>Quantity</IonCol>
-              {/* Removed Price Type */}
-              <IonCol>Amount</IonCol>
-              <IonCol>Status</IonCol>
-              <IonCol>Payment Method</IonCol>
-              <IonCol>GCash Ref</IonCol>
-              <IonCol>Proof</IonCol>
-              <IonCol>Paid At</IonCol>
-              <IonCol>Created At</IonCol>
-              <IonCol>Updated At</IonCol>
-            </IonRow>
-
-            {filteredTransactions.map((t, index) => (
+        
+          <div
+            style={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxHeight: "70vh",
+              
+              borderRadius: "8px",
+            }}
+          >
+            <IonGrid style={{ minWidth: "1200px" }}>
               <IonRow
-                key={t.id}
                 style={{
-                  borderBottom: "1px solid #040404ff",
-                  padding: "6px 0",
-                  fontSize: "0.85rem",
+                  fontWeight: "bold",
+                  background: "#FCB53B",
+                  color: "white",
+                  padding: "8px 0",
+                  fontSize: "0.9rem",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
                 }}
               >
-                <IonCol>{index + 1}</IonCol>
-                <IonCol>{t.equipment_name}</IonCol>
-                <IonCol>{t.user_name}</IonCol>
-                <IonCol>{t.quantity}</IonCol>
-                {/* Removed Price Type */}
-                <IonCol>₱{Number(t.amount).toFixed(2)}</IonCol>
-                <IonCol
+                <IonCol>#</IonCol>
+                <IonCol>Equipment</IonCol>
+                <IonCol>Booked By</IonCol>
+                <IonCol>Quantity</IonCol>
+                <IonCol>Amount</IonCol>
+                <IonCol>Status</IonCol>
+                <IonCol>Payment Method</IonCol>
+                <IonCol>GCash Ref</IonCol>
+                <IonCol>Proof</IonCol>
+                <IonCol>Paid At</IonCol>
+                <IonCol>Created At</IonCol>
+                <IonCol>Updated At</IonCol>
+              </IonRow>
+
+              {filteredTransactions.map((t, index) => (
+                <IonRow
+                  key={t.id}
                   style={{
-                    color:
-                      t.status === "paid"
-                        ? "green"
-                        : t.status === "cancelled"
-                        ? "red"
-                        : "#555",
+                    borderBottom: "1px solid #ddd",
+                    padding: "6px 0",
+                    fontSize: "0.85rem",
                   }}
                 >
-                  {t.status}
-                </IonCol>
-                <IonCol>{t.payment_method || "-"}</IonCol>
-                <IonCol>{t.gcash_ref_no || "-"}</IonCol>
-                <IonCol>
-                  {t.proof_url ? (
-                    <img
-                      src={t.proof_url}
-                      alt="Proof"
-                      style={{
-                        width: "70px",
-                        height: "70px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => window.open(t.proof_url!, "_blank")}
-                    />
-                  ) : (
-                    "-"
-                  )}
-                </IonCol>
-                <IonCol>
-                  {t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}
-                </IonCol>
-                <IonCol>{new Date(t.created_at).toLocaleString()}</IonCol>
-                <IonCol>{new Date(t.updated_at).toLocaleString()}</IonCol>
-              </IonRow>
-            ))}
-          </IonGrid>
+                  <IonCol>{index + 1}</IonCol>
+                  <IonCol>{t.equipment_name}</IonCol>
+                  <IonCol>{t.user_name}</IonCol>
+                  <IonCol>{t.quantity}</IonCol>
+                  <IonCol>₱{Number(t.amount).toFixed(2)}</IonCol>
+                  <IonCol
+                    style={{
+                      color:
+                        t.status === "paid"
+                          ? "green"
+                          : t.status === "cancelled"
+                          ? "red"
+                          : "#555",
+                    }}
+                  >
+                    {t.status}
+                  </IonCol>
+                  <IonCol>{t.payment_method || "-"}</IonCol>
+                  <IonCol>{t.gcash_ref_no || "-"}</IonCol>
+                  <IonCol>
+                    {t.proof_url ? (
+                      <img
+                        src={t.proof_url}
+                        alt="Proof"
+                        style={{
+                          width: "70px",
+                          height: "70px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => window.open(t.proof_url!, "_blank")}
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </IonCol>
+                  <IonCol>
+                    {t.paid_at ? new Date(t.paid_at).toLocaleString() : "-"}
+                  </IonCol>
+                  <IonCol>{new Date(t.created_at).toLocaleString()}</IonCol>
+                  <IonCol>{new Date(t.updated_at).toLocaleString()}</IonCol>
+                </IonRow>
+              ))}
+            </IonGrid>
+          </div>
         )}
 
         <IonToast

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";   
+import React, { useEffect, useState } from "react";    
 import { IonContent, IonBadge, IonSpinner, IonButton, IonToast } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
@@ -40,7 +40,8 @@ const Admin_ManageRentalBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState(""); // <-- Search state
+  const [searchTerm, setSearchTerm] = useState(""); // Search state
+  const [sortOrder, setSortOrder] = useState<"earliest" | "latest">("earliest"); // Sorting filter
 
   useEffect(() => {
     fetchBookings();
@@ -241,21 +242,22 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  const filteredBookings = bookings.filter(
-    (b) =>
-      b.equipment_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.user_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBookings = bookings
+    .filter(
+      (b) =>
+        b.equipment_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.user_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      return sortOrder === "earliest"
+        ? new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        : new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+    });
 
   return (
-    
     <IonContent className="ion-padding">
-      <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-        <h1 style={{ fontWeight: 600, fontSize: "1.2rem", margin: 0 }}>Manage Rental Bookings</h1>
-      </div>
-      
-      {/* Search Bar */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+      {/* Search + Sort row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
         <input
           type="text"
           placeholder="Search users..."
@@ -266,10 +268,25 @@ const Admin_ManageRentalBookings: React.FC = () => {
             borderRadius: "6px",
             border: "1px solid #ccc",
             width: "250px",
+            color: "#333",
           }}
         />
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as "earliest" | "latest")}
+          style={{
+            padding: "6px 10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            color: "#737373",
+            backgroundColor: "#fff",
+          }}
+        >
+          <option value="earliest" style={{ color: "#666" }}>Earliest First</option>
+          <option value="latest" style={{ color: "#666" }}>Latest First</option>
+        </select>
       </div>
-       
+
       {loading ? (
         <div className="ion-text-center ion-padding">
           <IonSpinner name="crescent" />
@@ -305,12 +322,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                 const isProcessing = processingIds.includes(booking.id);
 
                 return (
-                  <tr
-                    key={booking.id}
-                    style={{
-                      backgroundColor: index % 2 === 0 ? "#fffdfdff" : "#ffffffff",
-                    }}
-                  >
+                  <tr key={booking.id}>
                     <td style={cellStyle}>{index + 1}</td>
                     <td style={cellStyle}>{booking.equipment_name}</td>
                     <td style={cellStyle}>{booking.user_name}</td>
@@ -330,7 +342,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                       <IonBadge
                         style={{
                           backgroundColor: getStatusColor(booking.status),
-                          color: "#ffffffff",
+                          color: "#fff",
                           fontWeight: 600,
                           padding: "0.35em 0.6em",
                           borderRadius: "12px",
@@ -344,7 +356,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                         <IonBadge
                           style={{
                             backgroundColor: getPaymentColor(booking.transaction[0].status),
-                            color: "#ffffffff",
+                            color: "#a36262ff",
                             fontWeight: 600,
                             padding: "0.35em 0.6em",
                             borderRadius: "12px",
@@ -358,14 +370,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                     </td>
                     <td style={cellStyle}>
                       {booking.status === "pending" && (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "6px",
-                            justifyContent: "center",
-                            flexWrap: "wrap",
-                          }}
-                        >
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "center", flexWrap: "wrap" }}>
                           <IonButton
                             size="small"
                             color="success"

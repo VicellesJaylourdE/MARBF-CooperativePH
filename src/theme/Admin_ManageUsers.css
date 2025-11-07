@@ -1,0 +1,109 @@
+:root {
+  --text-color: #000;
+  --bg-color: #fff;
+  --row-even-bg: #ffffff;
+  --row-odd-bg: #f9f9f9;
+  --table-border: #000;
+  --input-bg: #fff;
+  --input-border: #ccc;
+  --header-bg: #c78e13ff;
+  --alert-bg: #ffffff;
+  --alert-input-bg: #ffffff;
+  --alert-input-border: #00000088;
+}
+
+body.ion-color-dark {
+  --text-color: #fff;
+  --bg-color: #222;
+  --row-even-bg: #222;
+  --row-odd-bg: #333;
+  --table-border: #555;
+  --input-bg: #333;
+  --input-border: #555;
+  --header-bg: #444;
+  --alert-bg: #333;
+  --alert-input-bg: #555;
+  --alert-input-border: #555;
+}
+
+.admin-users-container {
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  padding: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.admin-users-container .header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-users-container .header h2 {
+  margin: 0;
+}
+
+.admin-users-container input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  width: 250px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.admin-users-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-users-container th,
+.admin-users-container td {
+  padding: 8px;
+  border-bottom: 1px solid var(--table-border);
+  text-align: left;
+  color: var(--text-color);
+}
+
+.admin-users-container tbody tr:nth-child(even) {
+  background-color: var(--row-even-bg);
+}
+
+.admin-users-container tbody tr:nth-child(odd) {
+  background-color: var(--row-odd-bg);
+}
+
+.admin-users-container thead {
+  background-color: var(--header-bg);
+  color: #fff;
+}
+
+/* IonAlert custom styling */
+.edit-user-alert .alert-wrapper {
+  border-radius: 12px;
+  background: var(--alert-bg);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  font-family: 'Poppins', sans-serif;
+}
+
+.edit-user-alert .alert-input {
+  border: 1px solid var(--alert-input-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--text-color);
+  background: var(--alert-input-bg);
+}
+/* Admin_ManageUsers.css */
+.admin-users-container .header {
+  display: flex;
+  justify-content: space-between; /* <-- this pushes Add User button to the right */
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.admin-users-container .header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+ 
+}

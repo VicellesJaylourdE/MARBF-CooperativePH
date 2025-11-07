@@ -4,13 +4,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
- "scripts": {
-  "dev": "vite",
-  "build": "tsc && vite build",
-  "preview": "vite preview",
-  "test.e2e": "cypress run",
-  "test.unit": "vitest",
-  "lint": "eslint"
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test.e2e": "cypress run",
+    "test.unit": "vitest",
+    "lint": "eslint"
   },
   "dependencies": {
     "@capacitor/push-notifications": "^7.0.3",
@@ -21,6 +21,7 @@
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
     "file-saver": "^2.0.5",
     "ionicons": "^7.4.0",
     "jspdf": "^3.0.3",

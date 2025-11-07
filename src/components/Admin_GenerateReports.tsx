@@ -239,7 +239,7 @@ const Admin_GenerateReports: React.FC = () => {
           </IonItem>
 
           {!otpSent && (
-            <IonButton expand="block" onClick={handleSendOtp}>
+            <IonButton expand="block" color="warning" onClick={handleSendOtp}>
               Send OTP
             </IonButton>
           )}

@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { IonContent, IonButton, IonText, IonAlert, IonIcon } from "@ionic/react";
+import React, { useEffect, useState, useMemo } from "react";
+import { IonContent, IonPage, IonGrid, IonRow, IonCol, IonButton, IonText, IonAlert, IonIcon, IonSpinner } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import { pencil, trash } from "ionicons/icons";
 
 interface User {
   user_id: number;
   username: string;
-  user_email: string;
+  user_email: string | null;
+  user_phone: string | null;
   user_firstname: string | null;
   user_lastname: string | null;
 }
@@ -25,14 +26,12 @@ const Admin_ManageUsers: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("users")
-        .select("user_id, username, user_email, user_firstname, user_lastname")
+        .select("user_id, username, user_email, user_phone, user_firstname, user_lastname")
         .eq("role", "user");
 
-      if (error) {
-        console.error("Error fetching users:", error.message);
-      } else if (data) {
-        setUsers(data);
-      }
+      if (error) console.error("Error fetching users:", error.message);
+      else if (data) setUsers(data);
+
       setLoading(false);
     };
 
@@ -48,251 +47,136 @@ const Admin_ManageUsers: React.FC = () => {
 
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
+    if ((!values.user_email || values.user_email.trim() === "") && (!values.user_phone || values.user_phone.trim() === "")) {
+      alert("Please enter at least an Email or Phone.");
+      return false;
+    }
 
     const updatedData: any = {
       username: values.username,
-      user_email: values.user_email,
+      user_email: values.user_email || null,
+      user_phone: values.user_phone || null,
       user_firstname: values.user_firstname,
       user_lastname: values.user_lastname,
     };
-
-    if (values.password && values.password.trim() !== "") {
-      updatedData.password = values.password;
-    }
 
     const { error } = await supabase
       .from("users")
       .update(updatedData)
       .eq("user_id", editingUser.user_id);
 
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) => (u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u))
-      );
-    } else {
-      console.error("Update error:", error.message);
-    }
+    if (!error) setUsers((prev) => prev.map((u) => (u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u)));
+    else console.error("Update error:", error.message);
 
     setShowEditAlert(false);
   };
-  const filteredUsers = users.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.user_firstname || ""} ${user.user_lastname || ""}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const search = searchTerm.toLowerCase();
+      const matchesUsername = user.username.toLowerCase().includes(search);
+      const matchesEmail = user.user_email ? user.user_email.toLowerCase().includes(search) : false;
+      const matchesPhone = user.user_phone ? user.user_phone.toLowerCase().includes(search) : false;
+      const matchesFullName = `${user.user_firstname || ""} ${user.user_lastname || ""}`.toLowerCase().includes(search);
+
+      // Either Email OR Phone match (not combined)
+      return matchesUsername || matchesEmail || matchesPhone || matchesFullName;
+    });
+  }, [users, searchTerm]);
 
   return (
-    <IonContent className="ion-padding">
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem"  }}>
-        <h2 style={{ margin: 0 }}>Users</h2>
-        <IonButton color="warning" style={{ marginLeft: "auto"  }} routerLink="/register" >
-          Add User
-        </IonButton>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: "6px 10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            width: "250px",
-          }}
-        />
-      </div>
-
-      {loading ? (
-        <IonText>Loading users...</IonText>
-      ) : filteredUsers.length === 0 ? (
-        <IonText>No users found.</IonText>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#c78e13ff" }}>
-              <tr>
-                <th style={thStyle}>#</th>
-                <th style={thStyle}>Username</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Full Name</th>
-                <th style={thStyle}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user, index) => (
-                <tr key={user.user_id} style={index % 2 === 0 ? rowEven : rowOdd}>
-                  <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}>{user.username}</td>
-                  <td style={tdStyle}>{user.user_email}</td>
-                  <td style={tdStyle}>
-                    {user.user_firstname || ""} {user.user_lastname || ""}
-                  </td>
-                  <td style={tdStyle}>
-                    <IonButton
-                      color="primary"
-                      fill="clear"
-                      size="small"
-                      onClick={() => {
-                        setEditingUser(user);
-                        setShowEditAlert(true);
-                      }}
-                      style={{
-                        marginRight: "0.5rem",
-                        backgroundColor: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "4px",
-                        minWidth: "36px",
-                      }}
-                    >
-                      <IonIcon icon={pencil} />
-                    </IonButton>
-                    <IonButton
-                      color="danger"
-                      fill="clear"
-                      size="small"
-                      onClick={() => {
-                        setUserToDelete(user.user_id);
-                        setShowDeleteAlert(true);
-                      }}
-                      style={{
-                        backgroundColor: "#f8d7da",
-                        borderRadius: "6px",
-                        padding: "4px",
-                        minWidth: "36px",
-                      }}
-                    >
-                      <IonIcon icon={trash} />
-                    </IonButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <IonPage>
+      <IonContent className="ion-padding">
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+          <h2 style={{ margin: 0 }}>Users</h2>
+          <IonButton color="warning" style={{ marginLeft: "auto" }} routerLink="/register">
+            Add User
+          </IonButton>
         </div>
-      )}
 
-      <IonAlert
-        isOpen={showEditAlert}
-        onDidDismiss={() => setShowEditAlert(false)}
-        header="Edit User"
-        cssClass="edit-user-alert"
-        inputs={[
-          {
-            name: "username",
-            type: "text",
-            placeholder: "👤 Username",
-            value: editingUser?.username || "",
-          },
-          {
-            name: "user_email",
-            type: "email",
-            placeholder: "📧 Email",
-            value: editingUser?.user_email || "",
-          },
-          {
-            name: "user_firstname",
-            type: "text",
-            placeholder: "🪪 First Name",
-            value: editingUser?.user_firstname || "",
-          },
-          {
-            name: "user_lastname",
-            type: "text",
-            placeholder: "🪪 Last Name",
-            value: editingUser?.user_lastname || "",
-          },
-        ]}
-        buttons={[
-          { text: "Cancel", role: "cancel" },
-          {
-            text: "Save",
-            handler: (data) => {
-              handleEdit(data);
-              return false;
-            },
-          },
-        ]}
-      />
+        <div style={{ marginBottom: "1rem" }}>
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", width: "250px" }}
+          />
+        </div>
 
-      {/* ========== DELETE ALERT ========== */}
-      <IonAlert
-        isOpen={showDeleteAlert}
-        onDidDismiss={() => setShowDeleteAlert(false)}
-        header="Confirm Delete"
-        message="Are you sure you want to remove this user?"
-        buttons={[
-          { text: "Cancel", role: "cancel" },
-          { text: "Delete", handler: handleDelete },
-        ]}
-      />
+        <p style={{ fontWeight: 600 }}>Total Users: {filteredUsers.length}</p>
 
-      <style>{`
-        .edit-user-alert .alert-wrapper {
-          border-radius: 12px;
-          background: #ffffff;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-          font-family: 'Poppins', sans-serif;
-        }
-        .edit-user-alert .alert-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #000000ff;
-          margin-bottom: 8px;
-        }
-        .edit-user-alert .alert-input-group {
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 12px;
-        }
-        .edit-user-alert .alert-input {
-          border: 1px solid #00000088;
-          border-radius: 6px;
-          padding: 8px 10px;
-          font-size: 14px;
-          color: #222;
-          background: #ffffff;
-          transition: 0.2s all;
-        }
-        .edit-user-alert .alert-input:focus {
-          border-color: #787775ff;
-          box-shadow: 0 0 3px #fcb53b77;
-        }
-        .edit-user-alert .alert-input::placeholder {
-          color: #555;
-          opacity: 0.9;
-        }
-        .edit-user-alert button.alert-button {
-          color: #fcb53b;
-          font-weight: 600;
-          text-transform: uppercase;
-        }
-        .edit-user-alert button.alert-button.role-cancel {
-          color: #555;
-        }
-      `}</style>
-    </IonContent>
+        {loading ? (
+          <div className="ion-text-center">
+            <IonSpinner name="crescent" />
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <p className="ion-text-center">No users found.</p>
+        ) : (
+          <IonGrid>
+            <IonRow style={{ fontWeight: "bold", background: "#FCB53B", color: "white", padding: "8px 0" }}>
+              <IonCol>#</IonCol>
+              <IonCol>Username</IonCol>
+              <IonCol>Email</IonCol>
+              <IonCol>Phone</IonCol>
+              <IonCol>Full Name</IonCol>
+              <IonCol>Actions</IonCol>
+            </IonRow>
+
+            {filteredUsers.map((user, index) => (
+              <IonRow
+                key={user.user_id}
+                style={{
+                  borderBottom: "1px solid #040404ff",
+                  padding: "6px 0",
+                
+                }}
+              >
+                <IonCol>{index + 1}</IonCol>
+                <IonCol>{user.username}</IonCol>
+                <IonCol>{user.user_email || "-"}</IonCol>
+                <IonCol>{user.user_phone || "-"}</IonCol>
+                <IonCol>{`${user.user_firstname || ""} ${user.user_lastname || ""}`}</IonCol>
+                <IonCol>
+                  <IonButton fill="clear" size="small" onClick={() => { setEditingUser(user); setShowEditAlert(true); }}>
+                    <IonIcon icon={pencil} />
+                  </IonButton>
+                  <IonButton fill="clear" size="small" color="danger" onClick={() => { setUserToDelete(user.user_id); setShowDeleteAlert(true); }}>
+                    <IonIcon icon={trash} />
+                  </IonButton>
+                </IonCol>
+              </IonRow>
+            ))}
+          </IonGrid>
+        )}
+
+        <IonAlert
+          isOpen={showEditAlert}
+          onDidDismiss={() => setShowEditAlert(false)}
+          header="Edit User"
+          inputs={[
+            { name: "username", type: "text", placeholder: "Username", value: editingUser?.username || "" },
+            { name: "user_email", type: "email", placeholder: "Email", value: editingUser?.user_email || "" },
+            { name: "user_phone", type: "text", placeholder: "Phone", value: editingUser?.user_phone || "" },
+            { name: "user_firstname", type: "text", placeholder: "First Name", value: editingUser?.user_firstname || "" },
+            { name: "user_lastname", type: "text", placeholder: "Last Name", value: editingUser?.user_lastname || "" },
+          ]}
+          buttons={[
+            { text: "Cancel", role: "cancel" },
+            { text: "Save", handler: (data) => { handleEdit(data); return false; } },
+          ]}
+        />
+
+        <IonAlert
+          isOpen={showDeleteAlert}
+          onDidDismiss={() => setShowDeleteAlert(false)}
+          header="Confirm Delete"
+          message="Are you sure you want to remove this user?"
+          buttons={[{ text: "Cancel", role: "cancel" }, { text: "Delete", handler: handleDelete }]}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-// Table styles
-const thStyle: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px",
-  borderBottom: "1px solid #000000ff",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "8px",
-  borderBottom: "1px solid #000000ff",
-};
-
-const rowEven: React.CSSProperties = { backgroundColor: "#ffffffff" };
-const rowOdd: React.CSSProperties = { backgroundColor: "#ffffffff" };
 
 export default Admin_ManageUsers;

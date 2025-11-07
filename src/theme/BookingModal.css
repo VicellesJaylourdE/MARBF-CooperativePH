@@ -1,8 +1,134 @@
-.booking-modal-card {
-  --width: 90%;
-  --height: auto;
-  --border-radius: 16px;
-  --background: #fff;
-  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  margin: auto;
+.booking-modal {
+  padding: 30px 20px;
+  
+  font-family: "Poppins", sans-serif;
+  height: 100%;
+  overflow-y: auto;
 }
+
+.booking-card {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 2px solid #eb8d08;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+}
+
+.booking-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.booking-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e1e1e;
+}
+
+.booking-header p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+  color: #111;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.info-card {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.computation-box {
+  background: #000000;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #ffffff;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border: none;
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.btn.outline:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Placeholders */
+.form-group input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+/* Admin_ManageUsers.css */

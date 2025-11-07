@@ -44,17 +44,6 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
     <IonMenu contentId="staff-main" type="overlay" side="start">
       <IonHeader>
         <IonToolbar color="light">
-          <IonTitle
-            style={{
-              fontWeight: 600,
-              fontSize: "1.2rem",
-              color: "#000000ff",
-            }}
-          >
-            Admin Panel
-          </IonTitle>
-
-          
         </IonToolbar>
       </IonHeader>
 
@@ -87,11 +76,6 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
           <IonItem button onClick={() => setActiveTab("viewalltransactions")}>
             <IonIcon icon={bookOutline} slot="start" />
             <IonLabel>View all Transactions</IonLabel>
-          </IonItem>
-          
-          <IonItem button onClick={() => setActiveTab("users")}>
-            <IonIcon icon={peopleOutline} slot="start" />
-            <IonLabel>View User List</IonLabel>
           </IonItem>
           
            <IonItem button onClick={() => setActiveTab("generatereports")}>
