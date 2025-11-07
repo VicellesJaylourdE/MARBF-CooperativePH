@@ -268,7 +268,7 @@ const Admin_GenerateReports: React.FC = () => {
         <>
           <IonItem
             style={{
-              "--background": "#ffffffff",
+           
               borderRadius: "12px",
               marginBottom: "16px",
               padding: "6px 10px",
@@ -278,7 +278,7 @@ const Admin_GenerateReports: React.FC = () => {
             <IonSelect
               value={reportType}
               onIonChange={(e) => setReportType(e.detail.value)}
-              style={{ color: "#000000ff" }}
+              style={{ color: "#fffafaff" }}
             >
               <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
               <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
@@ -304,7 +304,7 @@ const Admin_GenerateReports: React.FC = () => {
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
-                <thead style={{ backgroundColor: "#ffffffff" }}>
+                <thead style={{ }}>
                   <tr>
                     <th style={headerStyle}>#</th>
                     {reportType === "bookings" && <th style={headerStyle}>Equipment</th>}
@@ -323,7 +323,7 @@ const Admin_GenerateReports: React.FC = () => {
                   {data.map((item, index) => (
                     <tr
                       key={item.id || index}
-                      style={{ backgroundColor: index % 2 === 0 ? "#ffffffff" : "#ffffffff" }}
+                
                     >
                       <td style={cellStyle}>{index + 1}</td>
                       {reportType === "bookings" && <td style={cellStyle}>{item.equipment_name}</td>}

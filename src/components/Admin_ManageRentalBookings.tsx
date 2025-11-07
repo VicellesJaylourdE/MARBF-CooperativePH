@@ -282,8 +282,8 @@ const Admin_ManageRentalBookings: React.FC = () => {
             backgroundColor: "#fff",
           }}
         >
-          <option value="earliest" style={{ color: "#666" }}>Earliest First</option>
-          <option value="latest" style={{ color: "#666" }}>Latest First</option>
+          <option value="earliest" style={{ color: "#666" }}>Earliest</option>
+          <option value="latest" style={{ color: "#666" }}>Latest</option>
         </select>
       </div>
 
