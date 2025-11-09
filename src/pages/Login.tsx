@@ -231,6 +231,7 @@ const Login: React.FC = () => {
                     value={segment}
                     onIonChange={(e) => setSegment(e.detail.value as "email" | "phone")}
                     className="segment"
+                    color="warning"
                   >
                     <IonSegmentButton value="email">
                       <IonLabel>Email</IonLabel>
@@ -266,7 +267,7 @@ const Login: React.FC = () => {
                             value={password}
                             onIonChange={(e) => setPassword(e.detail.value!)}
                           >
-                            <IonInputPasswordToggle slot="end" />
+                            <IonInputPasswordToggle slot="end" color="warning"/>
                           </IonInput>
 
                           <span
@@ -298,7 +299,7 @@ const Login: React.FC = () => {
                             value={password}
                             onIonChange={(e) => setPassword(e.detail.value!)}
                           >
-                            <IonInputPasswordToggle slot="end" />
+                            <IonInputPasswordToggle slot="end" color="warning" />
                           </IonInput>
                         </>
                       )}
@@ -324,12 +325,12 @@ const Login: React.FC = () => {
                         )}
                       </IonButton>
 
-                      {/* 🆕 Added Signup Link */}
+                    
                       <div className="signup-link">
                         <span>Don't have an account? </span>
                         <a
                           onClick={() => navigation.push("/registerone")}
-                          style={{ color: "#0078d7", cursor: "pointer", fontWeight: 500 }}
+                          style={{ color: "#3b72fcff", cursor: "pointer", fontWeight: 500 }}
                         >
                           Sign up
                         </a>
@@ -367,7 +368,7 @@ const Login: React.FC = () => {
                       <IonButton
                         fill="clear"
                         onClick={() => sendOtp(segment)}
-                        style={{ marginTop: "8px", color: "#0078d7" }}
+                        style={{ marginTop: "8px", color: "#FCB53B" }}
                       >
                         Resend OTP
                       </IonButton>

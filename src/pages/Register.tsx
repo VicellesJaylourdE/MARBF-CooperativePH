@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
 import {
   IonPage,
   IonContent,
@@ -68,21 +68,30 @@ const Register: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar color="warning">
-            <IonButton
-                    fill="clear"
-                    className="back-button"
-                    onClick={() => router.push("/admin-dashboard")}
-                  >
-                    ←
-                  </IonButton>
-        </IonToolbar>
-      </IonHeader>
-
       <IonContent className="ion-padding">
         <IonCard>
-          <IonCardHeader> Register</IonCardHeader>
+
+          {/* ← Button ug Register title magtapad */}
+          <IonCardHeader>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <IonButton
+                fill="clear"
+                className="back-button"
+                onClick={() => router.push("/admin-dashboard")}
+                style={{ fontSize: '1.5rem', padding: '0' }}
+              >
+                ←
+              </IonButton>
+              <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Register</span>
+            </div>
+          </IonCardHeader>
+
           <IonCardContent>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>

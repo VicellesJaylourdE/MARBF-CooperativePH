@@ -12,6 +12,7 @@ import {
   IonSpinner,
   IonToast,
   useIonRouter,
+  IonInputPasswordToggle
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
@@ -79,7 +80,6 @@ const RegisterOne: React.FC = () => {
     }
   };
 
-  // 🔹 Phone OTP
   const sendOtpPhone = async () => {
     if (!phoneNumber) {
       setAlertMessage("⚠️ Please enter your phone number.");
@@ -187,6 +187,7 @@ const RegisterOne: React.FC = () => {
                   <IonSegment
                     value={segment}
                     onIonChange={(e) => setSegment(e.detail.value as string)}
+                    color="warning"
                   >
                     <IonSegmentButton value="email">
                       <IonLabel>Email</IonLabel>
@@ -254,7 +255,10 @@ const RegisterOne: React.FC = () => {
                               className="input"
                               value={password}
                               onIonChange={(e) => setPassword(e.detail.value!)}
-                            />
+                              
+                            >
+                                  <IonInputPasswordToggle slot="end" color="warning" />
+                                                        </IonInput>
                           </div>
                         </div>
 
@@ -340,6 +344,7 @@ const RegisterOne: React.FC = () => {
                             expand="block"
                             onClick={sendOtpPhone}
                             disabled={loading || !phoneNumber}
+                            color="warning"
                           >
                             {loading ? (
                               <>

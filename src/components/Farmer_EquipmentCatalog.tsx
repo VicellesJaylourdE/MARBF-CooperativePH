@@ -49,7 +49,6 @@ const EquipmentCatalog: React.FC = () => {
 
   useEffect(() => {
     fetchEquipment();
-
     const channel = supabase
       .channel("equipment-changes")
       .on(
@@ -58,7 +57,6 @@ const EquipmentCatalog: React.FC = () => {
         () => fetchEquipment()
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
@@ -70,7 +68,12 @@ const EquipmentCatalog: React.FC = () => {
     setIsBookingOpen(true);
   };
 
-  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; location: string; quantity: number }) => {
+  const handleBookingSubmit = async (booking: {
+    startDate: string;
+    endDate: string;
+    location: string;
+    quantity: number;
+  }) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
@@ -79,7 +82,6 @@ const EquipmentCatalog: React.FC = () => {
       }
 
       const userEmail = userData.user.email;
-
       const { data: userRecord } = await supabase
         .from("users")
         .select("user_id")
@@ -92,7 +94,6 @@ const EquipmentCatalog: React.FC = () => {
       }
 
       const user_id = userRecord.user_id;
-
       const { data: existingBooking } = await supabase
         .from("bookings")
         .select("id")
@@ -183,34 +184,64 @@ const EquipmentCatalog: React.FC = () => {
               )
               .map((eq) => (
                 <IonCol size="6" sizeMd="3" key={eq.id}>
-                  <IonCard className="equipment-card">
-                    <div
+                  <IonCard
+                    style={{
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
+                      backgroundColor: "#fff",
+                      transition: "transform 0.2s ease",
+                    }}
+                    className="equipment-card"
+                  >
+                    <IonImg
+                      src={eq.image_url || "https://via.placeholder.com/300x200?text=No+Image"}
+                      alt={eq.name}
                       style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        background: "#f9f9f9",
-                        height: "100px",
-                        overflow: "hidden",
+                        width: "100%",
+                        height: "140px",
+                        objectFit: "cover",
                       }}
-                    >
-                      <IonImg
-                        src={eq.image_url || "https://via.placeholder.com/100?text=No+Image"}
-                        alt={eq.name}
-                        style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px" }}
-                      />
-                    </div>
+                    />
 
-                    <IonCardContent style={{ textAlign: "center", padding: "8px" }}>
-                      <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
-                      <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
-                      <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
-                        <strong>₱{eq.price}</strong>
+                    <IonCardContent style={{ padding: "10px 12px", textAlign: "left" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h3 style={{ fontSize: "1rem", margin: 0, fontWeight: 600 }}>{eq.name}</h3>
+                        <IonBadge color={getStatusColor(eq)} style={{ fontSize: "0.7rem" }}>
+                          {getStatusText(eq)}
+                        </IonBadge>
+                      </div>
+
+                      {/* Category with 🌾 icon */}
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#666",
+                          marginTop: "4px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>🌾</span>
+                        <span>{eq.category}</span>
                       </p>
 
-                      <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px", fontSize: "0.7rem" }}>
-                        {getStatusText(eq)}
-                      </IonBadge>
+                      {/* PRICE WITH /DAY */}
+                      <p
+                        style={{
+                          fontSize: "1rem",
+                          color: "#2e7d32",
+                          fontWeight: "bold",
+                          marginTop: "6px",
+                          marginBottom: "0",
+                        }}
+                      >
+                        ₱{eq.price.toLocaleString()}{" "}
+                        <span style={{ color: "#888", fontSize: "0.85rem", fontWeight: "normal" }}>
+                          /day
+                        </span>
+                      </p>
 
                       <IonButton
                         expand="block"
@@ -218,7 +249,11 @@ const EquipmentCatalog: React.FC = () => {
                         color={getStatusColor(eq)}
                         disabled={!(eq.status === "available" || eq.available)}
                         onClick={() => openBooking(eq.name, eq.price)}
-                        style={{ marginTop: "6px" }}
+                        style={{
+                          marginTop: "8px",
+                          borderRadius: "8px",
+                          fontWeight: 600,
+                        }}
                       >
                         {eq.status === "available" || eq.available ? "Book Now" : "Unavailable"}
                       </IonButton>

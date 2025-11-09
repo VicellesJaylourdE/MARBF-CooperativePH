@@ -111,7 +111,7 @@ const Staff_ViewAllTransactions: React.FC = () => {
             <IonRow
               style={{
                 fontWeight: "bold",
-                background: "#030303ff",
+                background: "#cd930ccc",
                 color: "white",
                 padding: "8px 0",
                 fontSize: "0.9rem",
@@ -132,7 +132,7 @@ const Staff_ViewAllTransactions: React.FC = () => {
               <IonRow
                 key={t.id}
                 style={{
-                  borderBottom: "1px solid #040404ff",
+                  borderBottom: "1px solid #000000ff",
                   padding: "6px 0",
                   fontSize: "0.85rem",
                 }}

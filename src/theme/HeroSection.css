@@ -15,7 +15,7 @@
 .hero-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #d3d3d3;
+  color: #5d5c5c;
 }
 
 .highlight {
@@ -25,7 +25,7 @@
 .hero-subtitle {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: #717881;
   margin-top: 16px;
 }
 
@@ -48,7 +48,7 @@
   width: 100%;
   max-width: 480px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
 }
 
 /* ===== MOBILE ===== */

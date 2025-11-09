@@ -30,12 +30,12 @@ const LearnMore: React.FC = () => {
             style={{
               fontWeight: "bold",
               fontSize: "1.05rem",
-              color: isDark ? "white" : "black",
+              color: "#515151ff"
               
             }}
             onClick={() => history.push("/")}
           >
-          MARBF Cooperative.
+         Coop PaBOOKid
           </IonButton>
         </div>
       </IonToolbar>
@@ -48,7 +48,7 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
-            About <span style={{ color: "#FCB53B" }}>MARBF Cooperative</span>
+            About <span style={{ color: "#FCB53B" }}>COOP PABOOKID</span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#555" }}>
             A digital initiative by the Mantibugao Agrarian Reform Beneficiaries
@@ -74,8 +74,8 @@ const LearnMore: React.FC = () => {
         </div>
         <div
           style={{
-            backgroundColor: "#ffffffff",
-            color: "#000000ff",
+          
+            color: "#626060ff",
             padding: "4rem 1rem",
             textAlign: "center",
           }}
@@ -89,7 +89,7 @@ poverty, expand opportunities, generate jobs and be sustainable in all our under
           </p>
           
         </div>
-<div
+         <div
           style={{
             backgroundColor: "#FCB53B",
             color: "#000000ff",
@@ -108,7 +108,6 @@ members, to set as a good example.
 
         <div
           style={{
-            backgroundColor: "#fffdfdff",
             padding: "1rem",
             display: "flex",
             flexDirection: "column",
@@ -116,7 +115,7 @@ members, to set as a good example.
             borderTop: "1px solid #ccc",
           }}
         >
-          <small style={{ color: "#000000ff" }}>
+          <small style={{ color: "#888888ff" }}>
             © 2025 MARBF Cooperative.
             All rights reserved.
           </small>

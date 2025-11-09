@@ -14,7 +14,7 @@ const Header: React.FC<HeaderProps> = ({ scrollToAbout, scrollToContact }) => {
   return (
     <IonToolbar color="light">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1rem" }}>
-        <IonTitle style={{ fontWeight: "bold", fontSize: "1.2rem" }}>MARBF Cooperative.</IonTitle>
+        <IonTitle style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Coop PaBOOKid</IonTitle>
 
         <div className="ion-hide-sm-down">
           <IonButton fill="clear" onClick={() => history.push("/Landingpage")} color="warning">Home</IonButton>
