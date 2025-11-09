@@ -26,16 +26,19 @@ interface Equipment {
   name: string;
   category: string;
   price: number;
-  price_type: "hectare"; // <-- FIXED HERE
-  status: string;
+  unit: "unit"; // <-- remove hectare/kilo
+  quantity: number;
+  status: "available" | "maintenance" | "unavailable";
   image_url?: string;
 }
 
-const Admin_Manageequipment: React.FC = () => {
+const Admin_ManageEquipment: React.FC = () => {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState<number | null>(null);
-  const [status, setStatus] = useState("available");
+  const [unit, setUnit] = useState<"unit">("unit"); // default only
+  const [quantity, setQuantity] = useState<number>(1);
+  const [status, setStatus] = useState<"available" | "maintenance" | "unavailable">("available");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -46,7 +49,6 @@ const Admin_Manageequipment: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Equipment>>({});
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEquipment = async () => {
@@ -55,10 +57,7 @@ const Admin_Manageequipment: React.FC = () => {
       .from("equipment")
       .select("*")
       .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setEquipment(data);
-    }
+    if (!error && data) setEquipment(data);
     setLoading(false);
   };
 
@@ -109,7 +108,8 @@ const Admin_Manageequipment: React.FC = () => {
           name,
           category,
           price,
-          price_type: "hectare", // <-- ALWAYS HECTARE
+          unit, // always "unit"
+          quantity,
           status,
           image_url: imageUrl,
         },
@@ -121,6 +121,8 @@ const Admin_Manageequipment: React.FC = () => {
       setName("");
       setCategory("");
       setPrice(null);
+      setUnit("unit");
+      setQuantity(1);
       setStatus("available");
       setImageFile(null);
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -135,9 +137,7 @@ const Admin_Manageequipment: React.FC = () => {
   };
 
   const handleDeleteEquipment = async (id: string) => {
-    const confirmDelete = window.confirm("🗑️ Delete this equipment?");
-    if (!confirmDelete) return;
-
+    if (!window.confirm("🗑️ Delete this equipment?")) return;
     await supabase.from("equipment").delete().eq("id", id);
     setEquipment(equipment.filter((eq) => eq.id !== id));
   };
@@ -148,7 +148,7 @@ const Admin_Manageequipment: React.FC = () => {
   };
 
   const handleSaveEdit = async (id: string) => {
-    if (!editData.name || !editData.category || !editData.price) {
+    if (!editData.name || !editData.category || !editData.price || editData.quantity === undefined) {
       setAlertMessage("⚠️ Please fill all required fields");
       setShowAlert(true);
       return;
@@ -160,7 +160,8 @@ const Admin_Manageequipment: React.FC = () => {
         name: editData.name,
         category: editData.category,
         price: editData.price,
-        price_type: "hectare", // <-- FIXED ALWAYS
+        unit: "unit", // fixed
+        quantity: editData.quantity,
         status: editData.status,
       })
       .eq("id", id);
@@ -193,11 +194,20 @@ const Admin_Manageequipment: React.FC = () => {
           </IonItem>
 
           <IonItem>
-            <IonLabel position="stacked">Price (₱ per hectare)</IonLabel>
+            <IonLabel position="stacked">Price</IonLabel>
             <IonInput
               type="number"
               value={price ?? ""}
               onIonChange={(e) => setPrice(Number(e.detail.value!))}
+            />
+          </IonItem>
+
+          <IonItem>
+            <IonLabel position="stacked">Quantity</IonLabel>
+            <IonInput
+              type="number"
+              value={quantity}
+              onIonChange={(e) => setQuantity(Number(e.detail.value!))}
             />
           </IonItem>
 
@@ -236,11 +246,10 @@ const Admin_Manageequipment: React.FC = () => {
             </IonRow>
           )}
 
-          <IonButton expand="block"  color="warning" onClick={handleAddEquipment} disabled={uploading}>
+          <IonButton expand="block" color="warning" onClick={handleAddEquipment} disabled={uploading}>
             {uploading ? "Uploading..." : "Add Equipment"}
           </IonButton>
         </IonList>
-      
 
         <h2 style={{ marginTop: "20px" }}>Equipment List</h2>
 
@@ -252,12 +261,13 @@ const Admin_Manageequipment: React.FC = () => {
               <IonCol>Name</IonCol>
               <IonCol>Category</IonCol>
               <IonCol>Price</IonCol>
+              <IonCol>Quantity</IonCol>
               <IonCol>Status</IonCol>
               <IonCol>Image</IonCol>
               <IonCol>Actions</IonCol>
             </IonRow>
 
-            {equipment.map((eq, index) => (
+            {equipment.map((eq) => (
               <IonRow key={eq.id} style={{ borderBottom: "1px solid #ccc" }}>
                 <IonCol>
                   {editingId === eq.id ? (
@@ -291,7 +301,19 @@ const Admin_Manageequipment: React.FC = () => {
                       }
                     />
                   ) : (
-                    `₱${eq.price} / hectare`
+                    `₱${eq.price}`
+                  )}
+                </IonCol>
+
+                <IonCol>
+                  {editingId === eq.id ? (
+                    <IonInput
+                      type="number"
+                      value={editData.quantity}
+                      onIonChange={(e) => setEditData({ ...editData, quantity: Number(e.detail.value!) })}
+                    />
+                  ) : (
+                    eq.quantity
                   )}
                 </IonCol>
 
@@ -299,9 +321,7 @@ const Admin_Manageequipment: React.FC = () => {
                   {editingId === eq.id ? (
                     <IonSelect
                       value={editData.status}
-                      onIonChange={(e) =>
-                        setEditData({ ...editData, status: e.detail.value })
-                      }
+                      onIonChange={(e) => setEditData({ ...editData, status: e.detail.value })}
                     >
                       <IonSelectOption value="available">Available</IonSelectOption>
                       <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
@@ -331,7 +351,7 @@ const Admin_Manageequipment: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <IonButton  color="warning" size="small" onClick={() => handleEdit(eq)}>
+                      <IonButton color="warning" size="small" onClick={() => handleEdit(eq)}>
                         Edit
                       </IonButton>
                       <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)}>
@@ -356,4 +376,4 @@ const Admin_Manageequipment: React.FC = () => {
   );
 };
 
-export default Admin_Manageequipment;
+export default Admin_ManageEquipment;

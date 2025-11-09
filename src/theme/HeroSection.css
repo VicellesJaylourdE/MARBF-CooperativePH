@@ -1,0 +1,77 @@
+.hero-section {
+  padding: 20px 20px;
+  
+}
+
+.hero-row {
+  align-items: center;
+}
+
+.text-section {
+  text-align: left;
+  
+}
+
+.hero-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #d3d3d3;
+}
+
+.highlight {
+  color: #FCB53B;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 16px;
+}
+
+.button-group {
+  margin-top: 24px;
+}
+
+.button-group ion-button {
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+.image-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-image {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .hero-row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .text-section {
+    margin-bottom: 30px;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  /* ✅ Hide image on mobile */
+  .image-section {
+    display: none;
+  }
+}

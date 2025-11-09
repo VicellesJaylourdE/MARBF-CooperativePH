@@ -1,0 +1,38 @@
+/* src/components/CTASection.css */
+
+.cta-section {
+  text-align: center;
+  padding: 4rem 1rem;
+  background-color: #FCB53B; /* matches your brand color */
+  color: #fff;
+}
+
+.cta-section h2 {
+  font-weight: bold;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.cta-section p {
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #fff;
+}
+
+/* Optional: style the button inside the CTA */
+.cta-section ion-button {
+  font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cta-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .cta-section p {
+    font-size: 0.95rem;
+  }
+}

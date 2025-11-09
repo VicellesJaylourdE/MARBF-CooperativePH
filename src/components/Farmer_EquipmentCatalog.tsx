@@ -70,7 +70,7 @@ const EquipmentCatalog: React.FC = () => {
     setIsBookingOpen(true);
   };
 
-  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; location: string; quantity: number; priceType: "hectare" }) => {
+  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; location: string; quantity: number }) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
@@ -115,7 +115,6 @@ const EquipmentCatalog: React.FC = () => {
             end_date: booking.endDate,
             location: booking.location,
             quantity: booking.quantity,
-            price_type: booking.priceType,
             payment_method: "gcash",
             status: "pending",
           },
@@ -185,7 +184,16 @@ const EquipmentCatalog: React.FC = () => {
               .map((eq) => (
                 <IonCol size="6" sizeMd="3" key={eq.id}>
                   <IonCard className="equipment-card">
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", background: "#f9f9f9", height: "100px", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "#f9f9f9",
+                        height: "100px",
+                        overflow: "hidden",
+                      }}
+                    >
                       <IonImg
                         src={eq.image_url || "https://via.placeholder.com/100?text=No+Image"}
                         alt={eq.name}
@@ -197,7 +205,7 @@ const EquipmentCatalog: React.FC = () => {
                       <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
                       <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
                       <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
-                        <strong>₱{eq.price}</strong> / hectare
+                        <strong>₱{eq.price}</strong>
                       </p>
 
                       <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px", fontSize: "0.7rem" }}>

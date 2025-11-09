@@ -1,5 +1,5 @@
 .booking-page {
-  padding: 4rem 1rem;
+  padding: 3rem 1rem;
 }
 
 .booking-row {
@@ -26,7 +26,6 @@
   max-width: 600px;
 }
 
-/* Image styling for desktop */
 .image-section {
   text-align: center;
 }
@@ -38,9 +37,8 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Accordion styling */
 .accordion-card {
-  background: #ffffff;
+  background: #fff;
   border-radius: 12px;
   margin-bottom: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -78,20 +76,4 @@
 
 .accordion-card.active {
   border-color: #2a6ef0;
-}
-
-/* ✅ MOBILE STYLING */
-@media (max-width: 768px) {
-  .image-section {
-    display: none; /* Hide the image on mobile */
-  }
-
-  .booking-title {
-    font-size: 2rem; /* slightly smaller title */
-  }
-
-  .booking-subtitle {
-    font-size: 1rem;
-    max-width: 100%;
-  }
 }

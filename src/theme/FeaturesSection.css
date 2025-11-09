@@ -1,0 +1,52 @@
+.features-section h2 {
+  font-weight: bold;
+  font-size: 2rem;
+  margin-bottom: 1rem; /* increased for looser spacing */
+}
+
+.features-section p {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 2.5rem; /* slightly larger spacing */
+}
+
+.feature-card {
+  border: 1.5px solid #FCB53B;
+  border-radius: 12px;
+  padding: 2rem;       /* increased padding for more breathing room */
+  margin: 1.5rem 0;    /* larger margin between cards */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem; /* more space below icon */
+}
+
+.feature-card h3 {
+  font-weight: bold;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem; /* more space below heading */
+}
+
+.feature-card p {
+  font-size: 0.95rem;  /* slightly bigger for readability */
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .feature-card {
+    padding: 1.5rem;  /* adjust for smaller screens */
+    margin: 1rem 0;   /* more breathing room */
+  }
+
+  .feature-card p {
+    font-size: 0.9rem; /* keep text readable on mobile */
+  }
+}

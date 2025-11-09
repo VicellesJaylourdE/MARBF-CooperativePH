@@ -127,32 +127,40 @@ const AdminDashboard: React.FC = () => {
 
         const { data: transactions } = await supabase
           .from("transactions")
-          .select(
-            "id, amount, status, paid_at, booking:booking_id(equipment_name)"
-          )
+          .select("id, amount, status, paid_at, booking:booking_id(equipment_name)")
           .eq("status", "paid");
 
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
 
-        const filtered = transactions?.filter((t: any) => {
-          const date = new Date(t.paid_at);
-          if (filter === "year") return date.getFullYear() === currentYear;
-          if (filter === "month") return date.getMonth() === currentMonth;
-          if (filter === "week") {
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay() + 1);
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            return date >= startOfWeek && date <= endOfWeek;
-          }
-          return true;
-        }) || [];
+        let filtered = transactions || [];
 
-        let formattedData: any[] = [];
-        if (filter === "week") {
-          const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        if (filter === "year") {
+          filtered = filtered.filter((t: any) => {
+            const date = new Date(t.paid_at);
+            return date.getFullYear() === currentYear;
+          });
+        } else if (filter === "month") {
+          filtered = filtered.filter((t: any) => {
+            const date = new Date(t.paid_at);
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+          });
+        } else if (filter === "week") {
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          startOfWeek.setHours(0, 0, 0, 0);
+
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          endOfWeek.setHours(23, 59, 59, 999);
+
+          filtered = filtered.filter((t: any) => {
+            const date = new Date(t.paid_at);
+            return date >= startOfWeek && date <= endOfWeek;
+          });
+
+          const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
           const groupedSales: Record<string, number> = {};
           weekDays.forEach((d) => (groupedSales[d] = 0));
 
@@ -165,11 +173,15 @@ const AdminDashboard: React.FC = () => {
             }
           });
 
-          formattedData = weekDays.map((d) => ({
+          const formattedData = weekDays.map((d) => ({
             label: d,
             revenue: groupedSales[d] || 0,
           }));
-        } else {
+
+          setSalesData(formattedData);
+        }
+
+        if (filter !== "week") {
           const groupedSales: Record<string, number> = {};
           filtered.forEach((t: any) => {
             const date = new Date(t.paid_at);
@@ -180,12 +192,13 @@ const AdminDashboard: React.FC = () => {
               label = date.toLocaleDateString("default", { day: "numeric" });
             groupedSales[label] = (groupedSales[label] || 0) + (t.amount || 0);
           });
-          formattedData = Object.entries(groupedSales).map(([label, amount]) => ({
-            label,
-            revenue: amount,
-          }));
+          setSalesData(
+            Object.entries(groupedSales).map(([label, amount]) => ({
+              label,
+              revenue: amount,
+            }))
+          );
         }
-        setSalesData(formattedData);
 
         const equipmentMap: Record<string, { revenue: number; count: number }> = {};
         filtered.forEach((t: any) => {
@@ -302,10 +315,9 @@ const AdminDashboard: React.FC = () => {
 
             <IonRow style={{ marginTop: "20px" }}>
               <IonCol size="12" sizeMd="8">
-                {/* Sales Analytics */}
                 <IonCard style={{ height: "350px" }}>
                   <IonCardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "left" }}>
-                    <IonCardTitle>💰 Sales Analytics ({filter})</IonCardTitle>
+                    <IonCardTitle>Sales Analytics ({filter})</IonCardTitle>
                     <IonItem lines="none" style={{ maxWidth: "150px", marginLeft: "auto", marginRight: 0 }}>
                       <IonLabel>Filter:</IonLabel>
                       <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)} interface="popover">
@@ -336,10 +348,9 @@ const AdminDashboard: React.FC = () => {
                   </IonCardContent>
                 </IonCard>
 
-                {/* Equipment Analytics */}
                 <IonCard style={{ height: "350px", marginTop: "20px" }}>
                   <IonCardHeader>
-                    <IonCardTitle>📊 Equipment Analytics (Total Bookings)</IonCardTitle>
+                    <IonCardTitle>Equipment Analytics (Total Bookings)</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent>
                     {loadingEquipmentCount ? (
@@ -364,10 +375,9 @@ const AdminDashboard: React.FC = () => {
               </IonCol>
 
               <IonCol size="12" sizeMd="4">
-                {/* Top Equipment */}
                 <IonCard style={{ height: "230px" }}>
                   <IonCardHeader>
-                    <IonCardTitle>🏆 Top Equipment ({filter})</IonCardTitle>
+                    <IonCardTitle>Top Equipment ({filter})</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent>
                     {loadingEquipments ? (
@@ -398,10 +408,9 @@ const AdminDashboard: React.FC = () => {
                   </IonCardContent>
                 </IonCard>
 
-                {/* Activity Logs */}
                 <IonCard style={{ height: "470px", marginTop: "20px" }}>
                   <IonCardHeader>
-                    <IonCardTitle>📝 Activity Logs</IonCardTitle>
+                    <IonCardTitle>Activity Logs</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent style={{ overflowY: "auto" }}>
                     {loadingLogs ? (
@@ -465,7 +474,6 @@ const AdminDashboard: React.FC = () => {
           </IonGrid>
         );
 
-    
       case "generatereports":
         return <Admin_GenerateReports />;
       case "bookings":
