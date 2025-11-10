@@ -48,14 +48,13 @@ const Admin_ManageRentalBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState<"earliest" | "latest">("earliest");
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [sortOrder, setSortOrder] = useState<"earliest" | "latest">("earliest"); 
 
   useEffect(() => {
     fetchBookings();
   }, []);
 
-  // --- FETCH BOOKINGS ---
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -89,7 +88,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  // --- UPDATE BOOKING STATUS ---
   const updateBookingStatus = async (bookingId: string, newStatus: Booking["status"], userId: number, totalPrice: number | null) => {
     try {
       setProcessingIds((prev) => [...prev, bookingId]);
@@ -142,7 +140,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  // --- MARK TRANSACTION PAID ---
   const markTransactionPaid = async (transactionId: string) => {
     try {
       setProcessingIds((prev) => [...prev, transactionId]);
@@ -172,7 +169,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  // --- MARK BOOKING RETURNED ---
   const markBookingReturned = async (bookingId: string) => {
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking || booking.status === "returned") {
@@ -201,7 +197,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
           user_id: booking.user_id,
           reference_booking: booking.id,
           action: "return",
-          quantity_change: booking.quantity || 1,
+          quantity_change: booking.quantity || 1, // add back the quantity
           created_at: new Date().toISOString(),
         },
       ]);
@@ -218,26 +214,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
-  // --- ADD STOCK ---
-  const addStock = async (equipmentId: string, quantity: number, adminId: number) => {
-    try {
-      await supabase.from("inventory_logs").insert([
-        {
-          equipment_id: equipmentId,
-          user_id: adminId,
-          action: "add_stock",
-          quantity_change: quantity,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-      setToastMessage(`✅ Added ${quantity} stock to equipment ID: ${equipmentId}`);
-    } catch (err: any) {
-      console.error("Add stock error:", err.message);
-      setToastMessage("Failed to add stock.");
-    }
-  };
-
-  // --- STATUS & PAYMENT COLORS ---
   const getStatusColor = (status: Booking["status"]) => {
     switch (status) {
       case "approved": return "#28a745";
@@ -346,9 +322,6 @@ const Admin_ManageRentalBookings: React.FC = () => {
                       )}
                       {canReturn && (
                         <IonButton size="small" color="warning" disabled={isProcessing} onClick={() => markBookingReturned(b.id)}>Mark Returned</IonButton>
-                      )}
-                      {b.equipment_id && (
-                        <IonButton size="small" color="secondary" onClick={() => addStock(b.equipment_id!, 1, b.user_id)}>+1 Stock</IonButton>
                       )}
                     </td>
                   </tr>

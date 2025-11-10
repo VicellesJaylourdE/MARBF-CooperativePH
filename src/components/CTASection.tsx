@@ -1,4 +1,4 @@
-// src/components/CTASection.tsx
+
 import React from "react";
 import "../theme/CTASection.css";
 import { IonButton } from "@ionic/react";

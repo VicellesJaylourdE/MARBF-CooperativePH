@@ -2,7 +2,6 @@ import React from "react";
 import { IonGrid, IonRow, IonCol, IonButton } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 
-// ✅ Import your hero image
 import heroImage from "../assets/tractor_3900184.png";
 import "../theme/HeroSection.css";
 
@@ -13,7 +12,7 @@ const HeroSection: React.FC = () => {
     <section className="hero-section">
       <IonGrid className="hero-grid">
         <IonRow className="hero-row">
-          {/* Text + Buttons */}
+
           <IonCol sizeMd="6" size="12" className="text-section">
             <h1 className="hero-title">
               Modern Equipment Booking for <span className="highlight">Agricultural Cooperatives</span>
@@ -33,7 +32,6 @@ const HeroSection: React.FC = () => {
             </div>
           </IonCol>
 
-          {/* Hero Image */}
           <IonCol sizeMd="6" size="12" className="image-section">
             <img src={heroImage} alt="Hero illustration" className="hero-image" />
           </IonCol>
