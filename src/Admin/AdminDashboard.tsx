@@ -31,6 +31,7 @@ import Admin_AdminDashboardAnaltys from "../components/Admin_AdminDashboardAnalt
 
 import Admin_AdminHeaderBar from "../components/Admin_AdminHeaderBar";
 import Admin_AdminSidebar from "../components/Admin_AdminSidebar";
+import Admin_InventoryLogs from "../components/Admin_InventoryLogs";
 
 import {
   BarChart,
@@ -488,6 +489,8 @@ const AdminDashboard: React.FC = () => {
         return <Admin_ViewAllTransactions />;
       case "manageusers":
         return <Admin_ManageUsers />;
+         case "inventorlogs":
+        return <Admin_InventoryLogs/>;
       case "registermember":
         return <Admin_RegisterMember />;
       case "admindashboardanaltys":

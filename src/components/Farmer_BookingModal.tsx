@@ -1,22 +1,5 @@
 import React, { useState } from "react";
-import {
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButtons,
-  IonButton,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonLabel,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonToast,
-} from "@ionic/react";
+import { IonModal, IonToast } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import "../theme/BookingModal.css";
 
@@ -28,7 +11,7 @@ interface BookingModalProps {
     endDate: string;
     location: string;
     quantity: number;
-    priceType: "hectare";
+    unit: "unit";
   }) => void;
   equipmentName: string;
   price: number;
@@ -43,11 +26,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
   price,
   equipmentId,
 }) => {
-  const priceType: "hectare" = "hectare";
+  const priceType: "unit" = "unit";
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [location, setLocation] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("gcash");
+  const [paymentMethod, setPaymentMethod] = useState<"gcash" | "cash">("gcash");
   const [proofUrl, setProofUrl] = useState("");
   const [gcashRefNo, setGcashRefNo] = useState("");
   const [days, setDays] = useState(0);
@@ -56,9 +39,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [uploading, setUploading] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
-  const computeTotal = (d: number, q: number) => {
-    setTotalPrice(d > 0 && q > 0 ? d * price * q : 0);
-  };
+  const computeTotal = (d: number, q: number) => setTotalPrice(d * price * q);
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value);
@@ -72,12 +53,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
     const end = new Date(value);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
-
-    const diff = end.getTime() - start.getTime();
-    const diffDays = diff / (1000 * 60 * 60 * 24) + 1;
-    if (diffDays > 0) {
-      setDays(diffDays);
-      computeTotal(diffDays, quantity);
+    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    if (diff > 0) {
+      setDays(diff);
+      computeTotal(diff, quantity);
     } else {
       setDays(0);
       setTotalPrice(0);
@@ -94,7 +73,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
@@ -102,11 +80,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         .from("payment_proofs")
         .upload(`payment_proofs/${fileName}`, file);
       if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from("payment_proofs")
-        .getPublicUrl(`payment_proofs/${fileName}`);
-
+      const { data } = supabase.storage.from("payment_proofs").getPublicUrl(`payment_proofs/${fileName}`);
       setProofUrl(data.publicUrl);
       setToastMsg(`Uploaded: ${file.name}`);
     } catch {
@@ -121,8 +95,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     if (!location.trim()) return alert("Enter location.");
     if (paymentMethod === "gcash") {
       if (!proofUrl) return alert("Upload proof of payment.");
-      if (!gcashRefNo.trim()) return alert("Enter GCash reference number.");
-      if (isNaN(Number(gcashRefNo))) return alert("GCash reference must be numeric.");
+      if (!gcashRefNo.trim() || isNaN(Number(gcashRefNo))) return alert("Enter valid GCash reference number.");
     }
 
     try {
@@ -134,44 +107,54 @@ const BookingModal: React.FC<BookingModalProps> = ({
         .select("user_id")
         .eq("user_email", user.email)
         .single();
-
       if (!profile) return alert("User record not found.");
 
-      const { data: bookingData } = await supabase
+      // Insert booking
+      const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
-        .insert([
-          {
-            user_id: profile.user_id,
-            equipment_id: equipmentId,
-            equipment_name: equipmentName,
-            start_date: startDate,
-            end_date: endDate,
-            location,
-            status: "pending",
-            total_price: totalPrice,
-            quantity,
-            price_type: "hectare",
-          },
-        ])
+        .insert([{
+          user_id: profile.user_id,
+          equipment_id: equipmentId,
+          equipment_name: equipmentName,
+          start_date: startDate,
+          end_date: endDate,
+          location,
+          status: "pending",
+          total_price: totalPrice,
+          quantity,
+          unit: "unit",
+          payment_method: paymentMethod,
+        }])
         .select()
         .single();
+      if (bookingError || !bookingData) throw bookingError;
 
-      await supabase.from("transactions").insert([
-        {
-          booking_id: bookingData.id,
-          user_id: profile.user_id,
-          amount: totalPrice,
-          status: "unpaid",
-          payment_method: paymentMethod,
-          proof_url: proofUrl || null,
-          gcash_ref_no: Number(gcashRefNo) || null,
-        },
-      ]);
+      // Insert transaction if GCash or Cash
+      await supabase.from("transactions").insert([{
+        booking_id: bookingData.id,
+        user_id: profile.user_id,
+        amount: totalPrice,
+        status: "unpaid",
+        payment_method: paymentMethod,
+        proof_url: proofUrl || null,
+        gcash_ref_no: Number(gcashRefNo) || null,
+      }]);
 
-      onSubmit({ startDate, endDate, location, quantity, priceType });
-      setToastMsg("Booking submitted!");
+      // Log inventory action
+      await supabase.from("inventory_logs").insert([{
+        equipment_id: equipmentId,
+        user_id: profile.user_id,
+        reference_booking: bookingData.id,
+        action: "reserve",
+        quantity_change: -quantity,
+        created_at: new Date().toISOString(),
+      }]);
+
+      onSubmit({ startDate, endDate, location, quantity, unit: "unit" });
+      setToastMsg("✅ Booking submitted!");
       onClose();
-    } catch {
+    } catch (err: any) {
+      console.error(err);
       setToastMsg("Booking failed.");
     }
   };
@@ -190,53 +173,29 @@ const BookingModal: React.FC<BookingModalProps> = ({
               <div className="form-grid">
                 <div className="form-group">
                   <label>Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                    required
-                  />
+                  <input type="date" value={startDate} onChange={(e) => handleStartDateChange(e.target.value)} required />
                 </div>
-
                 <div className="form-group">
                   <label>End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => handleEndDateChange(e.target.value)}
-                    required
-                  />
+                  <input type="date" value={endDate} onChange={(e) => handleEndDateChange(e.target.value)} required />
                 </div>
               </div>
 
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Hectares (Quantity)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => handleQuantityChange(e.target.value)}
-                    required
-                  />
+                  <label>Units (Quantity)</label>
+                  <input type="number" min="1" value={quantity} onChange={(e) => handleQuantityChange(e.target.value)} required />
                 </div>
-
                 <div className="form-group">
                   <label>Location</label>
-                  <input
-                    type="text"
-                    placeholder="Enter location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                  />
+                  <input type="text" placeholder="Enter location" value={location} onChange={(e) => setLocation(e.target.value)} required />
                 </div>
               </div>
 
               {days > 0 && quantity > 0 && (
                 <div className="computation-box">
                   <p><strong>Days:</strong> {days}</p>
-                  <p><strong>Price per hectare:</strong> ₱{price}</p>
+                  <p><strong>Price per unit:</strong> ₱{price}</p>
                   <p><strong>Quantity:</strong> {quantity}</p>
                   <hr />
                   <h3><strong>Total:</strong> ₱{totalPrice}</h3>
@@ -245,82 +204,39 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
               <div className="form-group">
                 <label>Payment Method</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                >
+                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as "gcash" | "cash")}>
                   <option value="gcash">GCash</option>
                   <option value="cash">Cash</option>
                 </select>
               </div>
 
-              {paymentMethod === "gcash" && (
+              {(paymentMethod === "gcash" || paymentMethod === "cash") && (
                 <>
-                  <div className="info-card">
-                    📱 GCash: 09639539761 <br /> 👤 Name: Jay Vicelles
-                  </div>
-
                   <div className="form-group">
                     <label>Upload Proof of Payment</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProofUpload}
-                      disabled={uploading}
-                    />
+                    <input type="file" accept="image/*" onChange={handleProofUpload} disabled={uploading} />
                   </div>
-
-                  <div className="form-group">
-                    <label>GCash Reference Number</label>
-                    <input
-                      type="text"
-                      placeholder="Enter reference number"
-                      value={gcashRefNo}
-                      onChange={(e) => setGcashRefNo(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-
-              {paymentMethod === "cash" && (
-                <>
-                  <div className="info-card">💵 Please upload proof of cash payment.</div>
-                  <div className="form-group">
-                    <label>Upload Proof of Payment</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProofUpload}
-                      disabled={uploading}
-                    />
-                  </div>
+                  {paymentMethod === "gcash" && (
+                    <div className="form-group">
+                      <label>GCash Reference Number</label>
+                      <input type="text" placeholder="Enter reference number" value={gcashRefNo} onChange={(e) => setGcashRefNo(e.target.value)} />
+                    </div>
+                  )}
                 </>
               )}
 
               <div className="form-buttons">
-                <button
-                  type="button"
-                  className="btn primary"
-                  onClick={handleSubmit}
-                  disabled={uploading}
-                >
+                <button type="button" className="btn primary" onClick={handleSubmit} disabled={uploading}>
                   {uploading ? "Uploading..." : "Submit Booking"}
                 </button>
-                <button type="button" className="btn outline" onClick={onClose}>
-                  Cancel
-                </button>
+                <button type="button" className="btn outline" onClick={onClose}>Cancel</button>
               </div>
             </form>
           </div>
         </div>
       </IonModal>
 
-      <IonToast
-        isOpen={!!toastMsg}
-        message={toastMsg}
-        duration={2000}
-        onDidDismiss={() => setToastMsg("")}
-      />
+      <IonToast isOpen={!!toastMsg} message={toastMsg} duration={2500} onDidDismiss={() => setToastMsg("")} />
     </>
   );
 };

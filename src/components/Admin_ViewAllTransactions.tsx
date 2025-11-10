@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react"; 
 import {
   IonContent,
   IonPage,
@@ -24,6 +24,7 @@ interface Transaction {
   proof_url: string | null;
   gcash_ref_no?: string | null;
   quantity?: number;
+  price_type?: string;
   paid_at: string | null;
   created_at: string;
   updated_at: string;
@@ -69,6 +70,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
         proof_url: t.proof_url || null,
         gcash_ref_no: t.gcash_ref_no || null,
         quantity: t.quantity ?? 1,
+        price_type: t.price_type,
         paid_at: t.paid_at,
         created_at: t.created_at,
         updated_at: t.updated_at,
@@ -79,7 +81,7 @@ const Admin_ViewAllTransactions: React.FC = () => {
       setTransactions(mappedTransactions);
     } catch (err: any) {
       console.error(err);
-      setErrorToast(err.message);
+      setErrorToast(err.message || "Failed to fetch transactions.");
     } finally {
       setLoading(false);
     }
@@ -101,8 +103,8 @@ const Admin_ViewAllTransactions: React.FC = () => {
           View All Transactions
         </h2>
         <p>
-          List of all transactions with Booking, User, Quantity, payment proof
-          images, and GCash Reference Numbers.
+          List of all transactions with Booking, User, Quantity, Payment Proof,
+          and GCash Reference.
         </p>
         <p style={{ fontWeight: 600 }}>
           Total Transactions: {filteredTransactions.length}
@@ -139,13 +141,11 @@ const Admin_ViewAllTransactions: React.FC = () => {
         ) : filteredTransactions.length === 0 ? (
           <p className="ion-text-center">No transactions found.</p>
         ) : (
-        
           <div
             style={{
               overflowX: "auto",
               overflowY: "auto",
               maxHeight: "70vh",
-              
               borderRadius: "8px",
             }}
           >

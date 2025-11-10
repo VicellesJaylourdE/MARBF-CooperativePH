@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { IonContent, IonSpinner, IonCard, IonCardContent } from "@ionic/react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -37,13 +37,13 @@ const Admin_ViewBookingCalendar: React.FC = () => {
 
     fetchBookings();
 
+    // Supabase realtime subscription
     const channel = supabase
       .channel("bookings-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
-        (payload) => {
-          console.log("Realtime change:", payload);
+        () => {
           fetchBookings();
         }
       )
@@ -54,9 +54,37 @@ const Admin_ViewBookingCalendar: React.FC = () => {
     };
   }, []);
 
-  const bookingsForDate = bookings.filter(
-    (b) => new Date(b.start_date).toDateString() === selectedDate.toDateString()
-  );
+  // Check if a date falls in any booking
+  const getBookingsOnDate = (date: Date) => {
+    return bookings.filter((b) => {
+      const start = new Date(b.start_date);
+      const end = new Date(b.end_date);
+      start.setHours(0,0,0,0);
+      end.setHours(23,59,59,999);
+      return date >= start && date <= end;
+    });
+  };
+
+  // Color coding for booking status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "#28a745";
+      case "pending":
+        return "#fd7e14";
+      case "declined":
+        return "#dc3545";
+      case "cancelled":
+        return "#6c757d";
+      case "returned":
+        return "#17a2b8";
+      default:
+        return "#999";
+    }
+  };
+
+  // Bookings for selected date
+  const bookingsForSelectedDate = getBookingsOnDate(selectedDate);
 
   return (
     <IonContent className="ion-padding">
@@ -71,42 +99,52 @@ const Admin_ViewBookingCalendar: React.FC = () => {
               value={selectedDate}
               showWeekNumbers={false}
               tileClassName={({ date }) =>
-                bookings.some(
-                  (b) =>
-                    new Date(b.start_date).toDateString() === date.toDateString()
-                )
-                  ? "has-booking"
-                  : ""
+                getBookingsOnDate(date).length > 0 ? "has-booking" : ""
               }
+              tileContent={({ date }) => {
+                const dayBookings = getBookingsOnDate(date);
+                if (dayBookings.length === 0) return null;
+
+                // Multiple bookings indicator (small colored dots)
+                return (
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
+                    {dayBookings.map((b, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          backgroundColor: getStatusColor(b.status),
+                          margin: "0 1px",
+                          display: "inline-block",
+                        }}
+                      />
+                    ))}
+                  </div>
+                );
+              }}
             />
           </div>
 
           <div style={{ marginTop: "16px" }}>
             <h3>
-              Bookings on {selectedDate.toDateString()} (
-              {bookingsForDate.length})
+              Bookings on {selectedDate.toDateString()} ({bookingsForSelectedDate.length})
             </h3>
-            {bookingsForDate.length === 0 ? (
+            {bookingsForSelectedDate.length === 0 ? (
               <p>No bookings for this date.</p>
             ) : (
-              bookingsForDate.map((b) => (
+              bookingsForSelectedDate.map((b) => (
                 <IonCard key={b.id}>
                   <IonCardContent>
                     <strong>{b.equipment_name}</strong> <br />
                     {b.start_date} → {b.end_date} <br />
                     Status:{" "}
-                    <span
-                      style={{
-                        color:
-                          b.status === "approved"
-                            ? "green"
-                            : b.status === "pending"
-                            ? "orange"
-                            : "red",
-                      }}
-                    >
-                      {b.status}
-                    </span>
+                    <span style={{ color: getStatusColor(b.status), fontWeight: 600 }}>
+                      {b.status.toUpperCase()}
+                    </span>{" "}
+                    <br />
+                    Total Price: ₱{b.total_price.toLocaleString()}
                   </IonCardContent>
                 </IonCard>
               ))
@@ -118,15 +156,16 @@ const Admin_ViewBookingCalendar: React.FC = () => {
       <style>{`
         .calendar-container {
           display: flex;
-          justify-content: left;
+          justify-content: center;
           width: 100%;
+          position: relative;
         }
         .react-calendar {
           width: 90%;
           max-width: 900px;
           font-size: 1.5rem;
           border-radius: 1px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .react-calendar__navigation {
           background-color: #FCB53B;

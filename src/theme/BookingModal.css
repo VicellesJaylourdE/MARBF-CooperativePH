@@ -1,97 +1,133 @@
-.booking-page {
-  padding: 4rem 1rem;
+.booking-modal {
+  padding: 30px 20px;
+  
+  font-family: "Poppins", sans-serif;
+  height: 100%;
+  overflow-y: auto;
 }
 
-.booking-row {
-  max-width: 1100px;
-  margin: auto;
-  align-items: center;
-}
-
-.booking-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #aaaaaa;
-}
-
-.highlight {
-  color: #f2b12e;
-}
-
-.booking-subtitle {
-  color: #5f6b7a;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin: 1rem 0 2rem;
-  max-width: 600px;
-}
-
-/* Image styling for desktop */
-.image-section {
-  text-align: center;
-}
-
-.booking-image {
-  width: 80%;
-  max-width: 300px;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Accordion styling */
-.accordion-card {
+.booking-card {
+  max-width: 700px;
+  margin: 0 auto;
   background: #ffffff;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  overflow: hidden;
-  border: 1px solid #e3eaf5;
+  border: 2px solid #eb8d08;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  padding: 30px;
 }
 
-.accordion-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.booking-header {
+  text-align: center;
+  margin-bottom: 25px;
 }
 
-.accordion-header {
+.booking-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e1e1e;
+}
+
+.booking-header p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.booking-form {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.2rem;
-  font-weight: 600;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
   color: #111;
 }
 
-.accordion-header h3 {
-  font-size: 1rem;
-  margin: 0;
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.accordion-content {
-  padding: 0 1.2rem 1rem 1.2rem;
-  color: #5f6b7a;
+.info-card {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  border-radius: 8px;
+  color: #374151;
   font-size: 0.95rem;
-  line-height: 1.5;
-  border-top: 1px solid #e3eaf5;
 }
 
-.accordion-card.active {
-  border-color: #2a6ef0;
+.computation-box {
+  background: #dcdbdb;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #ffffff;
 }
 
-/* ✅ MOBILE STYLING */
-@media (max-width: 768px) {
-  .image-section {
-    display: none; /* Hide the image on mobile */
-  }
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
 
-  .booking-title {
-    font-size: 2rem; /* slightly smaller title */
-  }
+.btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
 
-  .booking-subtitle {
-    font-size: 1rem;
-    max-width: 100%;
-  }
+.btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border: none;
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.btn.outline:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Placeholders */
+.form-group input::placeholder {
+  color: #6b7280;
+  opacity: 1;
 }

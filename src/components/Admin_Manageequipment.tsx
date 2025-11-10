@@ -26,7 +26,7 @@ interface Equipment {
   name: string;
   category: string;
   price: number;
-  unit: "unit"; // <-- remove hectare/kilo
+  unit: "unit";
   quantity: number;
   status: "available" | "maintenance" | "unavailable";
   image_url?: string;
@@ -36,11 +36,12 @@ const Admin_ManageEquipment: React.FC = () => {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState<number | null>(null);
-  const [unit, setUnit] = useState<"unit">("unit"); // default only
+  const [unit, setUnit] = useState<"unit">("unit");
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<"available" | "maintenance" | "unavailable">("available");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -51,18 +52,33 @@ const Admin_ManageEquipment: React.FC = () => {
   const [editData, setEditData] = useState<Partial<Equipment>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch equipment from Supabase
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("equipment")
       .select("*")
       .order("created_at", { ascending: false });
+
     if (!error && data) setEquipment(data);
     setLoading(false);
   };
 
+  // Realtime updates
   useEffect(() => {
     fetchEquipment();
+    const channel = supabase
+      .channel("equipment-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "equipment" },
+        () => fetchEquipment()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,15 +103,15 @@ const Admin_ManageEquipment: React.FC = () => {
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `user-avatars/${fileName}`;
+      const filePath = `equipment-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("user-avatars")
+        .from("equipment-images")
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
       if (!uploadError) {
         const { data: urlData } = supabase.storage
-          .from("user-avatars")
+          .from("equipment-images")
           .getPublicUrl(filePath);
         imageUrl = urlData?.publicUrl ?? null;
       }
@@ -108,7 +124,7 @@ const Admin_ManageEquipment: React.FC = () => {
           name,
           category,
           price,
-          unit, // always "unit"
+          unit,
           quantity,
           status,
           image_url: imageUrl,
@@ -154,23 +170,48 @@ const Admin_ManageEquipment: React.FC = () => {
       return;
     }
 
+    let imageUrl = editData.image_url;
+
+    if (imageFile) {
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `equipment-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("equipment-images")
+        .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from("equipment-images")
+          .getPublicUrl(filePath);
+        imageUrl = urlData?.publicUrl ?? null;
+      }
+    }
+
     await supabase
       .from("equipment")
       .update({
         name: editData.name,
         category: editData.category,
         price: editData.price,
-        unit: "unit", // fixed
+        unit: "unit",
         quantity: editData.quantity,
         status: editData.status,
+        image_url: imageUrl,
       })
       .eq("id", id);
 
     setEquipment(
-      equipment.map((eq) => (eq.id === id ? { ...eq, ...editData } : eq))
+      equipment.map((eq) => (eq.id === id ? { ...eq, ...editData, image_url: imageUrl } : eq))
     );
     setEditingId(null);
     setEditData({});
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setAlertMessage("✅ Equipment updated!");
+    setShowAlert(true);
   };
 
   return (

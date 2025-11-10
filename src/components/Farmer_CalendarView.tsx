@@ -25,7 +25,6 @@ const Farmer_CalendarView: React.FC = () => {
       const { data, error } = await supabase
         .from("bookings")
         .select("id, equipment_name, start_date, end_date, status, total_price, user_id")
-        .eq("status", "approved")
         .order("start_date", { ascending: true });
 
       if (error) {
@@ -43,7 +42,10 @@ const Farmer_CalendarView: React.FC = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
-        () => fetchBookings()
+        (payload) => {
+          console.log("Realtime change:", payload);
+          fetchBookings();
+        }
       )
       .subscribe();
 
@@ -52,17 +54,13 @@ const Farmer_CalendarView: React.FC = () => {
     };
   }, []);
 
-  const bookingsForDate = (date: Date) =>
-    bookings.filter((b) => {
-      const start = new Date(b.start_date);
-      const end = new Date(b.end_date);
-      return date >= start && date <= end;
-    });
+  const bookingsForDate = bookings.filter(
+    (b) => new Date(b.start_date).toDateString() === selectedDate.toDateString()
+  );
 
   return (
     <IonContent className="ion-padding">
-      <h2 className="calendar-title">Bookings Calendar</h2>
-
+      <h2>Booking Management</h2>
       {loading ? (
         <IonSpinner name="crescent" />
       ) : (
@@ -71,35 +69,44 @@ const Farmer_CalendarView: React.FC = () => {
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
               value={selectedDate}
+              showWeekNumbers={false}
               tileClassName={({ date }) =>
-                bookingsForDate(date).length > 0 ? "has-booking" : ""
+                bookings.some(
+                  (b) =>
+                    new Date(b.start_date).toDateString() === date.toDateString()
+                )
+                  ? "has-booking"
+                  : ""
               }
-              tileContent={({ date }) => (
-                <div style={{ fontSize: "0.7rem", marginTop: "2px" }}>
-                  {bookingsForDate(date).map((b) => (
-                    <div key={b.id} style={{ color: "white" }}>
-                      {b.equipment_name}
-                    </div>
-                  ))}
-                </div>
-              )}
             />
           </div>
 
           <div style={{ marginTop: "16px" }}>
             <h3>
-              Bookings on {selectedDate.toDateString()} ({bookingsForDate(selectedDate).length})
+              Bookings on {selectedDate.toDateString()} (
+              {bookingsForDate.length})
             </h3>
-
-            {bookingsForDate(selectedDate).length === 0 ? (
-              <p>No approved bookings on this date.</p>
+            {bookingsForDate.length === 0 ? (
+              <p>No bookings for this date.</p>
             ) : (
-              bookingsForDate(selectedDate).map((b) => (
+              bookingsForDate.map((b) => (
                 <IonCard key={b.id}>
                   <IonCardContent>
                     <strong>{b.equipment_name}</strong> <br />
                     {b.start_date} → {b.end_date} <br />
-                    <span style={{ color: "green" }}>Approved</span>
+                    Status:{" "}
+                    <span
+                      style={{
+                        color:
+                          b.status === "approved"
+                            ? "green"
+                            : b.status === "pending"
+                            ? "orange"
+                            : "red",
+                      }}
+                    >
+                      {b.status}
+                    </span>
                   </IonCardContent>
                 </IonCard>
               ))
@@ -109,23 +116,50 @@ const Farmer_CalendarView: React.FC = () => {
       )}
 
       <style>{`
-        .calendar-title {
-          text-align: left;
-          margin-bottom: 16px;
-        }
         .calendar-container {
           display: flex;
           justify-content: left;
+          width: 100%;
+        }
+        .react-calendar {
+          width: 90%;
+          max-width: 900px;
+          font-size: 1.5rem;
+          border-radius: 1px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .react-calendar__navigation {
+          background-color: #FCB53B;
+        }
+        .react-calendar__navigation button {
+          color: white;
+          font-weight: bold;
+          font-size: 1.1rem;
+        }
+        .react-calendar__month-view__weekdays {
+          background: #FCB53B;
+          font-weight: bold;
+          text-align: center;
+          text-transform: uppercase;
+          color: white;
+        }
+        .react-calendar__month-view__weekdays__weekday {
+          padding: 0.5rem;
         }
         .has-booking {
-          background: #62d26f !important;
-          color: white;
-        
+          background: #ffe9c4 !important;
+          border-radius: 50%;
         }
         .react-calendar__tile--active {
           background: #FCB53B !important;
           color: white !important;
-       
+          border-radius: 50%;
+        }
+        @media (max-width: 768px) {
+          .react-calendar {
+            width: 95%;
+            font-size: 1rem;
+          }
         }
       `}</style>
     </IonContent>

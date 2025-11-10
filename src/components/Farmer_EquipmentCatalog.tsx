@@ -15,12 +15,12 @@ import { supabase } from "../utils/supabaseClient";
 import BookingModal from "./Farmer_BookingModal";
 
 interface Equipment {
-  id: string | number;
+  id: string;
   name: string;
   category: string;
   price: number;
-  status?: string;
-  available?: boolean;
+  status: "available" | "maintenance" | "unavailable";
+  quantity: number;
   image_url?: string;
 }
 
@@ -28,15 +28,15 @@ const EquipmentCatalog: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
-  const [selectedPrice, setSelectedPrice] = useState<number>(0);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
+  // Fetch equipment from Supabase
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("equipment")
-      .select("id, name, category, status, price, image_url");
+      .select("*");
 
     if (error) {
       console.error("Error fetching equipment:", error);
@@ -64,13 +64,19 @@ const EquipmentCatalog: React.FC = () => {
     };
   }, []);
 
-  const openBooking = (eqName: string, eqPrice: number) => {
-    setSelectedEquipment(eqName);
-    setSelectedPrice(eqPrice);
+  const openBooking = (eq: Equipment) => {
+    setSelectedEquipment(eq);
     setIsBookingOpen(true);
   };
 
-  const handleBookingSubmit = async (booking: { startDate: string; endDate: string; location: string; quantity: number }) => {
+  const handleBookingSubmit = async (booking: {
+    startDate: string;
+    endDate: string;
+    location: string;
+    quantity: number;
+  }) => {
+    if (!selectedEquipment) return;
+
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
@@ -79,7 +85,6 @@ const EquipmentCatalog: React.FC = () => {
       }
 
       const userEmail = userData.user.email;
-
       const { data: userRecord } = await supabase
         .from("users")
         .select("user_id")
@@ -93,30 +98,35 @@ const EquipmentCatalog: React.FC = () => {
 
       const user_id = userRecord.user_id;
 
-      const { data: existingBooking } = await supabase
+      // Check for overlapping bookings
+      const { data: overlapping } = await supabase
         .from("bookings")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("equipment_name", selectedEquipment)
-        .in("status", ["pending", "approved"]);
+        .select("*")
+        .eq("equipment_id", selectedEquipment.id)
+        .or(
+          `and(start_date.lte.${booking.endDate},end_date.gte.${booking.startDate})`
+        );
 
-      if (existingBooking && existingBooking.length > 0) {
-        alert("⚠️ You already have an active booking for this equipment.");
+      if (overlapping && overlapping.length > 0) {
+        alert("⚠️ This equipment is already booked for the selected dates.");
         return;
       }
 
+      // Insert booking
       const { data: newBooking, error: bookingError } = await supabase
         .from("bookings")
         .insert([
           {
             user_id,
-            equipment_name: selectedEquipment,
+            equipment_id: selectedEquipment.id,
+            equipment_name: selectedEquipment.name,
             start_date: booking.startDate,
             end_date: booking.endDate,
             location: booking.location,
             quantity: booking.quantity,
             payment_method: "gcash",
             status: "pending",
+            total_price: booking.quantity * selectedEquipment.price,
           },
         ])
         .select()
@@ -124,11 +134,12 @@ const EquipmentCatalog: React.FC = () => {
 
       if (bookingError) throw bookingError;
 
+      // Insert transaction
       const { error: transactionError } = await supabase.from("transactions").insert([
         {
           booking_id: newBooking.id,
           user_id,
-          amount: selectedPrice,
+          amount: booking.quantity * selectedEquipment.price,
           status: "unpaid",
           payment_method: "gcash",
           proof_url: null,
@@ -137,7 +148,7 @@ const EquipmentCatalog: React.FC = () => {
 
       if (transactionError) throw transactionError;
 
-      alert(`✅ Booking created for ${selectedEquipment}. Transaction pending payment.`);
+      alert(`✅ Booking created for ${selectedEquipment.name}. Transaction pending payment.`);
       setIsBookingOpen(false);
     } catch (err) {
       console.error("Booking error:", err);
@@ -146,13 +157,13 @@ const EquipmentCatalog: React.FC = () => {
   };
 
   const getStatusColor = (eq: Equipment) => {
-    if (eq.status === "available" || eq.available) return "success";
+    if (eq.status === "available" && eq.quantity > 0) return "success";
     if (eq.status === "maintenance") return "warning";
     return "medium";
   };
 
   const getStatusText = (eq: Equipment) => {
-    if (eq.status === "available" || eq.available) return "Available";
+    if (eq.status === "available" && eq.quantity > 0) return "Available";
     if (eq.status === "maintenance") return "Maintenance";
     return "Non-available";
   };
@@ -160,9 +171,7 @@ const EquipmentCatalog: React.FC = () => {
   return (
     <div className="equipment-section">
       <h2 className="equipment-title">Available Equipment</h2>
-      <p className="equipment-sub">
-        Browse and book agricultural equipment for your farming needs
-      </p>
+      <p className="equipment-sub">Browse and book agricultural equipment for your farming needs</p>
 
       <IonSearchbar
         value={searchText}
@@ -183,44 +192,44 @@ const EquipmentCatalog: React.FC = () => {
               )
               .map((eq) => (
                 <IonCol size="6" sizeMd="3" key={eq.id}>
-                  <IonCard className="equipment-card">
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        background: "#f9f9f9",
-                        height: "100px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <IonImg
-                        src={eq.image_url || "https://via.placeholder.com/100?text=No+Image"}
-                        alt={eq.name}
-                        style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px" }}
-                      />
-                    </div>
-
-                    <IonCardContent style={{ textAlign: "center", padding: "8px" }}>
-                      <h3 style={{ fontSize: "1rem", margin: "6px 0" }}>{eq.name}</h3>
-                      <p style={{ fontSize: "0.85rem", color: "#666" }}>{eq.category}</p>
-                      <p style={{ fontSize: "0.9rem", marginBottom: "4px" }}>
-                        <strong>₱{eq.price}</strong>
+                  <IonCard
+                    style={{
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
+                      backgroundColor: "#fff",
+                      transition: "transform 0.2s ease",
+                    }}
+                    className="equipment-card"
+                  >
+                    <IonImg
+                      src={eq.image_url || "https://via.placeholder.com/300x200?text=No+Image"}
+                      alt={eq.name}
+                      style={{ width: "100%", height: "140px", objectFit: "cover" }}
+                    />
+                    <IonCardContent style={{ padding: "10px 12px", textAlign: "left" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h3 style={{ fontSize: "1rem", margin: 0, fontWeight: 600 }}>{eq.name}</h3>
+                        <IonBadge color={getStatusColor(eq)} style={{ fontSize: "0.7rem" }}>
+                          {getStatusText(eq)}
+                        </IonBadge>
+                      </div>
+                      <p style={{ fontSize: "0.85rem", color: "#666", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>🌾</span>
+                        <span>{eq.category}</span>
                       </p>
-
-                      <IonBadge color={getStatusColor(eq)} style={{ marginBottom: "6px", fontSize: "0.7rem" }}>
-                        {getStatusText(eq)}
-                      </IonBadge>
-
+                      <p style={{ fontSize: "1rem", color: "#2e7d32", fontWeight: "bold", marginTop: "6px", marginBottom: "0" }}>
+                        ₱{eq.price.toLocaleString()} <span style={{ color: "#888", fontSize: "0.85rem", fontWeight: "normal" }}>/day</span>
+                      </p>
                       <IonButton
                         expand="block"
                         size="small"
                         color={getStatusColor(eq)}
-                        disabled={!(eq.status === "available" || eq.available)}
-                        onClick={() => openBooking(eq.name, eq.price)}
-                        style={{ marginTop: "6px" }}
+                        disabled={!(eq.status === "available" && eq.quantity > 0)}
+                        onClick={() => openBooking(eq)}
+                        style={{ marginTop: "8px", borderRadius: "8px", fontWeight: 600 }}
                       >
-                        {eq.status === "available" || eq.available ? "Book Now" : "Unavailable"}
+                        {eq.status === "available" && eq.quantity > 0 ? "Book Now" : "Unavailable"}
                       </IonButton>
                     </IonCardContent>
                   </IonCard>
@@ -230,13 +239,16 @@ const EquipmentCatalog: React.FC = () => {
         </IonGrid>
       )}
 
-      <BookingModal
-        isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
-        onSubmit={handleBookingSubmit}
-        equipmentName={selectedEquipment || ""}
-        price={selectedPrice}
-      />
+      {selectedEquipment && (
+        <BookingModal
+          isOpen={isBookingOpen}
+          onClose={() => setIsBookingOpen(false)}
+          onSubmit={handleBookingSubmit}
+          equipmentName={selectedEquipment.name}
+          price={selectedEquipment.price}
+          equipmentId={selectedEquipment.id}
+        />
+      )}
     </div>
   );
 };
