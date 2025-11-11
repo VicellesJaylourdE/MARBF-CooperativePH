@@ -87,21 +87,20 @@ const Admin_ManageEquipment: React.FC = () => {
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `equipment-images/${fileName}`;
+      const filePath = `user-avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("equipment-images")
+        .from("user-avatars")
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
       if (!uploadError) {
         const { data: urlData } = supabase.storage
-          .from("equipment-images")
+          .from("user-avatars")
           .getPublicUrl(filePath);
         imageUrl = urlData?.publicUrl ?? null;
       }
     }
 
-    // Insert Data
     const { error } = await supabase
       .from("equipment")
       .insert([
@@ -147,26 +146,24 @@ const Admin_ManageEquipment: React.FC = () => {
 
     let imageUrl = editData.image_url;
 
-    // Re-upload Image if a new file is selected
+
     if (imageFile) {
-      // Image upload logic here (similar to add)
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `equipment-images/${fileName}`;
+      const filePath = `user-avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("equipment-images")
+        .from("user-avatars")
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
       if (!uploadError) {
         const { data: urlData } = supabase.storage
-          .from("equipment-images")
+          .from("user-avatars")
           .getPublicUrl(filePath);
         imageUrl = urlData?.publicUrl ?? null;
       }
     }
 
-    // Update Data
     const { error } = await supabase
       .from("equipment")
       .update({

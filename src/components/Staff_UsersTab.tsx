@@ -103,7 +103,7 @@ const Staff_UsersTab: React.FC = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#000000ff" }}>
+            <thead style={{ backgroundColor: "#e2991cff" }}>
               <tr>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Username</th>
@@ -201,7 +201,7 @@ const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #000000ff",
 };
 
-const rowEven: React.CSSProperties = { backgroundColor: "#000000ff" };
-const rowOdd: React.CSSProperties = { backgroundColor: "#000000ff" };
+const rowEven: React.CSSProperties = { backgroundColor: "#ffffffff" };
+const rowOdd: React.CSSProperties = { backgroundColor: "#ffffffff" };
 
 export default Staff_UsersTab;

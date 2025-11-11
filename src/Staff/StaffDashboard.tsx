@@ -22,7 +22,6 @@ import { supabase } from "../utils/supabaseClient";
 
 import GenerateReports from "../components/Staff_GenerateReports ";
 import Staff_UsersTab from "../components/Staff_UsersTab";
-import LateReturnPenalty from "../components/Staff_LateReturnPenalty";
 import ViewBookingCalendar from "../components/Staff_ViewBookingCalendar";
 import ViewAllTransactions from "./Staff_ViewAllTransactions";
 import ManageRentalBookings from "./ManageRentalBookings";
@@ -303,8 +302,6 @@ const StaffDashboard: React.FC = () => {
   
       case "users":
         return <Staff_UsersTab />;
-      case "latereturnpenalty":
-        return <LateReturnPenalty />;
       case "viewbookingcalendar":
         return <ViewBookingCalendar/>;
       case "managerentalbookings":
