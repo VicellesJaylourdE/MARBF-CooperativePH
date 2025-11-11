@@ -127,7 +127,6 @@ const Admin_ManageEquipment: React.FC = () => {
   const handleDeleteEquipment = async (id: string) => {
     if (!window.confirm("🗑️ Delete this equipment? This cannot be undone.")) return;
     await supabase.from("equipment").delete().eq("id", id);
-    // Realtime listener will handle the UI update
   };
 
   const handleEdit = (eq: Equipment) => {
@@ -177,7 +176,7 @@ const Admin_ManageEquipment: React.FC = () => {
       setAlertMessage(`Error updating equipment: ${error.message}`);
     }
 
-    // Reset editing state
+   
     setEditingId(null);
     setEditData({});
     setImageFile(null);
@@ -250,7 +249,7 @@ const Admin_ManageEquipment: React.FC = () => {
           <IonGrid className="table-grid">
             <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
               <IonCol size="2">Image</IonCol><IonCol size="3">Name</IonCol><IonCol size="2">Price</IonCol>
-              <IonCol size="1">Stock</IonCol><IonCol size="2">Status</IonCol><IonCol size="2">Actions</IonCol>
+              <IonCol size="1">Unit</IonCol><IonCol size="2">Status</IonCol><IonCol size="2">Actions</IonCol>
             </IonRow>
 
             {equipment.map((eq) => (
