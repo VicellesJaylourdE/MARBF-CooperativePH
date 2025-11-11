@@ -119,7 +119,7 @@ const EquipmentCatalog: React.FC = () => {
                         user_id: user_id, 
                         reference_booking: booking.bookingId, 
                         action: "reserve",
-                        quantity_change: -booking.quantity, // Negative value for deduction
+                        quantity_change: -booking.quantity,
                     },
                 ]);
             }
@@ -128,7 +128,7 @@ const EquipmentCatalog: React.FC = () => {
             
         } catch (err: any) {
             console.error("Stock update/logging error:", err);
-            // Kini nga error nagpasabot nga nag-reserve ang user, pero nag-fail ang stock deduction.
+           
             setToastMsg(`⚠️ Stock Error: Booking inserted but stock update failed: ${err.message}. Admin intervention needed.`);
         }
     };

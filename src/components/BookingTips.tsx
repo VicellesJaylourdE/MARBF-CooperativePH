@@ -3,7 +3,6 @@ import { IonGrid, IonRow, IonCol, IonIcon } from "@ionic/react";
 import { chevronDownOutline, chevronUpOutline } from "ionicons/icons";
 import "../theme/BookingTips.css";
 
-// ✅ Replace with your own image for booking tips
 import bookingImage from "../assets/business_16722874.png";
 
 const tips = [

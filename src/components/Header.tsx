@@ -2,7 +2,6 @@ import React from "react";
 import { IonToolbar, IonTitle, IonButton, IonMenuButton } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 
-// Define the props type
 interface HeaderProps {
   scrollToAbout: () => void;
   scrollToContact: () => void;

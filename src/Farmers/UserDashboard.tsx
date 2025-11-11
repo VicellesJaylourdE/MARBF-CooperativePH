@@ -112,10 +112,13 @@ const UserDashboard: React.FC = () => {
                   const canReturn = (() => {
                     const now = new Date();
                     const end = new Date(b.end_date);
-                    return (now > end || (now.toDateString() === end.toDateString() && now.getHours() >= 12)) && b.status !== "returned";
+                  
+                    return (b.status === "in_use" && (now > end || (now.toDateString() === end.toDateString() && now.getHours() >= 12))) && b.status !== "returned";
                   })();
 
                   const getStatusColor = (status: string) => {
+                   
+                    if (status === "in_use") return "#ff6a00ff"; 
                     if (status === "approved") return "green";
                     if (status === "pending") return "orange";
                     if (status === "declined") return "red";
@@ -150,14 +153,16 @@ const UserDashboard: React.FC = () => {
 
                       <div className="receipt-row">
                         <span className="receipt-label">Status:</span>
-                        <span style={{ color: getStatusColor(b.status) }}>{b.status.toUpperCase()}</span>
+                        <span style={{ color: getStatusColor(b.status), fontWeight: 'bold' }}>
+                            {b.status.toUpperCase().replace('_', ' ')}
+                        </span>
                       </div>
 
                       {transaction && (
                         <>
                           <div className="receipt-row">
                             <span className="receipt-label">Payment:</span>
-                            <span style={{ color: getPaymentColor(transaction.status) }}>
+                            <span style={{ color: getPaymentColor(transaction.status), fontWeight: 'bold' }}>
                               {transaction.status.toUpperCase()}
                             </span>
                           </div>
@@ -201,7 +206,7 @@ const UserDashboard: React.FC = () => {
                         Total: ₱{transaction?.amount || b.total_price || 0}
                       </div>
 
-                      {/* CANCEL BUTTON LEFT SIDE */}
+                    
                       {b.status === "pending" && (
                         <IonButton
                           color="danger"
@@ -209,7 +214,11 @@ const UserDashboard: React.FC = () => {
                           style={{ marginRight: "auto", width: "fit-content" }}
                           onClick={async () => {
                             if (!window.confirm("Cancel this booking?")) return;
+                       
                             await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
+                            if (transaction && transaction.status === "unpaid") {
+                                await supabase.from("transactions").update({ status: "cancelled" }).eq("booking_id", b.id);
+                            }
                             fetchBookings();
                           }}
                         >
@@ -217,13 +226,14 @@ const UserDashboard: React.FC = () => {
                         </IonButton>
                       )}
 
-                      {/* MARK AS RETURNED LEFT SIDE */}
-                      {canReturn && transaction?.status === "paid" && (
+                     
+                      {canReturn && b.status === "in_use" && transaction?.status === "paid" && (
                         <IonButton
                           color="warning"
                           className="ion-margin-top"
                           style={{ marginRight: "auto", width: "fit-content" }}
                           onClick={async () => {
+                            if (!window.confirm("Confirm equipment has been returned?")) return;
                             await supabase.from("bookings").update({ status: "returned" }).eq("id", b.id);
                             fetchBookings();
                           }}

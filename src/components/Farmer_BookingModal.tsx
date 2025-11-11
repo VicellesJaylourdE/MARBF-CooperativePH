@@ -376,8 +376,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 <button
                   type="button"
                   className="btn outline"
+                  color="warning"
                   onClick={onClose}
-                  style={{ minWidth: "100px" }}
+                  
+                  style={{ minWidth: "100px",  }}
                 >
                   Cancel
                 </button>

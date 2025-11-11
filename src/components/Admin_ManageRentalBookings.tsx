@@ -11,7 +11,7 @@ interface Booking {
   end_date: string;
   location: string | null;
   payment_method: "cash" | "gcash";
-  status: "pending" | "approved" | "declined" | "cancelled" | "returned";
+  status: "pending" | "approved" | "in_use" | "declined" | "cancelled" | "returned";
   total_price: number | null;
   approved_by: number | null;
   approved_at: string | null;
@@ -47,7 +47,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const [processingIds, setProcessingIds] = useState<string[]>([]); 
   const [searchTerm, setSearchTerm] = useState(""); 
   const [sortOrder, setSortOrder] = useState<"earliest" | "latest">("earliest"); 
 
@@ -91,7 +91,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
   const updateBookingStatus = async (bookingId: string, newStatus: Booking["status"], userId: number, totalPrice: number | null) => {
     try {
       setProcessingIds((prev) => [...prev, bookingId]);
-
+      
       const { error: updateError } = await supabase
         .from("bookings")
         .update({
@@ -129,6 +129,8 @@ const Admin_ManageRentalBookings: React.FC = () => {
         }
       } else if (newStatus === "declined") {
         setToastMessage("❌ Booking declined.");
+      } else if (newStatus === "in_use") {
+        setToastMessage("🚀 Booking status updated to In Use.");
       }
 
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b)));
@@ -140,6 +142,16 @@ const Admin_ManageRentalBookings: React.FC = () => {
     }
   };
 
+  const markBookingInUse = async (bookingId: string) => {
+      const booking = bookings.find((b) => b.id === bookingId);
+      if (!booking || booking.status === "in_use") {
+        setToastMessage("⚠️ Booking is already in use.");
+        return;
+      }
+      
+      await updateBookingStatus(bookingId, "in_use", booking.user_id, booking.total_price);
+  };
+  
   const markTransactionPaid = async (transactionId: string) => {
     try {
       setProcessingIds((prev) => [...prev, transactionId]);
@@ -179,7 +191,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
     try {
       setProcessingIds((prev) => [...prev, bookingId]);
 
-      // Update booking status
+      
       const { error } = await supabase
         .from("bookings")
         .update({
@@ -190,14 +202,14 @@ const Admin_ManageRentalBookings: React.FC = () => {
         .eq("id", bookingId);
       if (error) throw error;
 
-      // Log return in inventory_logs
+    
       await supabase.from("inventory_logs").insert([
         {
           equipment_id: booking.equipment_id,
           user_id: booking.user_id,
           reference_booking: booking.id,
           action: "return",
-          quantity_change: booking.quantity || 1, // add back the quantity
+          quantity_change: booking.quantity || 1, 
           created_at: new Date().toISOString(),
         },
       ]);
@@ -216,12 +228,13 @@ const Admin_ManageRentalBookings: React.FC = () => {
 
   const getStatusColor = (status: Booking["status"]) => {
     switch (status) {
-      case "approved": return "#28a745";
-      case "declined": return "#dc3545";
-      case "cancelled": return "#6c757d";
-      case "returned": return "#17a2b8";
+      case "approved": return "#28a745"; 
+      case "in_use": return "#007bff"; 
+      case "declined": return "#dc3545"; 
+      case "cancelled": return "#6c757d"; 
+      case "returned": return "#17a2b8"; 
       case "pending":
-      default: return "#fd7e14";
+      default: return "#fd7e14"; // Orange
     }
   };
 
@@ -290,8 +303,10 @@ const Admin_ManageRentalBookings: React.FC = () => {
             </thead>
             <tbody>
               {filteredBookings.map((b, idx) => {
-                const canReturn = b.status === "approved" && b.transaction?.[0]?.status === "paid" && new Date(b.end_date) <= new Date();
-                const isProcessing = processingIds.includes(b.id);
+                // Conditions for action buttons
+                const canStartUse = b.status === "approved" && b.transaction?.[0]?.status === "paid" && new Date(b.start_date) <= new Date();
+                const canReturn = (b.status === "in_use" || b.status === "approved") && b.transaction?.[0]?.status === "paid" && new Date(b.end_date) <= new Date();
+                const isProcessing = processingIds.includes(b.id) || (b.transaction?.[0]?.id && processingIds.includes(b.transaction[0].id));
 
                 return (
                   <tr key={b.id}>
@@ -302,7 +317,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
                     <td style={cellStyle}>{b.end_date}</td>
                     <td style={cellStyle}>{b.location || "N/A"}</td>
                     <td style={cellStyle}>{b.total_price ? `₱${b.total_price.toLocaleString()}` : "N/A"}</td>
-                    <td style={cellStyle}><IonBadge style={{ backgroundColor: getStatusColor(b.status), color: "#fff" }}>{b.status.toUpperCase()}</IonBadge></td>
+                    <td style={cellStyle}><IonBadge style={{ backgroundColor: getStatusColor(b.status), color: "#fff" }}>{b.status.toUpperCase().replace('_', ' ')}</IonBadge></td>
                     <td style={cellStyle}>
                       {b.transaction?.[0] ? (
                         <IonBadge style={{ backgroundColor: getPaymentColor(b.transaction[0].status), color: "#fff" }}>
@@ -310,18 +325,30 @@ const Admin_ManageRentalBookings: React.FC = () => {
                         </IonBadge>
                       ) : "N/A"}
                     </td>
-                    <td style={cellStyle}>
-                      {b.status === "pending" && (
+                    <td style={cellStyle} className="ion-text-wrap">
+                      {isProcessing && <IonSpinner name="dots" />}
+                      {!isProcessing && (
                         <>
-                          <IonButton size="small" color="success" disabled={isProcessing} onClick={() => updateBookingStatus(b.id, "approved", b.user_id, b.total_price)}>Approve</IonButton>
-                          <IonButton size="small" color="danger" disabled={isProcessing} onClick={() => updateBookingStatus(b.id, "declined", b.user_id, b.total_price)}>Decline</IonButton>
+                          {b.status === "pending" && (
+                            <>
+                              <IonButton size="small" color="success" onClick={() => updateBookingStatus(b.id, "approved", b.user_id, b.total_price)}>Approve</IonButton>
+                              <IonButton size="small" color="danger" onClick={() => updateBookingStatus(b.id, "declined", b.user_id, b.total_price)}>Decline</IonButton>
+                            </>
+                          )}
+                          {b.status === "approved" && b.transaction?.[0]?.status === "unpaid" && (
+                            <IonButton size="small" color="primary" onClick={() => markTransactionPaid(b.transaction![0].id)}>Mark Paid</IonButton>
+                          )}
+                          
+                         
+                          {canStartUse && b.status === "approved" && (
+                            <IonButton size="small" color="secondary" onClick={() => markBookingInUse(b.id)}>Start Use</IonButton>
+                          )}
+
+                          
+                          {canReturn && b.status !== "returned" && (
+                            <IonButton size="small" color="warning" onClick={() => markBookingReturned(b.id)}>Mark Returned</IonButton>
+                          )}
                         </>
-                      )}
-                      {b.status === "approved" && b.transaction?.[0]?.status === "unpaid" && (
-                        <IonButton size="small" color="primary" disabled={isProcessing} onClick={() => markTransactionPaid(b.transaction![0].id)}>Mark Paid</IonButton>
-                      )}
-                      {canReturn && (
-                        <IonButton size="small" color="warning" disabled={isProcessing} onClick={() => markBookingReturned(b.id)}>Mark Returned</IonButton>
                       )}
                     </td>
                   </tr>
