@@ -7,6 +7,7 @@ import {
   IonAlert,
   IonModal,
   useIonRouter,
+  IonInputPasswordToggle
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
@@ -26,7 +27,6 @@ const RegisterAll: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
-  // 🔹 New state for Terms & Conditions modal
   const [showTermsModal, setShowTermsModal] = useState(false);
 
   const doRegister = async () => {
@@ -146,7 +146,9 @@ const RegisterAll: React.FC = () => {
                         className="input"
                         value={password}
                         onIonChange={(e) => setPassword(e.detail.value!)}
-                      />
+                       >
+                      <IonInputPasswordToggle slot="end" color="warning" />
+                          </IonInput>
                     </div>
                   </div>
 

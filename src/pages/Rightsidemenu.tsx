@@ -31,7 +31,7 @@ const RightSideMenu: React.FC = () => {
     >
       <IonHeader>
         <IonToolbar color="light">
-          <IonTitle style={{ fontWeight: "", color: "white" }}>
+          <IonTitle style={{ fontWeight: "", color: "warning" }}>
             Menu
           </IonTitle>
         </IonToolbar>

@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef, Ref } from "react";
-import { Mail, Github, Linkedin } from "lucide-react";
+import { Mail, Phone, Facebook } from "lucide-react";
 import "../theme/Footer.css";
 
 export interface FooterHandles {
@@ -7,13 +7,11 @@ export interface FooterHandles {
   scrollToContact: () => void;
 }
 
-interface FooterProps {} // No extra props
-
+interface FooterProps {}
 const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHandles>) => {
   const aboutRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
-  // Expose scroll functions to parent via ref
   useImperativeHandle(ref, () => ({
     scrollToAbout: () => aboutRef.current?.scrollIntoView({ behavior: "smooth" }) || undefined,
     scrollToContact: () => contactRef.current?.scrollIntoView({ behavior: "smooth" }) || undefined,
@@ -22,11 +20,9 @@ const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHan
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Logo / Description */}
         <div className="footer-column">
           <div className="footer-logo">
-            <div className="logo-icon">🏡</div>
-            <h2>MARBF Cooperative</h2>
+            <h2>Coop PaBooKid</h2>
           </div>
           <p>
             Modernizing equipment rentals for Mantibugao Agrarian Reform
@@ -34,7 +30,6 @@ const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHan
           </p>
         </div>
 
-        {/* About Us */}
         <div className="footer-column" ref={aboutRef}>
           <h3>About Us</h3>
           <ul>
@@ -43,7 +38,6 @@ const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHan
           </ul>
         </div>
 
-        {/* Customer Support */}
         <div className="footer-column" ref={contactRef}>
           <h3>Customer Support</h3>
           <ul>
@@ -52,19 +46,18 @@ const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHan
           </ul>
         </div>
 
-        {/* Connect */}
         <div className="footer-column">
           <h3>Connect</h3>
           <div className="footer-icons">
             <a href="#"><Mail /></a>
-            <a href="#"><Github /></a>
-            <a href="#"><Linkedin /></a>
+            <a href="#"><Facebook /></a>
+            <a href="#"><Phone /></a>
           </div>
         </div>
       </div>
 
       <div className="footer-bottom">
-        © 2025 MARBF Cooperative. All Rights Reserved.
+        © 2025 Coop PaBooKid . All Rights Reserved.
       </div>
     </footer>
   );

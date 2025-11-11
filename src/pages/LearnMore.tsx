@@ -35,7 +35,7 @@ const LearnMore: React.FC = () => {
             }}
             onClick={() => history.push("/")}
           >
-          MARBF Cooperative.
+          Coop PaBooKid.
           </IonButton>
         </div>
       </IonToolbar>
@@ -48,7 +48,7 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
-            About <span style={{ color: "#FCB53B" }}>MARBF Cooperative</span>
+            About <span style={{ color: "#FCB53B" }}>Coop PaBooKid</span>
           </h1>
           <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#555" }}>
             A digital initiative by the Mantibugao Agrarian Reform Beneficiaries
@@ -65,7 +65,7 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
-        🌱 Our Mission
+         Our Mission
           </h2>
           <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
               Commits to serve our members and the community towards having a better standard of living.
@@ -81,7 +81,7 @@ const LearnMore: React.FC = () => {
           }}
         >
           <h2 style={{ fontWeight: "bold", fontSize: "1.8rem" }}>
-           🌍 Our Vision
+           Our Vision
           </h2>
           <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
              We must for ourselves a strong and viable cooperative that can uplift its members from
@@ -117,7 +117,7 @@ members, to set as a good example.
           }}
         >
           <small style={{ color: "#000000ff" }}>
-            © 2025 MARBF Cooperative.
+            © 2025 Coop PaBooKid
             All rights reserved.
           </small>
         </div>

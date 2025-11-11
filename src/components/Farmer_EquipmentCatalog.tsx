@@ -111,6 +111,7 @@ const EquipmentCatalog: React.FC = () => {
             
             if (updateError) throw updateError;
             
+        
             if (user_id) {
                 await supabase.from("inventory_logs").insert([
                     {
@@ -118,7 +119,7 @@ const EquipmentCatalog: React.FC = () => {
                         user_id: user_id, 
                         reference_booking: booking.bookingId, 
                         action: "reserve",
-                        quantity_change: -booking.quantity,
+                        quantity_change: -booking.quantity, // Negative value for deduction
                     },
                 ]);
             }
@@ -127,6 +128,7 @@ const EquipmentCatalog: React.FC = () => {
             
         } catch (err: any) {
             console.error("Stock update/logging error:", err);
+            // Kini nga error nagpasabot nga nag-reserve ang user, pero nag-fail ang stock deduction.
             setToastMsg(`⚠️ Stock Error: Booking inserted but stock update failed: ${err.message}. Admin intervention needed.`);
         }
     };

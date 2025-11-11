@@ -152,7 +152,6 @@ const Login: React.FC = () => {
     await fetchUser();
   };
 
-  // ✅ UPDATED WITH ACTIVITY LOGS
   const fetchUser = async () => {
     const { data: userData, error: roleError } = await supabase
       .from("users")
@@ -182,7 +181,6 @@ const Login: React.FC = () => {
 
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
-    // ✅ INSERT ACTIVITY LOGS (TIME IN)
     await supabase.from("activity_logs").insert([
       {
         user_id: userInfo.id,
@@ -231,6 +229,7 @@ const Login: React.FC = () => {
                     value={segment}
                     onIonChange={(e) => setSegment(e.detail.value as "email" | "phone")}
                     className="segment"
+                    color="warning"
                   >
                     <IonSegmentButton value="email">
                       <IonLabel>Email</IonLabel>
@@ -266,7 +265,7 @@ const Login: React.FC = () => {
                             value={password}
                             onIonChange={(e) => setPassword(e.detail.value!)}
                           >
-                            <IonInputPasswordToggle slot="end" />
+                            <IonInputPasswordToggle slot="end" color="warning" />
                           </IonInput>
 
                           <span
@@ -298,7 +297,7 @@ const Login: React.FC = () => {
                             value={password}
                             onIonChange={(e) => setPassword(e.detail.value!)}
                           >
-                            <IonInputPasswordToggle slot="end" />
+                            <IonInputPasswordToggle slot="end" color="warning" />
                           </IonInput>
                         </>
                       )}
@@ -324,7 +323,6 @@ const Login: React.FC = () => {
                         )}
                       </IonButton>
 
-                      {/* 🆕 Added Signup Link */}
                       <div className="signup-link">
                         <span>Don't have an account? </span>
                         <a

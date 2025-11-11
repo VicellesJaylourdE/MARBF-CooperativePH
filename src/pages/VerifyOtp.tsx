@@ -6,7 +6,7 @@ import {
   IonButton,
   IonToast,
   IonSpinner,
-  IonInputPasswordToggle, // 👁️ added for show/hide password
+  IonInputPasswordToggle, 
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import { useIonRouter } from "@ionic/react";
@@ -33,7 +33,7 @@ const VerifyOtp: React.FC = () => {
 
     setLoading(true);
 
-    // 1️⃣ Verify OTP
+    
     const { data, error: otpError } = await supabase.auth.verifyOtp({
       email,
       token: otp,
@@ -47,7 +47,7 @@ const VerifyOtp: React.FC = () => {
       return;
     }
 
-    // 2️⃣ Verify old password
+   
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password: oldPassword,
@@ -60,7 +60,7 @@ const VerifyOtp: React.FC = () => {
       return;
     }
 
-    // 3️⃣ Update to new password
+  
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
@@ -83,30 +83,33 @@ const VerifyOtp: React.FC = () => {
         <h2>Verify OTP & Reset Password</h2>
         <p>Enter OTP, your old password, and set a new password.</p>
 
-        {/* OTP Input */}
+        
         <IonInput
           type="text"
           placeholder="Enter OTP"
           maxlength={6}
+         color="warning"
           onIonChange={(e) => setOtp(e.detail.value!)}
         />
 
-        {/* Old Password Input with 👁️ toggle */}
+        
         <IonInput
           type="password"
           placeholder="Enter old password"
+           color="warning"
           onIonChange={(e) => setOldPassword(e.detail.value!)}
         >
-          <IonInputPasswordToggle slot="end" />
+          <IonInputPasswordToggle slot="end"  color="warning" />
         </IonInput>
 
-        {/* New Password Input with 👁️ toggle */}
+       
         <IonInput
           type="password"
           placeholder="Enter new password"
+           color="warning"
           onIonChange={(e) => setNewPassword(e.detail.value!)}
         >
-          <IonInputPasswordToggle slot="end" />
+          <IonInputPasswordToggle slot="end" color="warning"  />
         </IonInput>
 
         <IonButton
