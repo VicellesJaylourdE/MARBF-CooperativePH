@@ -12,6 +12,7 @@ import {
   IonPopover,
   IonButtons,
   IonMenuButton,
+  IonImg, // ✅ GIDUGANG ANG IonImg
 } from "@ionic/react";
 import { logOutOutline, notificationsOutline } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
@@ -20,6 +21,7 @@ const Staff_StaffHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
   const [initials, setInitials] = useState<string>("U");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // ✅ GIDUGANG NGA STATE
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [isLogoutClicked, setIsLogoutClicked] = useState(false);
@@ -42,13 +44,14 @@ const Staff_StaffHeaderBar: React.FC = () => {
       if (user) {
         const { data: profile, error: profileError } = await supabase
           .from("users")
-          .select("username")
+          .select("username, user_avatar_url") // ✅ GI-UPDATE ANG SELECT
           .eq("user_email", user.email)
           .single();
 
         if (profileError || !profile) {
           setUserName("User");
           setInitials("U");
+          setAvatarUrl(null); // ✅ I-SET SA NULL
         } else {
           const username = profile.username;
           setUserName(username);
@@ -57,6 +60,7 @@ const Staff_StaffHeaderBar: React.FC = () => {
             .map((n: string) => n[0]?.toUpperCase())
             .join("");
           setInitials(init);
+          setAvatarUrl(profile.user_avatar_url || null); // ✅ I-SET ANG AVATAR URL
         }
       }
 
@@ -167,22 +171,32 @@ const Staff_StaffHeaderBar: React.FC = () => {
             <IonSpinner name="crescent" />
           ) : (
             <>
+              {/* ✅✅✅ GI-UPDATE NGA AVATAR SECTION */}
               <IonAvatar style={{ width: "35px", height: "35px" }}>
-                <div
-                  style={{
-                    backgroundColor: "#2a62f3",
-                    color: "#fff",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {initials}
-                </div>
+                {avatarUrl ? (
+                  // KUNG NAA'Y PICTURE
+                  <IonImg
+                    src={avatarUrl}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                  />
+                ) : (
+                  // KUNG WALA (INITIALS)
+                  <div
+                    style={{
+                      backgroundColor: "#2a62f3",
+                      color: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                )}
               </IonAvatar>
 
               {!isMobile && (
@@ -235,8 +249,6 @@ const Staff_StaffHeaderBar: React.FC = () => {
                   )}
                 </div>
               </IonPopover>
-
-              {/* ✅ LOGOUT BUTTON (WITH ACTIVITY LOGS) */}
               <IonButton
                 fill="clear"
                 color={isLogoutClicked ? "warning" : "medium"}

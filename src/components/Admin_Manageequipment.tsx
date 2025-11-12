@@ -346,7 +346,7 @@ const Admin_ManageEquipment: React.FC = () => {
               ))}
             </IonGrid>
 
-            {/* Mobile View: IonList (Hidden on medium/large screens) */}
+           
             <IonList className="ion-hide-sm-up">
               {equipment.map((eq) => (
                 <IonItem key={eq.id} lines="full" style={{flexWrap: 'wrap', paddingBottom: '10px'}}>
