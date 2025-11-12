@@ -30,7 +30,7 @@ const LearnMore: React.FC = () => {
             style={{
               fontWeight: "bold",
               fontSize: "1.05rem",
-              color: isDark ? "white" : "black",
+              color: isDark ? "black" : "",
               
             }}
             onClick={() => history.push("/")}
@@ -74,8 +74,8 @@ const LearnMore: React.FC = () => {
         </div>
         <div
           style={{
-            backgroundColor: "#ffffffff",
-            color: "#000000ff",
+          
+          
             padding: "4rem 1rem",
             textAlign: "center",
           }}
@@ -108,15 +108,15 @@ members, to set as a good example.
 
         <div
           style={{
-            backgroundColor: "#fffdfdff",
+           
             padding: "1rem",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            borderTop: "1px solid #ccc",
+           
           }}
         >
-          <small style={{ color: "#000000ff" }}>
+          <small style={{ }}>
             © 2025 Coop PaBooKid
             All rights reserved.
           </small>
