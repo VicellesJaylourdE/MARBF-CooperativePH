@@ -20,6 +20,7 @@ import {
   gridOutline,
   printOutline,
   settingsOutline,
+  personCircleOutline,
 } from "ionicons/icons";
 
 interface StaffSidebarProps {
@@ -63,6 +64,10 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
              <IonItem button onClick={() => setActiveTab("generatereports")}>
             <IonIcon icon={printOutline} slot="start" />
             <IonLabel>GenerateReports</IonLabel>
+          </IonItem>
+           <IonItem button onClick={() => setActiveTab("myprofile")}>
+            <IonIcon icon={personCircleOutline} slot="start" />
+            <IonLabel>My Profile</IonLabel>
           </IonItem>
         </IonList>
       </IonContent>

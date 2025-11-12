@@ -205,12 +205,6 @@ const Admin_ManageEquipment: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Manage Equipment</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
       <IonContent className="ion-padding">
         
         <IonList>

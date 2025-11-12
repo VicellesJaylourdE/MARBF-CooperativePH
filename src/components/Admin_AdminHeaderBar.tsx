@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 import {
   IonHeader,
   IonToolbar,
@@ -12,6 +13,7 @@ import {
   IonPopover,
   IonButtons,
   IonMenuButton,
+  IonImg, // ✅ GIDUGANG ANG IonImg
 } from "@ionic/react";
 import {
   logOutOutline,
@@ -23,9 +25,12 @@ const Admin_AdminHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
   const [initials, setInitials] = useState<string>("U");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // ✅ GIDUGANG NGA STATE PARA SA AVATAR
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [isLogoutClicked, setIsLogoutClicked] = useState(false);
+
+  const history = useHistory();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -45,13 +50,14 @@ const Admin_AdminHeaderBar: React.FC = () => {
       if (user) {
         const { data: profile, error: profileError } = await supabase
           .from("users")
-          .select("username")
+          .select("username, user_avatar_url") // Kini nga select sakto na
           .eq("user_email", user.email)
           .single();
 
         if (profileError || !profile) {
           setUserName("User");
           setInitials("U");
+          setAvatarUrl(null); // ✅ I-SET SA NULL KUNG WALAY PROFILE
         } else {
           const username = profile.username;
           setUserName(username);
@@ -60,6 +66,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
             .map((n: string) => n[0]?.toUpperCase())
             .join("");
           setInitials(init);
+          setAvatarUrl(profile.user_avatar_url || null); // ✅ I-SET ANG AVATAR URL GIKAN SA PROFILE
         }
       }
 
@@ -129,6 +136,10 @@ const Admin_AdminHeaderBar: React.FC = () => {
     }
   };
 
+  const handleProfileClick = () => {
+    history.push('/admin/myprofile'); 
+  };
+
   return (
     <IonHeader>
       <IonToolbar color="light">
@@ -137,7 +148,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
         </IonButtons>
 
         <IonTitle style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>Admin Dasboard</div>
+          <div style={{ display: "flex", alignItems: "center" }}>Admin Dashboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
               Welcome back, {userName}
@@ -159,22 +170,39 @@ const Admin_AdminHeaderBar: React.FC = () => {
             <IonSpinner name="crescent" />
           ) : (
             <>
-              <IonAvatar style={{ width: "35px", height: "35px" }}>
-                <div
-                  style={{
-                    backgroundColor: "#2a62f3",
-                    color: "#fff",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {initials}
-                </div>
+              {/* ✅ GI-UPDATE NGA AVATAR SECTION */}
+              <IonAvatar 
+                style={{ 
+                  width: "35px", 
+                  height: "35px",
+                  cursor: "pointer", // Gipabilin ang cursor
+                }}
+                onClick={handleProfileClick} // Gipabilin ang onClick
+              >
+                {avatarUrl ? (
+                  // KUNG NAA'Y PICTURE URL, GAMIT OG IonImg
+                  <IonImg
+                    src={avatarUrl}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                  />
+                ) : (
+                  // KUNG WALA, GAMIT OG INITIALS (sama sa daan)
+                  <div
+                    style={{
+                      backgroundColor: "#2a62f3",
+                      color: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                )}
               </IonAvatar>
 
               {!isMobile && (
@@ -226,7 +254,6 @@ const Admin_AdminHeaderBar: React.FC = () => {
                 </div>
               </IonPopover>
 
-              {/* ✅ REPLACED LOGOUT BUTTON */}
               <IonButton
                 fill="clear"
                 color={isLogoutClicked ? "warning" : "medium"}

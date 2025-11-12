@@ -4,7 +4,7 @@ import {
   IonContent,
   IonHeader,
   IonButtons,
-  IonBackButton, // <-- Naa na ni
+  IonBackButton,
   IonInput,
   IonButton,
   IonAlert,
@@ -16,12 +16,12 @@ import {
   IonText,
   IonInputPasswordToggle,
   IonSpinner,
-  IonListHeader, // Added for section headers
+  IonListHeader,
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import { useHistory } from "react-router-dom";
 
-const Farmer_MyProfile: React.FC = () => {
+const Admin_MyProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -41,7 +41,6 @@ const Farmer_MyProfile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const history = useHistory();
 
-  // 🔹 Fetch logged-in user info
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -103,7 +102,6 @@ const Farmer_MyProfile: React.FC = () => {
         return;
       }
 
-      // Verify current password
       const { data: session } = await supabase.auth.getSession();
       const user = session?.session?.user;
       if (!user) return;
@@ -118,8 +116,6 @@ const Farmer_MyProfile: React.FC = () => {
         setShowAlert(true);
         return;
       }
-
-      // ✅ Check for duplicate phone numbers
       if (phone && phone !== originalPhone) {
         const { data: existingUser } = await supabase
           .from("users")
@@ -134,8 +130,6 @@ const Farmer_MyProfile: React.FC = () => {
           return;
         }
       }
-
-      // Avatar upload
       let avatarUrl = avatarPreview;
       if (avatarFile) {
         const fileExt = avatarFile.name.split(".").pop();
@@ -158,8 +152,6 @@ const Farmer_MyProfile: React.FC = () => {
 
         avatarUrl = publicUrlData.publicUrl;
       }
-
-      // Prepare update data
       const updateData: any = {
         username,
         user_firstname: firstName,
@@ -171,7 +163,6 @@ const Farmer_MyProfile: React.FC = () => {
         updateData.user_phone = phone;
       }
 
-      // Update users table
       const { error: updateError } = await supabase
         .from("users")
         .update(updateData)
@@ -183,7 +174,6 @@ const Farmer_MyProfile: React.FC = () => {
         return;
       }
 
-      // Optional: change password
       if (newPassword) {
         if (newPassword !== confirmPassword) {
           setAlertMessage("New passwords do not match.");
@@ -202,7 +192,7 @@ const Farmer_MyProfile: React.FC = () => {
         }
       }
 
-      setOriginalPhone(phone); // update cached phone number
+      setOriginalPhone(phone);
       setAlertMessage("✅ Profile updated successfully!");
       setShowAlert(true);
     } catch (error: any) {
@@ -224,12 +214,9 @@ const Farmer_MyProfile: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonButtons slot="start">
-          {/* 👇 GI-USAB NA NI NGA LINYA PADULONG SA IMONG GUSTO */}
-          <IonBackButton defaultHref="/userdashboard" />
-        </IonButtons>
-      </IonHeader>
+     
+       
+      
 
       <IonContent className="ion-padding">
         <IonText color="secondary">
@@ -434,4 +421,4 @@ const Farmer_MyProfile: React.FC = () => {
   );
 };
 
-export default Farmer_MyProfile;
+export default Admin_MyProfile;

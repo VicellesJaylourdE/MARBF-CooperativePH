@@ -133,14 +133,13 @@ const EquipmentCatalog: React.FC = () => {
         }
     };
 
-    {/* --- GIUSAB NGA FUNCTION --- */}
-    {/* Kani na function mo check na sa 3 ka status: available, maintenance, or unavailable */}
+    
     const getStatusColor = (eq: Equipment): "success" | "warning" | "medium" => {
         if (eq.status === "available" && eq.quantity > 0) {
             return "success";
         }
         if (eq.status === "maintenance") {
-            return "warning"; // Warning color (yellow) para sa maintenance
+            return "warning";
         }
         return "medium";
     };
