@@ -10,17 +10,15 @@ import { supabase } from "../utils/supabaseClient";
 
 interface Booking {
   id: string;
-  user_id: number; 
+  user_id: number;
   equipment_name: string;
   start_date: string;
   end_date: string;
-
-  status: "pending" | "approved" | "in_use" | "declined" | "cancelled" | "returned"; 
+  status: "pending" | "approved" | "in_use" | "declined" | "cancelled" | "returned";
   total_price: number;
   quantity: number;
   user_name?: string;
 }
-
 
 const Farmer_CalendarView: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -31,45 +29,48 @@ const Farmer_CalendarView: React.FC = () => {
     const fetchAndMergeBookings = async () => {
       setLoading(true);
       try {
+        // ✅ Get logged-in user
+        const { data: { user } } = await supabase.auth.getUser();
 
+        if (!user) {
+          console.error("❌ No logged-in user found.");
+          setBookings([]);
+          setLoading(false);
+          return;
+        }
+
+        // ✅ Get user_id from "users" table using email (same as UserDashboard)
+        const { data: userData, error: userDataError } = await supabase
+          .from("users")
+          .select("user_id, username, user_firstname, user_lastname")
+          .eq("user_email", user.email)
+          .single();
+
+        if (userDataError || !userData) {
+          console.error("❌ No matching user record found:", userDataError?.message);
+          setBookings([]);
+          setLoading(false);
+          return;
+        }
+
+        // ✅ Fetch only bookings of this user
         const { data: bookingsData, error: bookingsError } = await supabase
           .from("bookings")
-          .select(
-            "id, user_id, equipment_name, start_date, end_date, status, total_price, quantity"
-          )
+          .select("id, user_id, equipment_name, start_date, end_date, status, total_price, quantity")
+          .eq("user_id", userData.user_id)
           .order("start_date", { ascending: true });
 
         if (bookingsError) throw bookingsError;
 
-        const userIds = [
-          ...new Set(bookingsData.map((b) => b.user_id)),
-        ];
-
-        let usersData: any[] | null = [];
-        if (userIds.length > 0) {
-
-          const { data: fetchedUsers, error: usersError } = await supabase
-            .from("users")
-            .select("user_id, username, user_firstname, user_lastname")
-            .in("user_id", userIds);
-          if (usersError) throw usersError;
-          usersData = fetchedUsers;
-        }
-
-        const merged: Booking[] = (bookingsData as any[]).map((booking) => {
-          const user = usersData?.find((u) => u.user_id === booking.user_id);
-        
-          const userName = user
-            ? user.username ||
-              `${user.user_firstname || ""} ${user.user_lastname || ""}`.trim()
-            : "Unknown User";
-
-          return {
-            ...booking,
-            user_name: userName, 
-            quantity: booking.quantity || 1, 
-          } as Booking; 
-        });
+        // ✅ Merge user info into bookings
+        const merged: Booking[] = (bookingsData as any[]).map((booking) => ({
+          ...booking,
+          user_name:
+            userData.username ||
+            `${userData.user_firstname || ""} ${userData.user_lastname || ""}`.trim() ||
+            "Unknown User",
+          quantity: booking.quantity || 1,
+        }));
 
         setBookings(merged);
       } catch (error: any) {
@@ -81,7 +82,8 @@ const Farmer_CalendarView: React.FC = () => {
     };
 
     fetchAndMergeBookings();
-    
+
+    // ✅ Real-time updates (auto refresh calendar)
     const channel = supabase
       .channel("bookings-changes-calendar")
       .on(
@@ -98,8 +100,8 @@ const Farmer_CalendarView: React.FC = () => {
     };
   }, []);
 
+  // 🔹 Filter bookings per date
   const getBookingsOnDate = (date: Date) => {
-
     const selectedDateOnly = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -109,7 +111,7 @@ const Farmer_CalendarView: React.FC = () => {
     return bookings.filter((b) => {
       const start = new Date(b.start_date);
       const end = new Date(b.end_date);
-      
+
       const tempStart = new Date(
         start.getFullYear(),
         start.getMonth(),
@@ -128,22 +130,21 @@ const Farmer_CalendarView: React.FC = () => {
   const getStatusColor = (status: Booking["status"]) => {
     switch (status) {
       case "approved":
-        return "#28a745"; 
+        return "#28a745";
       case "in_use":
-        return "#007bff"; 
+        return "#007bff";
       case "pending":
-        return "#fd7e14"; 
+        return "#fd7e14";
       case "declined":
         return "#dc3545";
       case "cancelled":
-        return "#6c757d"; 
+        return "#6c757d";
       case "returned":
-        return "#17a2b8"; 
+        return "#17a2b8";
       default:
         return "#999";
     }
   };
-
 
   const bookingsForSelectedDate = getBookingsOnDate(selectedDate);
 
@@ -164,8 +165,8 @@ const Farmer_CalendarView: React.FC = () => {
 
   return (
     <IonContent className="ion-padding custom-content">
-      <h2 style={{ }}>Booking Management Calendar </h2>
-      
+      <h2>Booking Management Calendar</h2>
+
       {loading ? (
         <div className="ion-text-center ion-padding">
           <IonSpinner name="crescent" color="warning" />
@@ -174,7 +175,6 @@ const Farmer_CalendarView: React.FC = () => {
       ) : (
         <>
           <div className="calendar-container">
-
             <Calendar
               onChange={(date) => setSelectedDate(date as Date)}
               value={selectedDate}
@@ -212,13 +212,16 @@ const Farmer_CalendarView: React.FC = () => {
               <p>No bookings found for this date.</p>
             ) : (
               bookingsForSelectedDate.map((b) => (
-                <IonCard
-                  key={b.id}
-                  style={getCardStyle(b.status)}
-                >
-                  
+                <IonCard key={b.id} style={getCardStyle(b.status)}>
                   <div style={cardContentStyle}>
-                    <div style={{ marginBottom: "5px", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        marginBottom: "5px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <strong style={{ fontSize: "1.1em" }}>
                         {b.equipment_name}
                       </strong>
@@ -232,13 +235,12 @@ const Farmer_CalendarView: React.FC = () => {
                           fontSize: "0.8em",
                         }}
                       >
-                        {b.status.toUpperCase().replace('_', ' ')}
+                        {b.status.toUpperCase().replace("_", " ")}
                       </span>
                     </div>
 
-                    
                     <p style={{ margin: "3px 0", fontSize: "0.9em" }}>
-                      👤 Booked By: {" "}
+                      👤 Booked By:{" "}
                       <code
                         style={{
                           backgroundColor: "#f0f0f0",
@@ -274,20 +276,15 @@ const Farmer_CalendarView: React.FC = () => {
         </>
       )}
 
-    
       <style>{`
-        /* --- GLOBAL CONTENT CONTAINER (Mas Dako) --- */
         .custom-content {
-            --padding-start: 16px;
-            --padding-end: 16px;
-            --padding-top: 16px;
-            --padding-bottom: 16px;
-            
-            max-width: 1400px; 
-            margin: 0 auto;
+          --padding-start: 16px;
+          --padding-end: 16px;
+          --padding-top: 16px;
+          --padding-bottom: 16px;
+          max-width: 1400px;
+          margin: 0 auto;
         }
-
-        /* --- CALENDAR CONTAINER --- */
         .calendar-container {
           display: flex;
           justify-content: center;
@@ -295,23 +292,18 @@ const Farmer_CalendarView: React.FC = () => {
           position: relative;
           margin-top: 20px;
         }
-        
-        /* --- REACT CALENDAR STYLES (Para sa Laptop) --- */
         .react-calendar {
-        
           width: 100%;
-          max-width: 1200px; 
+          max-width: 1200px;
           border-radius: 12px;
           border: 1px solid #ccc;
           box-shadow: 0 4px 12px rgba(0,0,0,0.1);
           font-family: sans-serif;
           font-size: 1.05rem;
         }
-        
-        /* Navigation Header */
         .react-calendar__navigation {
-          background-color: #FCB53B; 
-          height: 50px; 
+          background-color: #FCB53B;
+          height: 50px;
         }
         .react-calendar__navigation button {
           color: white;
@@ -320,9 +312,8 @@ const Farmer_CalendarView: React.FC = () => {
           transition: background-color 0.2s;
         }
         .react-calendar__navigation button:hover:not(:disabled) {
-            background-color: rgba(255, 255, 255, 0.2);
+          background-color: rgba(255, 255, 255, 0.2);
         }
-        /* Weekdays */
         .react-calendar__month-view__weekdays {
           background: #fce7b7;
           font-weight: bold;
@@ -332,52 +323,39 @@ const Farmer_CalendarView: React.FC = () => {
           font-size: 0.8em;
           padding: 5px 0;
         }
-        .react-calendar__month-view__weekdays__weekday {
-          padding: 0.5rem;
-        }
-        /* Day Tile with Booking */
         .has-booking {
-          background: #ffe9c4 !important; 
+          background: #ffe9c4 !important;
           border-radius: 8px !important;
         }
-        /* Selected Day Tile */
         .react-calendar__tile--active {
-          background: #FCB53B !important; 
+          background: #FCB53B !important;
           color: white !important;
-          
         }
         .react-calendar__tile--active:hover {
-              background: #e6a735 !important; 
+          background: #e6a735 !important;
         }
-        /* Selected Tile with Booking (Active + has-booking) */
         .react-calendar__tile--active.has-booking {
-            background: #FCB53B !important; 
+          background: #FCB53B !important;
         }
-        
-        /* Today's date */
         .react-calendar__tile--now {
-            background: #f0f0f0; 
-            border-radius: 8px; 
+          background: #f0f0f0;
+          border-radius: 8px;
         }
         .react-calendar__tile--now:hover {
-            background: #e0e0e0;
+          background: #e0e0e0;
         }
-
-        /* Booking Dots Container */
         .booking-dots-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 2px;
+          display: flex;
+          justify-content: center;
+          margin-top: 2px;
         }
         .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            margin: 0 1px;
-            display: inline-block;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          margin: 0 1px;
+          display: inline-block;
         }
-        
-        /* --- MOBILE ADAPTATION (Small Screens) --- */
         @media (max-width: 768px) {
           .react-calendar {
             width: 100%;

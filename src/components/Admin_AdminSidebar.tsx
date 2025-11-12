@@ -56,7 +56,7 @@ const Admin_AdminSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
 
           <IonItem button onClick={() => setActiveTab("manageusers")}>
             <IonIcon icon={peopleOutline} slot="start" />
-            <IonLabel>Manage Users</IonLabel>
+            <IonLabel>Create Users</IonLabel>
           </IonItem>
 
            <IonItem button onClick={() => setActiveTab("manageequipment")}>

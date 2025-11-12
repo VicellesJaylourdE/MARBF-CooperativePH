@@ -11,6 +11,7 @@ import {
   IonBadge,
   IonPopover,
   IonButtons,
+  IonImg,
 } from "@ionic/react";
 import { logOutOutline, notificationsOutline } from "ionicons/icons";
 import { supabase } from "../utils/supabaseClient";
@@ -19,9 +20,9 @@ const Farmer_HeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
   const [initials, setInitials] = useState<string>("U");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
-  const [isLogoutClicked, setIsLogoutClicked] = useState(false);
   const [loginMethod, setLoginMethod] = useState<string>("User");
 
   useEffect(() => {
@@ -43,12 +44,13 @@ const Farmer_HeaderBar: React.FC = () => {
         const method = user.email ? "Email" : user.phone ? "Phone" : "User";
         setLoginMethod(method);
 
+        // 🔹 Fetch profile info
         let profile: any = null;
 
         if (user.email) {
           const { data, error } = await supabase
             .from("users")
-            .select("username")
+            .select("username, user_avatar_url")
             .eq("user_email", user.email)
             .single();
           profile = data;
@@ -56,7 +58,7 @@ const Farmer_HeaderBar: React.FC = () => {
         } else if (user.phone) {
           const { data, error } = await supabase
             .from("users")
-            .select("username")
+            .select("username, user_avatar_url")
             .eq("user_phone", user.phone)
             .single();
           profile = data;
@@ -66,10 +68,16 @@ const Farmer_HeaderBar: React.FC = () => {
         if (!profile) {
           setUserName("User");
           setInitials("U");
+          setAvatarUrl(null);
         } else {
-          const username = profile.username;
+          const username = profile.username || "User";
+          const initials = username
+            .split(" ")
+            .map((n: string) => n[0]?.toUpperCase())
+            .join("");
           setUserName(username);
-          setInitials(username.split(" ").map((n: string) => n[0]?.toUpperCase()).join(""));
+          setInitials(initials);
+          setAvatarUrl(profile.user_avatar_url || null);
         }
       }
 
@@ -89,6 +97,7 @@ const Farmer_HeaderBar: React.FC = () => {
     fetchUserData();
     fetchNotifications();
 
+    // 🔹 Real-time notifications
     const channel = supabase
       .channel("user-notifications-channel")
       .on(
@@ -155,6 +164,7 @@ const Farmer_HeaderBar: React.FC = () => {
           )}
         </IonTitle>
 
+        {/* === RIGHT SIDE ICONS === */}
         <div
           style={{
             position: "absolute",
@@ -169,24 +179,33 @@ const Farmer_HeaderBar: React.FC = () => {
             <IonSpinner name="crescent" />
           ) : (
             <>
+              {/* ✅ Avatar or initials */}
               <IonAvatar style={{ width: "35px", height: "35px" }}>
-                <div
-                  style={{
-                    backgroundColor: "#2a62f3",
-                    color: "#fff",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {initials}
-                </div>
+                {avatarUrl ? (
+                  <IonImg
+                    src={avatarUrl}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: "#2a62f3",
+                      color: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                )}
               </IonAvatar>
 
+              {/* ✅ User Info */}
               {!isMobile && (
                 <div style={{ textAlign: "right", marginRight: "4px" }}>
                   <IonLabel style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
@@ -199,6 +218,7 @@ const Farmer_HeaderBar: React.FC = () => {
                 </div>
               )}
 
+              {/* ✅ Notifications */}
               <IonButton id="admin-notif-btn" fill="clear">
                 <IonIcon icon={notificationsOutline} />
                 {notifications.filter((n) => !n.is_read).length > 0 && (
@@ -246,12 +266,8 @@ const Farmer_HeaderBar: React.FC = () => {
                 </div>
               </IonPopover>
 
-              {/* ✅ NEW LOGOUT BUTTON WITH ACTIVITY LOG */}
-              <IonButton
-                fill="clear"
-                color={isLogoutClicked ? "warning" : "medium"}
-                onClick={handleLogout}
-              >
+              {/* ✅ Logout */}
+              <IonButton fill="clear" color="medium" onClick={handleLogout}>
                 <IonIcon icon={logOutOutline} />
               </IonButton>
             </>

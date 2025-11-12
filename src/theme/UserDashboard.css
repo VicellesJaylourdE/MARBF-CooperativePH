@@ -1,68 +1,51 @@
-/* Equipment Section */
-.equipment-section {
-  padding: 20px;
-}
-
-.equipment-title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-}
-
-.equipment-sub {
-  font-size: 0.95rem;
-  color: gray;
-  margin-bottom: 10px;
-}
-
-.equipment-card {
-  text-align: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #e0f7e9, #f7fff9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.equip-icon {
-  font-size: 2.5rem;
-  color: #28a745;
-  margin-bottom: 10px;
-}
-
+/* Para sa Receipt Card sa Bookings */
 .receipt-card {
-  border: 1px dashed #999;
-  background: #fff;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  font-family: "Courier New", monospace;
 }
 
 .receipt-header {
-  text-align: center;
+  font-size: 1.2rem;
   font-weight: bold;
-  font-size: 1.1rem;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed #999;
-  margin-bottom: 8px;
+  color: var(--ion-color-primary);
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .receipt-row {
   display: flex;
   justify-content: space-between;
-  margin: 4px 0;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
 }
 
 .receipt-label {
-  font-weight: bold;
+  font-weight: 500;
+  color: #666;
 }
 
 .receipt-total {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed #999;
+  font-size: 1.1rem;
   font-weight: bold;
   text-align: right;
-  font-size: 1.1rem;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed #ccc;
+  color: var(--ion-color-secondary);
 }
 
+/* ===============================================
+  KINI ANG IMONG GIPANGAYO PARA MOGAMAY ANG TABS
+===============================================
+*/
+.small-segment-tabs ion-segment-button ion-label {
+  font-size: 0.8rem;    /* Ginamay nga font size */
+  white-space: normal;  /* Mo-wrap ang text kung taas ra */
+  line-height: 1.2;     /* Spacing sa wrapped text */
+  padding-top: 2px;
+  padding-bottom: 2px;
+  text-transform: none; /* Para dili tanan-uppercase (opsyonal) */
+}

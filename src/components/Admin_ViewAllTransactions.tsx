@@ -102,10 +102,6 @@ const Admin_ViewAllTransactions: React.FC = () => {
         <h2 style={{ fontWeight: "bold", fontSize: "1.3rem" }}>
           View All Transactions
         </h2>
-        <p>
-          List of all transactions with Booking, User, Quantity, Payment Proof,
-          and GCash Reference.
-        </p>
         <p style={{ fontWeight: 600 }}>
           Total Transactions: {filteredTransactions.length}
         </p>
