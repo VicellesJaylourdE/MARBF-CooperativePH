@@ -175,16 +175,11 @@ const UserDashboard: React.FC = () => {
             <IonLabel>My Profile</IonLabel>
           </IonSegmentButton>
         </IonSegment>
-
-        {/* ************************************************** */}
-        {/* CONDITIONAL RENDERING */}
-        {/* ************************************************** */}
         
         {segment === "catalog" && <EquipmentCatalog />}
 
         {segment === "calendar" && <CalendarView />}
 
-        {/* I-ADD ANG PROFILE VIEW DIRI */}
         {segment === "profile" && <MyProfile />} 
         
         {segment === "bookings" && (

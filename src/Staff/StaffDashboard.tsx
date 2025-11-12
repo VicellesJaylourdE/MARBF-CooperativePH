@@ -26,6 +26,7 @@ import Staff_UsersTab from "../components/Staff_UsersTab";
 import ViewBookingCalendar from "../components/Staff_ViewBookingCalendar";
 import ViewAllTransactions from "./Staff_ViewAllTransactions";
 import ManageRentalBookings from "./ManageRentalBookings";
+import EquipmentList from "../components/Staff_EquipmentList";
 import {
   BarChart,
   Bar,
@@ -478,6 +479,8 @@ const StaffDashboard: React.FC = () => {
         return <ViewAllTransactions/>;
          case "generatereports":
         return <GenerateReports/>;
+        case "equipmentlist":
+        return <EquipmentList/>;
       default:
         return null;
     }

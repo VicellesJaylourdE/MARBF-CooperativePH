@@ -125,15 +125,7 @@ const EquipmentList: React.FC = () => {
     fetchEquipment();  
   };
 
-  const handleDeleteEquipment = async (id: string) => {
-    if (!window.confirm("🗑️ Delete this equipment? This cannot be undone.")) return;
-    const { error } = await supabase.from("equipment").delete().eq("id", id);
-    if (error) {
-      setAlertMessage(`Error deleting equipment: ${error.message}`);
-      setShowAlert(true);
-    }
-    fetchEquipment(); 
-  };
+  
 
   const handleEdit = (eq: Equipment) => {
     setEditingId(eq.id);
@@ -206,54 +198,9 @@ const EquipmentList: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Manage Equipment</IonTitle>
-        </IonToolbar>
       </IonHeader>
 
       <IonContent className="ion-padding">
-        
-        <IonList>
-          <IonItem><IonLabel position="stacked">Name</IonLabel><IonInput value={name} onIonChange={(e) => setName(e.detail.value!)} /></IonItem>
-          <IonItem><IonLabel position="stacked">Category</IonLabel><IonInput value={category} onIonChange={(e) => setCategory(e.detail.value!)} /></IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Price (₱/day)</IonLabel>
-            <IonInput type="number" value={price ?? ""} onIonChange={(e) => setPrice(Number(e.detail.value!))} />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Quantity (Initial Unit)</IonLabel>
-            <IonInput type="number" value={quantity} onIonChange={(e) => setQuantity(Number(e.detail.value!))} min="0" />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Upload Image</IonLabel>
-            <input
-              type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange}
-                />
-            <IonButton expand="block" size="small" onClick={() => fileInputRef.current?.click()} style={{marginTop: '10px'}}>
-              Choose Image
-            </IonButton>
-          </IonItem>
-
-          {imagePreview && (
-            <IonRow className="ion-justify-content-center ion-align-items-center">
-              <IonCol className="ion-text-center">
-                <IonImg src={imagePreview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", marginTop: "10px", borderRadius: '4px' }}/>
-              </IonCol>
-            </IonRow>
-          )}
-          
-          <IonButton expand="block" color="warning" onClick={handleAddEquipment} disabled={uploading} style={{marginTop: '20px'}}>
-            {uploading ? (
-                <>
-                    <IonSpinner name="crescent" color="light" style={{marginRight: '8px'}} /> Uploading...
-                </>
-            ) : (
-                "Add Equipment"
-            )}
-          </IonButton>
-        </IonList>
-
-       
         {loading ? (
           <div className="ion-text-center" style={{padding: '20px'}}>
             <IonSpinner name="dots" /> <p>Loading Equipment...</p>
@@ -261,8 +208,8 @@ const EquipmentList: React.FC = () => {
         ) : (
           <>
           
-            <IonGrid className="table-grid ion-hide-sm-down">
-              <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
+            <IonGrid className="table-grid ion-hide-sm-down" >
+              <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #e2c419ff" }}>
                 <IonCol size-lg="2" size-md="2">Image</IonCol>
                 <IonCol size-lg="3" size-md="3">Name/Category</IonCol>
                 <IonCol size-lg="2" size-md="2">Price</IonCol>
@@ -344,7 +291,7 @@ const EquipmentList: React.FC = () => {
                     ) : (
                       <>
                         <IonButton color="warning" size="small" onClick={() => handleEdit(eq)}>Edit</IonButton>
-                        <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)} style={{marginLeft: '4px'}}>Delete</IonButton>
+                      
                       </>
                     )}
                   </IonCol>
@@ -407,7 +354,7 @@ const EquipmentList: React.FC = () => {
                             ) : (
                                 <>
                                     <IonButton color="warning" size="small" onClick={() => handleEdit(eq)}>Edit</IonButton>
-                                    <IonButton color="danger" size="small" onClick={() => handleDeleteEquipment(eq.id)} style={{marginLeft: '4px'}}>Delete</IonButton>
+                             
                                 </>
                             )}
                         </IonCol>

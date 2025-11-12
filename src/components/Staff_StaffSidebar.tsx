@@ -19,6 +19,7 @@ import {
   bookOutline,
   gridOutline,
   printOutline,
+  settingsOutline,
 } from "ionicons/icons";
 
 interface StaffSidebarProps {
@@ -42,6 +43,10 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
            <IonItem button onClick={() => setActiveTab("users")}>
             <IonIcon icon={peopleOutline} slot="start" />
             <IonLabel>Member List</IonLabel>
+          </IonItem>
+          <IonItem button onClick={() => setActiveTab("equipmentlist")}>
+            <IonIcon icon={settingsOutline} slot="start" />
+            <IonLabel>Equipment List</IonLabel>
           </IonItem>
            <IonItem button onClick={() => setActiveTab("managerentalbookings")}>
             <IonIcon icon={barChartOutline} slot="start" />
