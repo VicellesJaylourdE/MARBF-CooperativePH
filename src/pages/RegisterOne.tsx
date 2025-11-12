@@ -16,14 +16,14 @@ import {
 } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import bcrypt from "bcryptjs";
-import logo from "../assets/logo.png";
+import logo from "../assets/Gemini_Generated_Image_lh66iclh66iclh66-removebg-preview.png";
 
 const RegisterOne: React.FC = () => {
   const navigation = useIonRouter();
 
   const [segment, setSegment] = useState<string>("email");
 
-  // Common
+
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -36,16 +36,15 @@ const RegisterOne: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  // Email
+  
   const [email, setEmail] = useState("");
 
-  // Phone
+  
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
-
-  // 🔹 Register with Email
+  
   const doRegisterEmail = async () => {
     try {
       setLoading(true);
@@ -176,13 +175,7 @@ const RegisterOne: React.FC = () => {
 
               <div className="right-panel">
                 <div className="register-box">
-                  <IonButton
-                    fill="clear"
-                    className="back-button"
-                    onClick={() => navigation.push("/login")}
-                  >
-                    ←
-                  </IonButton>
+              
 
                   <IonSegment
                     value={segment}
@@ -257,26 +250,9 @@ const RegisterOne: React.FC = () => {
                               value={password}
                               onIonChange={(e) => setPassword(e.detail.value!)}
                              >
-                                                 <IonInputPasswordToggle slot="end" color="warning" />
-                                                     </IonInput>
+                  <IonInputPasswordToggle slot="end" color="warning" />
+                   </IonInput>
                           </div>
-                        </div>
-
-                        <div className="terms-container">
-                          <input
-                            type="checkbox"
-                            checked={agreed}
-                            onChange={(e) => setAgreed(e.target.checked)}
-                          />
-                          <label>
-                            I agree to the{" "}
-                            <span
-                              style={{ color: "#0078d7", cursor: "pointer" }}
-                              onClick={() => setShowTermsModal(true)}
-                            >
-                              Terms and Conditions
-                            </span>
-                          </label>
                         </div>
 
                         <IonButton
@@ -397,18 +373,7 @@ const RegisterOne: React.FC = () => {
                                   setAgreed(e.target.checked)
                                 }
                               />
-                              <label>
-                                I agree to the{" "}
-                                <span
-                                  style={{
-                                    color: "#0078d7",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => setShowTermsModal(true)}
-                                >
-                                  Terms and Conditions
-                                </span>
-                              </label>
+                            
                             </div>
                             <IonButton
                               expand="block"
@@ -422,17 +387,6 @@ const RegisterOne: React.FC = () => {
                       </>
                     )}
                   </div>
-
-                  <p className="signup-text">
-                    Already have an account?{" "}
-                    <span
-                      className="signup-link"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => navigation.push("/login")}
-                    >
-                      Log In
-                    </span>
-                  </p>
                 </div>
               </div>
             </div>
@@ -474,21 +428,7 @@ const RegisterOne: React.FC = () => {
           onDidDismiss={() => setShowTermsModal(false)}
         >
           <IonContent className="ion-padding" scrollY>
-            <h2>Terms and Conditions</h2>
-            <ul>
-              <li>Your personal data will be stored securely.</li>
-              <li>Do not share your password.</li>
-              <li>Misuse will result in account suspension.</li>
-              <li>Terms may be updated anytime.</li>
-              <li>Continued use means acceptance of changes.</li>
-            </ul>
-            <IonButton
-              expand="block"
-              onClick={() => setShowTermsModal(false)}
-              style={{ marginTop: "1rem" }}
-            >
-              Close
-            </IonButton>
+            
           </IonContent>
         </IonModal>
       </IonContent>

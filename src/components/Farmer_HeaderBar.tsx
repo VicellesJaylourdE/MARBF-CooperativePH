@@ -147,7 +147,7 @@ const Farmer_HeaderBar: React.FC = () => {
           className="logo"
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>Farmer Portal</div>
+          <div style={{ display: "flex", alignItems: "center" }}>Member Dashboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
               Welcome back, {userName}

@@ -61,7 +61,7 @@ const EquipmentCatalog: React.FC = () => {
             .on(
                 "postgres_changes",
                 { event: "*", schema: "public", table: "equipment" },
-                () => fetchEquipment() 	
+                () => fetchEquipment() 
             )
             .subscribe();
 
@@ -79,7 +79,7 @@ const EquipmentCatalog: React.FC = () => {
     
     const handleBookingSubmit = async (booking: BookingSubmitData) => {
         if (!selectedEquipment) return;
-      
+        
         
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profile } = await supabase.from("users").select("user_id").eq("user_email", user?.email).single();
@@ -98,8 +98,8 @@ const EquipmentCatalog: React.FC = () => {
             const finalNewQuantity = currentEqData.quantity - booking.quantity;
             
             if (finalNewQuantity < 0) {
-                 
-                 throw new Error("Insufficient stock (Realtime conflict detected).");
+                
+                throw new Error("Insufficient stock (Realtime conflict detected).");
             }
             
             const { error: updateError } = await supabase
@@ -111,7 +111,7 @@ const EquipmentCatalog: React.FC = () => {
             
             if (updateError) throw updateError;
             
-        
+    
             if (user_id) {
                 await supabase.from("inventory_logs").insert([
                     {
@@ -128,13 +128,34 @@ const EquipmentCatalog: React.FC = () => {
             
         } catch (err: any) {
             console.error("Stock update/logging error:", err);
-           
+            
             setToastMsg(`⚠️ Stock Error: Booking inserted but stock update failed: ${err.message}. Admin intervention needed.`);
         }
     };
 
-    const getStatusColor = (eq: Equipment) => (eq.status === "available" && eq.quantity > 0 ? "success" : "medium");
-    const getStatusText = (eq: Equipment) => (eq.status === "available" && eq.quantity > 0 ? "Available" : "Unavailable");
+    {/* --- GIUSAB NGA FUNCTION --- */}
+    {/* Kani na function mo check na sa 3 ka status: available, maintenance, or unavailable */}
+    const getStatusColor = (eq: Equipment): "success" | "warning" | "medium" => {
+        if (eq.status === "available" && eq.quantity > 0) {
+            return "success";
+        }
+        if (eq.status === "maintenance") {
+            return "warning"; // Warning color (yellow) para sa maintenance
+        }
+        return "medium"; // Medium color (gray) para sa unavailable or 0 quantity
+    };
+
+    {/* --- GIUSAB NGA FUNCTION --- */}
+    {/* Kani na function mo return sa saktong text para sa status */}
+    const getStatusText = (eq: Equipment) => {
+        if (eq.status === "available" && eq.quantity > 0) {
+            return "Available";
+        }
+        if (eq.status === "maintenance") {
+            return "Maintenance";
+        }
+        return "Unavailable";
+    };
 
     return (
         <div className="equipment-section">
@@ -169,10 +190,15 @@ const EquipmentCatalog: React.FC = () => {
                                             <IonCardContent style={{ padding: "10px 12px", textAlign: "left" }}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                     <h3 style={{ fontSize: "1rem", margin: 0, fontWeight: 600 }}>{eq.name}</h3>
+                                                    {/* --- GIUSAB NGA BADGE --- */}
+                                                    {/* Mugamit na ni sa bag-o na functions para sa saktong color ug text */}
                                                     <IonBadge color={getStatusColor(eq)} style={{ fontSize: "0.7rem" }}>
                                                         {getStatusText(eq)}
                                                     </IonBadge>
                                                 </div>
+                                                <p style={{ fontSize: "0.8rem", color: "#666", margin: "2px 0 0 0", fontStyle: "italic" }}>
+                                                  {eq.category}
+                                                </p>
                                                     <p style={{ fontSize: "1rem", color: "#2e7d32", fontWeight: "bold", marginTop: "6px", marginBottom: "0" }}>
                                                         ₱{eq.price.toLocaleString()} <span style={{ color: "#888", fontSize: "0.85rem", fontWeight: "normal" }}>/day</span>
                                                 </p>
@@ -182,15 +208,21 @@ const EquipmentCatalog: React.FC = () => {
                                                 </p> 
                                             <div style={{ textAlign: "left" }}>
                                                 <IonButton
-                                            size="small"
-                                            color={getStatusColor(eq)}
-                                                disabled={!(eq.status === "available" && eq.quantity > 0)}
-                                            onClick={() => openBooking(eq)}
-                                                style={{ marginTop: "8px", borderRadius: "8px", fontWeight: 600, width: "auto" }}
-                                        >
-                                                    {eq.status === "available" && eq.quantity > 0 ? "Book Now" : "Unavailable"}
-                                                </IonButton>
-                                            </div>
+                                                size="small"
+                                                color={getStatusColor(eq)} // Mugamit sa saktong color
+                                                    disabled={!(eq.status === "available" && eq.quantity > 0)} // Disabled gihapon kung DILI available
+                                                onClick={() => openBooking(eq)}
+                                                    style={{ marginTop: "8px", borderRadius: "8px", fontWeight: 600, width: "auto" }}
+                                            >
+                                                    {/* --- GIUSAB NGA BUTTON TEXT --- */}
+                                                    {/* Mo display na ni og "Maintenance" kung maintenance ang status */}
+                                                    {eq.status === "available" && eq.quantity > 0
+                                                        ? "Book Now"
+                                                        : eq.status === "maintenance"
+                                                        ? "Maintenance"
+                                                        : "Unavailable"}
+                                                    </IonButton>
+                                                </div>
                                                 </IonCardContent>
                                             </IonCard>
                                             </IonCol>

@@ -225,15 +225,6 @@ const Admin_ManageEquipment: React.FC = () => {
             <IonInput type="number" value={quantity} onIonChange={(e) => setQuantity(Number(e.detail.value!))} min="0" />
           </IonItem>
           <IonItem>
-            <IonLabel position="stacked">Status (Will be "Unavailable" if Quantity is 0)</IonLabel>
-            <IonSelect value={status} onIonChange={(e) => setStatus(e.detail.value)}>
-              <IonSelectOption value="available">Available</IonSelectOption>
-              <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
-              <IonSelectOption value="unavailable">Unavailable</IonSelectOption>
-            </IonSelect>
-          </IonItem>
-          
-          <IonItem>
             <IonLabel position="stacked">Upload Image</IonLabel>
             <input
               type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange}

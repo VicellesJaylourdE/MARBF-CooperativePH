@@ -99,7 +99,6 @@ const Admin_AdminHeaderBar: React.FC = () => {
     };
   }, []);
 
-  // ✅ LOGOUT WITH ACTIVITY LOG UPDATE
   const handleLogout = async () => {
     try {
       const stored = localStorage.getItem("userInfo");
@@ -138,7 +137,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
         </IonButtons>
 
         <IonTitle style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>Admin Portal</div>
+          <div style={{ display: "flex", alignItems: "center" }}>Admin Dasboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
               Welcome back, {userName}

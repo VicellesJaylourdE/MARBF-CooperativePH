@@ -1,4 +1,4 @@
-// src/components/FeaturesSection.tsx
+
 import React from "react";
 import { IonGrid, IonRow, IonCol } from "@ionic/react";
 import "../theme/FeaturesSection.css";

@@ -145,7 +145,7 @@ const Staff_StaffHeaderBar: React.FC = () => {
         <IonTitle
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>Staff Portal</div>
+          <div style={{ display: "flex", alignItems: "center" }}>Staff Dashboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
               Welcome back, {userName}

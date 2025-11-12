@@ -15,7 +15,7 @@ import {
 } from "@ionic/react";
 import bcrypt from "bcryptjs";
 import { supabase } from "../utils/supabaseClient";
-import logo from "../assets/logo.png";
+import logo from "../assets/Gemini_Generated_Image_lh66iclh66iclh66-removebg-preview.png";
 
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({
   message,
@@ -190,7 +190,7 @@ const Login: React.FC = () => {
       },
     ]);
 
-    setAlertMessage(`👋 Welcome back, ${fullName || userData.username}!`);
+    setAlertMessage(`Welcome back, ${fullName || userData.username}!`);
     setShowAlert(true);
 
     setTimeout(() => {
@@ -323,15 +323,7 @@ const Login: React.FC = () => {
                         )}
                       </IonButton>
 
-                      <div className="signup-link">
-                        <span>Don't have an account? </span>
-                        <a
-                          onClick={() => navigation.push("/registerone")}
-                          style={{ color: "#0078d7", cursor: "pointer", fontWeight: 500 }}
-                        >
-                          Sign up
-                        </a>
-                      </div>
+                     
                     </>
                   )}
 

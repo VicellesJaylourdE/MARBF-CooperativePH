@@ -169,7 +169,6 @@ const Admin_ManageUsers: React.FC = () => {
                   {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
                 </IonCol>
                 
-                {/* Actions Column */}
                 <IonCol size="auto">
                   <IonButton fill="clear" size="small" onClick={() => { setEditingUser(user); setShowEditAlert(true); }}>
                     <IonIcon icon={pencil} />
@@ -181,10 +180,7 @@ const Admin_ManageUsers: React.FC = () => {
               </IonRow>
             ))}
           </IonGrid>
-          /* --- END OF SINGLE RESPONSIVE ION GRID --- */
         )}
-
-        {/* --- EDIT ALERT (Modal) --- */}
         <IonAlert
           isOpen={showEditAlert}
           onDidDismiss={() => setShowEditAlert(false)}
@@ -207,7 +203,6 @@ const Admin_ManageUsers: React.FC = () => {
           ]}
         />
 
-        {/* --- DELETE ALERT (Modal) --- */}
         <IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
