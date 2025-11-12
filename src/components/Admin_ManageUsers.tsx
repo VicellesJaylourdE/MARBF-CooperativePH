@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { IonContent, IonPage, IonGrid, IonRow, IonCol, IonButton, IonText, IonAlert, IonIcon, IonSpinner } from "@ionic/react";
+import { IonContent, IonPage, IonGrid, IonRow, IonCol, IonButton, IonAlert, IonIcon, IonSpinner } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 import { pencil, trash } from "ionicons/icons";
 
@@ -79,7 +79,6 @@ const Admin_ManageUsers: React.FC = () => {
       const matchesPhone = user.user_phone ? user.user_phone.toLowerCase().includes(search) : false;
       const matchesFullName = `${user.user_firstname || ""} ${user.user_lastname || ""}`.toLowerCase().includes(search);
 
-      // Either Email OR Phone match (not combined)
       return matchesUsername || matchesEmail || matchesPhone || matchesFullName;
     });
   }, [users, searchTerm]);
@@ -87,6 +86,8 @@ const Admin_ManageUsers: React.FC = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding">
+        
+        {/* Header and Add Button */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
           <h2 style={{ margin: 0 }}>Users</h2>
           <IonButton color="warning" style={{ marginLeft: "auto" }} routerLink="/register">
@@ -94,18 +95,21 @@ const Admin_ManageUsers: React.FC = () => {
           </IonButton>
         </div>
 
+        {/* Search Input */}
         <div style={{ marginBottom: "1rem" }}>
           <input
             type="text"
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", width: "250px" }}
+            // Adjusted width for better mobile behavior
+            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", width: "100%", maxWidth: "300px" }}
           />
         </div>
 
         <p style={{ fontWeight: 600 }}>Total Users: {filteredUsers.length}</p>
-
+        
+        {/* --- LOADING AND EMPTY STATE --- */}
         {loading ? (
           <div className="ion-text-center">
             <IonSpinner name="crescent" />
@@ -113,14 +117,16 @@ const Admin_ManageUsers: React.FC = () => {
         ) : filteredUsers.length === 0 ? (
           <p className="ion-text-center">No users found.</p>
         ) : (
+          /* --- SINGLE RESPONSIVE ION GRID --- */
           <IonGrid>
+            {/* Header Row: Hide Email/Phone/Full Name on small screens (mobile) */}
             <IonRow style={{ fontWeight: "bold", background: "#FCB53B", color: "white", padding: "8px 0" }}>
-              <IonCol>#</IonCol>
-              <IonCol>Username</IonCol>
-              <IonCol>Email</IonCol>
-              <IonCol>Phone</IonCol>
-              <IonCol>Full Name</IonCol>
-              <IonCol>Actions</IonCol>
+              <IonCol size="auto">#</IonCol>
+              <IonCol sizeXs="5" sizeSm="2">Username</IonCol> {/* Give Username more space on mobile */}
+              <IonCol className="ion-hide-sm-down" sizeSm="2">Email</IonCol>
+              <IonCol className="ion-hide-sm-down" sizeSm="2">Phone</IonCol>
+              <IonCol className="ion-hide-sm-down" sizeSm="3">Full Name</IonCol>
+              <IonCol size="auto">Actions</IonCol>
             </IonRow>
 
             {filteredUsers.map((user, index) => (
@@ -129,15 +135,42 @@ const Admin_ManageUsers: React.FC = () => {
                 style={{
                   borderBottom: "1px solid #040404ff",
                   padding: "6px 0",
-                
+                  // Add a hover effect for better UX
+                  transition: 'background-color 0.2s',
                 }}
+                // You can add a CSS class or inline style for hover:
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <IonCol>{index + 1}</IonCol>
-                <IonCol>{user.username}</IonCol>
-                <IonCol>{user.user_email || "-"}</IonCol>
-                <IonCol>{user.user_phone || "-"}</IonCol>
-                <IonCol>{`${user.user_firstname || ""} ${user.user_lastname || ""}`}</IonCol>
-                <IonCol>
+                <IonCol size="auto">{index + 1}</IonCol>
+                
+                {/* Username Column (Visible on all screens) */}
+                <IonCol sizeXs="5" sizeSm="2">
+                  <div style={{ fontWeight: 600 }}>{user.username}</div>
+                  {/* Secondary info stacking for mobile (optional, but avoids double data) */}
+                  <div className="ion-show-sm-down" style={{ fontSize: '0.75em', color: '#666' }}>
+                    {/* Show Full Name on mobile when other columns are hidden */}
+                    {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
+                  </div>
+                </IonCol>
+
+                {/* Email (Hidden on mobile) */}
+                <IonCol className="ion-hide-sm-down" sizeSm="2">
+                  {user.user_email || "-"}
+                </IonCol>
+                
+                {/* Phone (Hidden on mobile) */}
+                <IonCol className="ion-hide-sm-down" sizeSm="2">
+                  {user.user_phone || "-"}
+                </IonCol>
+                
+                {/* Full Name (Hidden on mobile) */}
+                <IonCol className="ion-hide-sm-down" sizeSm="3">
+                  {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
+                </IonCol>
+                
+                {/* Actions Column */}
+                <IonCol size="auto">
                   <IonButton fill="clear" size="small" onClick={() => { setEditingUser(user); setShowEditAlert(true); }}>
                     <IonIcon icon={pencil} />
                   </IonButton>
@@ -148,8 +181,10 @@ const Admin_ManageUsers: React.FC = () => {
               </IonRow>
             ))}
           </IonGrid>
+          /* --- END OF SINGLE RESPONSIVE ION GRID --- */
         )}
 
+        {/* --- EDIT ALERT (Modal) --- */}
         <IonAlert
           isOpen={showEditAlert}
           onDidDismiss={() => setShowEditAlert(false)}
@@ -163,15 +198,21 @@ const Admin_ManageUsers: React.FC = () => {
           ]}
           buttons={[
             { text: "Cancel", role: "cancel" },
-            { text: "Save", handler: (data) => { handleEdit(data); return false; } },
+            { 
+              text: "Save", 
+              handler: (data) => { 
+                return handleEdit(data); 
+              } 
+            },
           ]}
         />
 
+        {/* --- DELETE ALERT (Modal) --- */}
         <IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
           header="Confirm Delete"
-          message="Are you sure you want to remove this user?"
+          message={`Are you sure you want to remove user "${users.find(u => u.user_id === userToDelete)?.username || 'this user'}"?`}
           buttons={[{ text: "Cancel", role: "cancel" }, { text: "Delete", handler: handleDelete }]}
         />
       </IonContent>

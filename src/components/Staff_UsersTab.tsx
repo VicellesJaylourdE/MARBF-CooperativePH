@@ -1,207 +1,125 @@
-import React, { useEffect, useState } from "react";
-import {
-  IonContent,
-  IonButton,
-  IonText,
-  IonAlert,
-} from "@ionic/react";
+import React, { useEffect, useState, useMemo } from "react";
+import { IonContent, IonPage, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonSpinner } from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
 interface User {
-  user_id: number;
-  username: string;
-  user_email: string;
-  user_firstname: string | null;
-  user_lastname: string | null;
+  user_id: number;
+  username: string;
+  user_email: string | null;
+  user_phone: string | null;
+  user_firstname: string | null;
+  user_lastname: string | null;
 }
 
 const Staff_UsersTab: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [showEditAlert, setShowEditAlert] = useState(false);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("users")
-        .select("user_id, username, user_email, user_firstname, user_lastname")
-        .eq("role", "user");
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("users")
+        .select("user_id, username, user_email, user_phone, user_firstname, user_lastname")
+        .eq("role", "user");
 
-      if (error) {
-        console.error("Error fetching users:", error.message);
-      } else if (data) {
-        setUsers(data);
-      }
-      setLoading(false);
-    };
+      if (error) console.error("Error fetching users:", error.message);
+      else if (data) setUsers(data);
 
-    fetchUsers();
-  }, []);
+      setLoading(false);
+    };
 
-  const handleDelete = async () => {
-    if (!userToDelete) return;
+    fetchUsers();
+  }, []);
 
-    const { error } = await supabase
-      .from("users")
-      .delete()
-      .eq("user_id", userToDelete);
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const search = searchTerm.toLowerCase();
+      const matchesUsername = user.username.toLowerCase().includes(search);
+      const matchesEmail = user.user_email ? user.user_email.toLowerCase().includes(search) : false;
+      const matchesPhone = user.user_phone ? user.user_phone.toLowerCase().includes(search) : false;
+      const matchesFullName = `${user.user_firstname || ""} ${user.user_lastname || ""}`.toLowerCase().includes(search);
 
-    if (!error) setUsers(users.filter((u) => u.user_id !== userToDelete));
-    setShowDeleteAlert(false);
-  };
+      return matchesUsername || matchesEmail || matchesPhone || matchesFullName;
+    });
+  }, [users, searchTerm]);
 
-  const handleEdit = async (values: any) => {
-    if (!editingUser) return;
+  return (
+    <IonPage>
+      <IonContent className="ion-padding">
+        
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+          <h2 style={{ margin: 0 }}>Registered Members (View Only)</h2>
+        </div>
 
-    // Fix: IonAlert returns object, not array
-    const updatedData = {
-      username: values.username,
-      user_email: values.user_email,
-      user_firstname: values.user_firstname,
-      user_lastname: values.user_lastname,
-    };
+        <div style={{ marginBottom: "1rem" }}>
+          <input
+            type="text"
+            placeholder="Search users by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", width: "100%", maxWidth: "300px" }}
+          />
+        </div>
 
-    const { error } = await supabase
-      .from("users")
-      .update(updatedData)
-      .eq("user_id", editingUser.user_id);
+        <p style={{ fontWeight: 600 }}>Total Users: {filteredUsers.length}</p>
+        
+        {loading ? (
+          <div className="ion-text-center">
+            <IonSpinner name="crescent" />
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <p className="ion-text-center">No users found matching your search.</p>
+        ) : (
+          <IonGrid style={{ padding: 0 }}>
+            <IonRow style={{ fontWeight: "bold", background: "#FCB53B", color: "white", padding: "8px 0" }}>
+              <IonCol size="auto" style={{ paddingLeft: '10px' }}>#</IonCol>
+              <IonCol sizeXs="5" sizeSm="3">Username</IonCol> 
+              <IonCol className="ion-hide-sm-down" sizeSm="2">Email</IonCol>
+              <IonCol className="ion-hide-sm-down" sizeSm="2">Phone</IonCol>
+              <IonCol sizeXs="auto" sizeSm="4">Full Name</IonCol> 
+            </IonRow>
 
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.user_id === editingUser.user_id ? { ...u, ...updatedData } : u
-        )
-      );
-    } else {
-      console.error("Update error:", error.message);
-    }
+            {filteredUsers.map((user, index) => (
+              <IonRow
+                key={user.user_id}
+                style={{
+                  borderBottom: "1px solid #040404ff",
+                  padding: "6px 0",
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <IonCol size="auto" style={{ paddingLeft: '10px' }}>{index + 1}</IonCol>
+                
+                <IonCol sizeXs="5" sizeSm="3">
+                  <div style={{ fontWeight: 600 }}>{user.username}</div>
+                  
+                  <div className="ion-show-sm-down" style={{ fontSize: '0.75em', color: '#666', marginTop: '2px' }}>
+                    {user.user_phone || user.user_email || "No contact"}
+                  </div>
+                </IonCol>
 
-    setShowEditAlert(false);
-  };
-
-  return (
-    <IonContent className="ion-padding">
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0 }}>Users</h2>
-        <IonButton
-          color="primary"
-          style={{ marginLeft: "auto" }}
-          routerLink="/register"
-        >
-          Add Member
-        </IonButton>
-      </div>
-
-      {loading ? (
-        <IonText>Loading users...</IonText>
-      ) : users.length === 0 ? (
-        <IonText>No users found.</IonText>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#e2991cff" }}>
-              <tr>
-                <th style={thStyle}>#</th>
-                <th style={thStyle}>Username</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Full Name</th>
-                <th style={thStyle}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, index) => (
-                <tr key={user.user_id} style={index % 2 === 0 ? rowEven : rowOdd}>
-                  <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}>{user.username}</td>
-                  <td style={tdStyle}>{user.user_email}</td>
-                  <td style={tdStyle}>
-                    {user.user_firstname || ""} {user.user_lastname || ""}
-                  </td>
-                  <td style={tdStyle}>
-                    <IonButton
-                      color="primary"
-                      size="small"
-                      onClick={() => {
-                        setEditingUser(user);
-                        setShowEditAlert(true);
-                      }}
-                      style={{ marginRight: "0.5rem" }}
-                    >
-                      Edit
-                    </IonButton>
-                    <IonButton
-                      color="danger"
-                      size="small"
-                      onClick={() => {
-                        setUserToDelete(user.user_id);
-                        setShowDeleteAlert(true);
-                      }}
-                    >
-                      Remove
-                    </IonButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Edit User Alert */}
-      <IonAlert
-        isOpen={showEditAlert}
-        onDidDismiss={() => setShowEditAlert(false)}
-        header="Edit User"
-        inputs={[
-          { name: "username", type: "text", placeholder: "Username", value: editingUser?.username || "" },
-          { name: "user_email", type: "email", placeholder: "Email", value: editingUser?.user_email || "" },
-          { name: "user_firstname", type: "text", placeholder: "First Name", value: editingUser?.user_firstname || "" },
-          { name: "user_lastname", type: "text", placeholder: "Last Name", value: editingUser?.user_lastname || "" },
-        ]}
-        buttons={[
-          { text: "Cancel", role: "cancel" },
-          {
-            text: "Save",
-            handler: (data) => {
-              handleEdit(data);
-              return false; // prevents auto-close until handler finishes
-            },
-          },
-        ]}
-      />
-
-      {/* Delete Confirmation Alert */}
-      <IonAlert
-        isOpen={showDeleteAlert}
-        onDidDismiss={() => setShowDeleteAlert(false)}
-        header="Confirm Delete"
-        message="Are you sure you want to remove this user?"
-        buttons={[
-          { text: "Cancel", role: "cancel" },
-          { text: "Delete", handler: handleDelete },
-        ]}
-      />
-    </IonContent>
-  );
+                <IonCol className="ion-hide-sm-down" sizeSm="2">
+                  {user.user_email || "-"}
+                </IonCol>
+               
+                <IonCol className="ion-hide-sm-down" sizeSm="2">
+                  {user.user_phone || "-"}
+                </IonCol>
+                
+                <IonCol sizeXs="auto" sizeSm="4">
+                  {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
+                </IonCol>
+              </IonRow>
+            ))}
+          </IonGrid>
+        )}
+      </IonContent>
+    </IonPage>
+  );
 };
-
-// Styles for Excel-style table
-const thStyle: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px",
-  borderBottom: "1px solid #000000ff",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "8px",
-  borderBottom: "1px solid #000000ff",
-};
-
-const rowEven: React.CSSProperties = { backgroundColor: "#ffffffff" };
-const rowOdd: React.CSSProperties = { backgroundColor: "#ffffffff" };
 
 export default Staff_UsersTab;

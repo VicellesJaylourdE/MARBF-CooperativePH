@@ -1,113 +1,130 @@
+
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { supabase } from '../utils/supabaseClient'; 
 import bcrypt from 'bcryptjs';
 
+type Role = 'admin' | 'user' | 'staff' | null;
+
 interface AuthContextType {
-  user: any;
-  role: string | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
-  register: (userData: {
-    username: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'user' | 'staff';
-  }) => Promise<{ error?: string }>;
-  logout: () => Promise<void>;
+  user: any;
+  role: Role;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  register: (userData: {
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: Role;
+  }) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<Role>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+    const fetchAndSetRole = async (currentUser: any) => {
+        if (!currentUser) {
+            setRole(null);
+            return;
+        }
+        
+        const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('user_email', currentUser.email)
+            .single();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
+        setRole(userData?.role ?? null);
     };
-  }, []);
 
-  const login = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    const processSession = async (session: any) => {
+        setUser(session?.user ?? null);
+        await fetchAndSetRole(session?.user ?? null);
+        setLoading(false);
+    };
 
-    setUser(data.user);
+  useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => {
+            processSession(data.session);
+        });
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('user_email', email)
-      .single();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+             processSession(session);
+    });
 
-    setRole(userData?.role ?? null);
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
-    return {};
-  };
 
-  const register = async (userData: {
-    username: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'user' | 'staff'; // 🔹 Added staff here too
-  }) => {
-    try {
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-      });
-      if (signUpError) return { error: signUpError.message };
+    setUser(data.user);
+   
+    await fetchAndSetRole(data.user); 
+    return {};
+  };
 
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
+  const register = async (userData: {
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: Role; 
+  }) => {
+    try {
+        // ... (Supabase sign up logic)
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+      });
+      if (signUpError) return { error: signUpError.message };
 
-      const { error: dbError } = await supabase.from('users').insert([{
-        username: userData.username,
-        user_firstname: userData.firstName,
-        user_lastname: userData.lastName,
-        user_email: userData.email,
-        user_password: hashedPassword,
-        role: userData.role,
-      }]);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-      if (dbError) return { error: dbError.message };
+      const { error: dbError } = await supabase.from('users').insert([{
+        username: userData.username,
+        user_firstname: userData.firstName,
+        user_lastname: userData.lastName,
+        user_email: userData.email,
+        user_password: hashedPassword,
+        role: userData.role,
+      }]);
 
-      return {};
-    } catch (err: any) {
-      return { error: err.message };
-    }
-  };
-  
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setRole(null);
-  };
+      if (dbError) return { error: dbError.message };
 
-  return (
-    <AuthContext.Provider value={{ user, role, loading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+      return {};
+    } catch (err: any) {
+      return { error: err.message };
+    }
+  };
+  
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setRole(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, role, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 };
