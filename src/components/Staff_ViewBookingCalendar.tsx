@@ -81,8 +81,6 @@ const Staff_ViewBookingCalendar: React.FC = () => {
     };
 
     fetchAndMergeBookings();
-
-    // Supabase realtime subscription
     const channel = supabase
       .channel("bookings-changes-calendar")
       .on(
@@ -165,7 +163,7 @@ const Staff_ViewBookingCalendar: React.FC = () => {
 
   return (
     <IonContent className="ion-padding custom-content">
-      <h2 style={{ color: "#FCB53B" }}>Booking Management Calendar 📅</h2>
+      <h2 style={{ color: "#FCB53B" }}>Booking Management Calendar</h2>
       
       {loading ? (
         <div className="ion-text-center ion-padding">

@@ -142,11 +142,10 @@ const EquipmentCatalog: React.FC = () => {
         if (eq.status === "maintenance") {
             return "warning"; // Warning color (yellow) para sa maintenance
         }
-        return "medium"; // Medium color (gray) para sa unavailable or 0 quantity
+        return "medium";
     };
 
-    {/* --- GIUSAB NGA FUNCTION --- */}
-    {/* Kani na function mo return sa saktong text para sa status */}
+
     const getStatusText = (eq: Equipment) => {
         if (eq.status === "available" && eq.quantity > 0) {
             return "Available";
@@ -190,8 +189,7 @@ const EquipmentCatalog: React.FC = () => {
                                             <IonCardContent style={{ padding: "10px 12px", textAlign: "left" }}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                     <h3 style={{ fontSize: "1rem", margin: 0, fontWeight: 600 }}>{eq.name}</h3>
-                                                    {/* --- GIUSAB NGA BADGE --- */}
-                                                    {/* Mugamit na ni sa bag-o na functions para sa saktong color ug text */}
+                                                
                                                     <IonBadge color={getStatusColor(eq)} style={{ fontSize: "0.7rem" }}>
                                                         {getStatusText(eq)}
                                                     </IonBadge>
@@ -209,13 +207,11 @@ const EquipmentCatalog: React.FC = () => {
                                             <div style={{ textAlign: "left" }}>
                                                 <IonButton
                                                 size="small"
-                                                color={getStatusColor(eq)} // Mugamit sa saktong color
-                                                    disabled={!(eq.status === "available" && eq.quantity > 0)} // Disabled gihapon kung DILI available
+                                                color={getStatusColor(eq)}
+                                                    disabled={!(eq.status === "available" && eq.quantity > 0)} 
                                                 onClick={() => openBooking(eq)}
                                                     style={{ marginTop: "8px", borderRadius: "8px", fontWeight: 600, width: "auto" }}
                                             >
-                                                    {/* --- GIUSAB NGA BUTTON TEXT --- */}
-                                                    {/* Mo display na ni og "Maintenance" kung maintenance ang status */}
                                                     {eq.status === "available" && eq.quantity > 0
                                                         ? "Book Now"
                                                         : eq.status === "maintenance"

@@ -39,6 +39,10 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
             <IonIcon icon={homeOutline} slot="start" />
             <IonLabel>Dashboard</IonLabel>
           </IonItem>
+           <IonItem button onClick={() => setActiveTab("users")}>
+            <IonIcon icon={peopleOutline} slot="start" />
+            <IonLabel>Member List</IonLabel>
+          </IonItem>
            <IonItem button onClick={() => setActiveTab("managerentalbookings")}>
             <IonIcon icon={barChartOutline} slot="start" />
             <IonLabel>ManageRentalBookings</IonLabel>
@@ -50,10 +54,6 @@ const Staff_StaffSidebar: React.FC<StaffSidebarProps> = ({ setActiveTab }) => {
           <IonItem button onClick={() => setActiveTab("viewalltransactions")}>
             <IonIcon icon={bookOutline} slot="start" />
             <IonLabel>View All Transactions</IonLabel>
-          </IonItem>
-          <IonItem button onClick={() => setActiveTab("users")}>
-            <IonIcon icon={peopleOutline} slot="start" />
-            <IonLabel>View User List</IonLabel>
           </IonItem>
              <IonItem button onClick={() => setActiveTab("generatereports")}>
             <IonIcon icon={printOutline} slot="start" />

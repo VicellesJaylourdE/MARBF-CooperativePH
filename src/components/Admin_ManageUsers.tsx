@@ -87,22 +87,20 @@ const Admin_ManageUsers: React.FC = () => {
     <IonPage>
       <IonContent className="ion-padding">
         
-        {/* Header and Add Button */}
+        
         <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 style={{ margin: 0 }}>Users</h2>
+          <h2 style={{ margin: 0 }}>User</h2>
           <IonButton color="warning" style={{ marginLeft: "auto" }} routerLink="/register">
-            Add User
+            Add Users
           </IonButton>
         </div>
 
-        {/* Search Input */}
         <div style={{ marginBottom: "1rem" }}>
           <input
             type="text"
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            // Adjusted width for better mobile behavior
             style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", width: "100%", maxWidth: "300px" }}
           />
         </div>

@@ -9,6 +9,7 @@ import {
   IonSpinner,
   IonToast,
   IonButton,
+  useIonRouter, // I-import ang useIonRouter para sa navigation
 } from "@ionic/react";
 import { useState, useEffect } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
@@ -17,6 +18,59 @@ import HeaderBar from "../components/Farmer_HeaderBar";
 import EquipmentCatalog from "../components/Farmer_EquipmentCatalog";
 import CalendarView from "../components/Farmer_CalendarView";
 import "../theme/UserDashboard.css";
+
+// *******************************************************************
+// PLACEHOLDER for the Profile Page
+// *******************************************************************
+const MyProfile: React.FC = () => {
+    const navigation = useIonRouter();
+    
+    // Example function for logging out
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        // Clear local storage and redirect to login/landing page
+        localStorage.removeItem("userInfo");
+        navigation.push("/", "back", "replace");
+    };
+
+    // Assuming you store userInfo in localStorage after login
+    const userInfoString = localStorage.getItem("userInfo");
+    const userInfo = userInfoString ? JSON.parse(userInfoString) : {};
+
+    return (
+        <div className="ion-padding" style={{ maxWidth: '600px', margin: '20px auto' }}>
+            <h2>👤 My Profile</h2>
+            <p>Welcome, **{userInfo.fullname || userInfo.username || 'User'}**!</p>
+            
+            <IonCard>
+                <IonList lines="full">
+                    <div className="receipt-row">
+                        <span className="receipt-label">Email:</span>
+                        <span>{userInfo.email || 'N/A'}</span>
+                    </div>
+                    <div className="receipt-row">
+                        <span className="receipt-label">Phone:</span>
+                        <span>{userInfo.phone || 'N/A'}</span>
+                    </div>
+                    <div className="receipt-row">
+                        <span className="receipt-label">Role:</span>
+                        <span>{userInfo.role?.toUpperCase() || 'N/A'}</span>
+                    </div>
+                </IonList>
+            </IonCard>
+
+            <IonButton expand="block" color="danger" onClick={handleLogout} className="ion-margin-top">
+                Logout
+            </IonButton>
+            
+            <p className="ion-text-center ion-padding-top">
+                {/* Diri nimo ibutang ang imong actual Profile editing component */}
+                Profile content will go here.
+            </p>
+        </div>
+    );
+};
+// *******************************************************************
 
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
@@ -69,6 +123,7 @@ const UserDashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    // Only fetch bookings when the 'bookings' tab is selected
     if (segment === "bookings") fetchBookings();
   }, [segment]);
 
@@ -78,10 +133,33 @@ const UserDashboard: React.FC = () => {
     });
   }, []);
 
+  // *******************************************************************
+  // Helper functions for rendering (gikuha sa imong code)
+  // *******************************************************************
+  const getStatusColor = (status: string) => {
+    if (status === "in_use") return "#ff6a00ff";
+    if (status === "approved") return "green";
+    if (status === "pending") return "orange";
+    if (status === "declined") return "red";
+    if (status === "returned") return "blue";
+    return "gray";
+  };
+
+  const getPaymentColor = (status: string) => {
+    if (status === "paid") return "green";
+    if (status === "unpaid") return "orange";
+    return "red";
+  };
+  // *******************************************************************
+
+
   return (
     <IonPage>
       <HeaderBar />
       <IonContent fullscreen>
+        {/* ************************************************** */}
+        {/* I-ADD ANG MY PROFILE BUTTON DIRI */}
+        {/* ************************************************** */}
         <IonSegment value={segment} onIonChange={(e) => setSegment(String(e.detail.value))}>
           <IonSegmentButton value="catalog">
             <IonLabel>Equipment Catalog</IonLabel>
@@ -92,10 +170,23 @@ const UserDashboard: React.FC = () => {
           <IonSegmentButton value="calendar">
             <IonLabel>Calendar</IonLabel>
           </IonSegmentButton>
+          {/* BAG-ONG BUTTON */}
+          <IonSegmentButton value="profile">
+            <IonLabel>My Profile</IonLabel>
+          </IonSegmentButton>
         </IonSegment>
 
+        {/* ************************************************** */}
+        {/* CONDITIONAL RENDERING */}
+        {/* ************************************************** */}
+        
         {segment === "catalog" && <EquipmentCatalog />}
 
+        {segment === "calendar" && <CalendarView />}
+
+        {/* I-ADD ANG PROFILE VIEW DIRI */}
+        {segment === "profile" && <MyProfile />} 
+        
         {segment === "bookings" && (
           <>
             {loading ? (
@@ -115,22 +206,6 @@ const UserDashboard: React.FC = () => {
                   
                     return (b.status === "in_use" && (now > end || (now.toDateString() === end.toDateString() && now.getHours() >= 12))) && b.status !== "returned";
                   })();
-
-                  const getStatusColor = (status: string) => {
-                   
-                    if (status === "in_use") return "#ff6a00ff"; 
-                    if (status === "approved") return "green";
-                    if (status === "pending") return "orange";
-                    if (status === "declined") return "red";
-                    if (status === "returned") return "blue";
-                    return "gray";
-                  };
-
-                  const getPaymentColor = (status: string) => {
-                    if (status === "paid") return "green";
-                    if (status === "unpaid") return "orange";
-                    return "red";
-                  };
 
                   return (
                     <IonCard key={b.id} className="receipt-card">
@@ -154,7 +229,7 @@ const UserDashboard: React.FC = () => {
                       <div className="receipt-row">
                         <span className="receipt-label">Status:</span>
                         <span style={{ color: getStatusColor(b.status), fontWeight: 'bold' }}>
-                            {b.status.toUpperCase().replace('_', ' ')}
+                          {b.status.toUpperCase().replace('_', ' ')}
                         </span>
                       </div>
 
@@ -206,7 +281,7 @@ const UserDashboard: React.FC = () => {
                         Total: ₱{transaction?.amount || b.total_price || 0}
                       </div>
 
-                    
+                      
                       {b.status === "pending" && (
                         <IonButton
                           color="danger"
@@ -214,7 +289,7 @@ const UserDashboard: React.FC = () => {
                           style={{ marginRight: "auto", width: "fit-content" }}
                           onClick={async () => {
                             if (!window.confirm("Cancel this booking?")) return;
-                       
+                          
                             await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
                             if (transaction && transaction.status === "unpaid") {
                                 await supabase.from("transactions").update({ status: "cancelled" }).eq("booking_id", b.id);
@@ -226,7 +301,7 @@ const UserDashboard: React.FC = () => {
                         </IonButton>
                       )}
 
-                     
+                      
                       {canReturn && b.status === "in_use" && transaction?.status === "paid" && (
                         <IonButton
                           color="warning"
@@ -248,8 +323,6 @@ const UserDashboard: React.FC = () => {
             )}
           </>
         )}
-
-        {segment === "calendar" && <CalendarView />}
 
         <IonToast
           isOpen={!!toastMsg}

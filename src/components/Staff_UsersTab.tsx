@@ -12,7 +12,7 @@ interface User {
   user_lastname: string | null;
 }
 
-const Staff_UsersTab: React.FC = () => {
+const Admin_ManageUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -38,12 +38,7 @@ const Staff_UsersTab: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleDelete = async () => {
-    if (!userToDelete) return;
-    const { error } = await supabase.from("users").delete().eq("user_id", userToDelete);
-    if (!error) setUsers(users.filter((u) => u.user_id !== userToDelete));
-    setShowDeleteAlert(false);
-  };
+ 
 
   const handleEdit = async (values: any) => {
     if (!editingUser) return;
@@ -86,8 +81,10 @@ const Staff_UsersTab: React.FC = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding">
+        
+        
         <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 style={{ margin: 0 }}>Users</h2>
+          <h2 style={{ margin: 0 }}>User</h2>
           <IonButton color="warning" style={{ marginLeft: "auto" }} routerLink="/registerone">
             Add User
           </IonButton>
@@ -103,24 +100,25 @@ const Staff_UsersTab: React.FC = () => {
           />
         </div>
 
-        <p style={{ fontWeight: 600 }}>Total Users: {filteredUsers.length}</p>
+        <p style={{ fontWeight: 600 }}>Total User: {filteredUsers.length}</p>
         
         {loading ? (
           <div className="ion-text-center">
             <IonSpinner name="crescent" />
           </div>
         ) : filteredUsers.length === 0 ? (
-          <p className="ion-text-center">No users found.</p>
+          <p className="ion-text-center">No user found.</p>
         ) : (
+        
           <IonGrid>
            
             <IonRow style={{ fontWeight: "bold", background: "#FCB53B", color: "white", padding: "8px 0" }}>
               <IonCol size="auto">#</IonCol>
-              <IonCol sizeXs="5" sizeSm="2">Username</IonCol> 
+              <IonCol sizeXs="5" sizeSm="2">Username</IonCol> {/* Give Username more space on mobile */}
               <IonCol className="ion-hide-sm-down" sizeSm="2">Email</IonCol>
               <IonCol className="ion-hide-sm-down" sizeSm="2">Phone</IonCol>
               <IonCol className="ion-hide-sm-down" sizeSm="3">Full Name</IonCol>
-              
+              <IonCol size="auto">Actions</IonCol>
             </IonRow>
 
             {filteredUsers.map((user, index) => (
@@ -129,32 +127,44 @@ const Staff_UsersTab: React.FC = () => {
                 style={{
                   borderBottom: "1px solid #040404ff",
                   padding: "6px 0",
+                
                   transition: 'background-color 0.2s',
                 }}
-            
+              
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <IonCol size="auto">{index + 1}</IonCol>
+               
                 <IonCol sizeXs="5" sizeSm="2">
                   <div style={{ fontWeight: 600 }}>{user.username}</div>
+                  {/* Secondary info stacking for mobile (optional, but avoids double data) */}
                   <div className="ion-show-sm-down" style={{ fontSize: '0.75em', color: '#666' }}>
+                    {/* Show Full Name on mobile when other columns are hidden */}
                     {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
                   </div>
                 </IonCol>
 
+                {/* Email (Hidden on mobile) */}
                 <IonCol className="ion-hide-sm-down" sizeSm="2">
                   {user.user_email || "-"}
                 </IonCol>
                 
+                {/* Phone (Hidden on mobile) */}
                 <IonCol className="ion-hide-sm-down" sizeSm="2">
                   {user.user_phone || "-"}
                 </IonCol>
                 
+                {/* Full Name (Hidden on mobile) */}
                 <IonCol className="ion-hide-sm-down" sizeSm="3">
                   {`${user.user_firstname || ""} ${user.user_lastname || ""}`}
                 </IonCol>
-            
+                
+                <IonCol size="auto">
+                  <IonButton fill="clear" size="small" onClick={() => { setEditingUser(user); setShowEditAlert(true); }}>
+                    <IonIcon icon={pencil} />
+                  </IonButton>
+                </IonCol>
               </IonRow>
             ))}
           </IonGrid>
@@ -181,16 +191,10 @@ const Staff_UsersTab: React.FC = () => {
           ]}
         />
 
-        <IonAlert
-          isOpen={showDeleteAlert}
-          onDidDismiss={() => setShowDeleteAlert(false)}
-          header="Confirm Delete"
-          message={`Are you sure you want to remove user "${users.find(u => u.user_id === userToDelete)?.username || 'this user'}"?`}
-          buttons={[{ text: "Cancel", role: "cancel" }, { text: "Delete", handler: handleDelete }]}
-        />
+      
       </IonContent>
     </IonPage>
   );
 };
 
-export default Staff_UsersTab;
+export default Admin_ManageUsers;
