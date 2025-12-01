@@ -22,6 +22,7 @@ interface BookingModalProps {
     maxQuantity: number;
 }
 
+// Fixed GCash Account Details
 const GCASH_ACCOUNT = {
     name: "Jay Lourd",
     number: "09639539761",
@@ -36,25 +37,30 @@ const BookingModal: React.FC<BookingModalProps> = ({
     equipmentId,
     maxQuantity,
 }) => {
+    // Booking Details State
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [location, setLocation] = useState("");
+    const [quantity, setQuantity] = useState(1);
+
+    // Payment State
     const [paymentMethod, setPaymentMethod] = useState<"gcash" | "cash">("gcash");
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [gcashRefNo, setGcashRefNo] = useState("");
-    const [quantity, setQuantity] = useState(1);
 
+    // UI/Handling State
     const [uploading, setUploading] = useState(false);
     const [toastMsg, setToastMsg] = useState("");
     const [error, setError] = useState<string | null>(null);
-
-    // ALERT STATE
     const [showAlert, setShowAlert] = useState(false);
     const [alertMsg, setAlertMsg] = useState("");
 
+    // Computation
     const totalDays =
         startDate && endDate ? dayjs(endDate).diff(dayjs(startDate), "day") + 1 : 0;
     const totalPrice = totalDays > 0 ? totalDays * price * quantity : 0;
+
+    // --- Handlers ---
 
     const handleDateChange = (dateType: "start" | "end", value: string) => {
         setError(null);
@@ -86,9 +92,21 @@ const BookingModal: React.FC<BookingModalProps> = ({
         setProofFile(file || null);
     };
 
+    const resetState = () => {
+        setStartDate("");
+        setEndDate("");
+        setLocation("");
+        setQuantity(1);
+        setPaymentMethod("gcash"); 
+        setProofFile(null);
+        setGcashRefNo("");
+        setError(null);
+    };
+
     const handleSubmit = async () => {
         setError(null);
 
+        // 1. Validation Checks
         if (!startDate || !endDate || totalDays <= 0 || !location.trim() || quantity <= 0) {
             setAlertMsg("Please complete all required fields before submitting.");
             setShowAlert(true);
@@ -99,6 +117,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             setShowAlert(true);
             return;
         }
+        // Specific checks for GCash
         if (paymentMethod === "gcash" && !proofFile) {
             setAlertMsg("Please upload proof of GCash payment.");
             setShowAlert(true);
@@ -114,18 +133,23 @@ const BookingModal: React.FC<BookingModalProps> = ({
         let proofUrl = null;
 
         try {
+            // 2. Upload Proof if GCash
             if (proofFile) {
                 const fileName = `${Date.now()}_${proofFile.name}`;
                 const { error: uploadError } = await supabase.storage
                     .from("payment_proofs")
                     .upload(`payment_proofs/${fileName}`, proofFile);
+                
                 if (uploadError) throw uploadError;
+
                 const { data } = supabase.storage
                     .from("payment_proofs")
                     .getPublicUrl(`payment_proofs/${fileName}`);
+                
                 proofUrl = data.publicUrl;
             }
 
+            // 3. Get User ID
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Login required.");
 
@@ -137,6 +161,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             if (!profile) throw new Error("User record not found.");
             const user_id = profile.user_id;
 
+            // 4. Insert into 'bookings' table
             const { data: bookingData, error: bookingError } = await supabase
                 .from("bookings")
                 .insert([
@@ -147,10 +172,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
                         start_date: startDate,
                         end_date: endDate,
                         location,
-                        status: "pending",
+                        status: "pending", // Booking status is always pending for admin approval
                         total_price: totalPrice,
                         quantity,
-                        payment_method: paymentMethod,
+                        payment_method: paymentMethod, 
                     },
                 ])
                 .select("id")
@@ -159,15 +184,18 @@ const BookingModal: React.FC<BookingModalProps> = ({
             if (bookingError) throw bookingError;
             if (!bookingData) throw new Error("Booking insertion failed.");
 
+            // 5. Insert into 'transactions' table (Payment details)
             await supabase.from("transactions").insert([
                 {
                     booking_id: bookingData.id,
                     user_id,
                     amount: totalPrice,
-                    status: paymentMethod === "gcash" ? "unpaid" : "pending",
-                    payment_method: paymentMethod,
-                    proof_url: proofUrl,
-                    gcash_ref_no: paymentMethod === "gcash" ? gcashRefNo.trim() || null : null,
+                    // Status: "pending" for Cash (needs collection/verification) 
+                    // and "unpaid" for GCash (needs proof verification)
+                    status: paymentMethod === "cash" ? "pending" : "unpaid", 
+                    payment_method: paymentMethod, 
+                    proof_url: proofUrl, 
+                    gcash_ref_no: paymentMethod === "gcash" ? gcashRefNo.trim() || null : null, 
                     quantity: quantity,
                     price_type: "unit",
                 },
@@ -182,7 +210,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
             if (err.message && err.message.includes("Login required")) {
                 errorMessage = "Login required to submit a booking.";
             } else if (err.message) {
-               
                 errorMessage = `Booking failed: ${err.message}`;
             }
 
@@ -192,16 +219,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
         }
     };
 
-    const resetState = () => {
-        setStartDate("");
-        setEndDate("");
-        setLocation("");
-        setQuantity(1);
-        setProofFile(null);
-        setGcashRefNo("");
-        setError(null);
-    };
-
+    // --- Render Component ---
+    
     return (
         <>
             <IonModal
@@ -303,10 +322,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
                                     }}
                                 >
                                     <option value="gcash">GCash</option>
-                                    <option value="cash">Cash (Upon Delivery)</option>
+                                    <option value="cash">Cash (Upon Delivery/Pickup)</option>
                                 </select>
                             </div>
 
+                            {/* GCash Details */}
                             {paymentMethod === "gcash" && (
                                 <>
                                     <div className="info-card" style={{ backgroundColor: "#e9f7e9" }}>
@@ -342,6 +362,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                                 </>
                             )}
 
+                            {/* Cash Details */}
                             {paymentMethod === "cash" && (
                                 <>
                                     <div className="info-card" style={{ backgroundColor: "#e6f7ff" }}>
@@ -351,8 +372,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
                                             {totalPrice.toLocaleString()} will be collected by our staff/driver.
                                         </p>
                                     </div>
-
-                                    
                                 </>
                             )}
 
@@ -370,10 +389,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
                                 <button
                                     type="button"
                                     className="btn outline"
-                                    color="warning"
                                     onClick={onClose}
-
-                                    style={{ minWidth: "100px",  }}
+                                    style={{ minWidth: "100px" }}
                                 >
                                     Cancel
                                 </button>

@@ -219,7 +219,7 @@ const Staff_MyProfile: React.FC = () => {
       
 
       <IonContent className="ion-padding">
-        <IonText color="secondary">
+        <IonText>
           <h1 style={{ marginBottom: "20px" }}>My Profile</h1>
         </IonText>
 
@@ -243,6 +243,7 @@ const Staff_MyProfile: React.FC = () => {
               <IonButton
                 expand="block"
                 fill="outline"
+                color="warning"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Change Avatar
@@ -260,7 +261,7 @@ const Staff_MyProfile: React.FC = () => {
           <IonRow>
             <IonCol size="12">
               <IonListHeader color="light" style={{ paddingLeft: "0", marginBottom: "10px" }}>
-                <IonText color="secondary">
+                <IonText>
                   <h3 style={{ margin: "0" }}>Personal Information</h3>
                 </IonText>
               </IonListHeader>
@@ -334,7 +335,7 @@ const Staff_MyProfile: React.FC = () => {
           <IonRow>
             <IonCol size="12">
               <IonListHeader color="light" style={{ paddingLeft: "0", marginBottom: "10px" }}>
-                <IonText color="secondary">
+                <IonText >
                   <h3 style={{ margin: "0" }}>Change Password</h3>
                 </IonText>
               </IonListHeader>
@@ -379,7 +380,7 @@ const Staff_MyProfile: React.FC = () => {
           <IonRow>
             <IonCol size="12">
               <IonListHeader color="light" style={{ paddingLeft: "0", marginBottom: "10px" }}>
-                <IonText color="secondary">
+                <IonText>
                   <h3 style={{ margin: "0" }}>Confirm Changes (Required)</h3>
                 </IonText>
               </IonListHeader>
@@ -403,7 +404,7 @@ const Staff_MyProfile: React.FC = () => {
 
           <IonRow>
             <IonCol>
-              <IonButton expand="full" shape="round" onClick={handleUpdateProfile} style={{ marginTop: "10px" }}>
+              <IonButton expand="full" shape="round" onClick={handleUpdateProfile} style={{ marginTop: "10px",  }}color="warning">
                 Save Changes
               </IonButton>
             </IonCol>

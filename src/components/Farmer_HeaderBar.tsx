@@ -97,7 +97,6 @@ const Farmer_HeaderBar: React.FC = () => {
     fetchUserData();
     fetchNotifications();
 
-    // 🔹 Real-time notifications
     const channel = supabase
       .channel("user-notifications-channel")
       .on(
@@ -116,7 +115,6 @@ const Farmer_HeaderBar: React.FC = () => {
     };
   }, []);
 
-  // ✅ LOGOUT WITH ACTIVITY LOG UPDATE
   const handleLogout = async () => {
     try {
       const stored = localStorage.getItem("userInfo");

@@ -28,6 +28,8 @@ interface ReportData {
   created_at?: string;
   category?: string;
   price?: number;
+  unit?: "unit"; 
+  quantity?: number;
   user_name?: string;
 }
 
@@ -50,8 +52,6 @@ const Staff_GenerateReports : React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState<string>("bookings");
   const [data, setData] = useState<ReportData[]>([]);
-
-  // OTP states
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -59,7 +59,6 @@ const Staff_GenerateReports : React.FC = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
 
-  // Fetch data only after OTP verification
   useEffect(() => {
     if (!otpVerified) return;
 
@@ -84,7 +83,8 @@ const Staff_GenerateReports : React.FC = () => {
         } else if (reportType === "equipment") {
           const res = await supabase
             .from("equipment")
-            .select("name, category, price, status");
+            // ✨ IDINAGDAG ANG 'quantity'
+            .select("name, category, price, status, quantity"); 
           fetchedData = res.data;
           error = res.error;
         }
@@ -98,14 +98,23 @@ const Staff_GenerateReports : React.FC = () => {
         if (usersError) throw usersError;
 
         const merged = fetchedData?.map((item) => {
-          if (!item.user_id) return item;
+          if (reportType !== "equipment" && !item.user_id) return item;
+
           const user = usersData?.find((u) => u.user_id === item.user_id);
+          
+          // ✨ LOGIC PARA SA EQUIPMENT STATUS: Unavailable kung Quantity ay 0
+          let finalStatus = item.status;
+          if (reportType === "equipment" && item.quantity !== undefined) {
+            finalStatus = item.quantity === 0 ? "unavailable" : item.status;
+          }
+
           return {
             ...item,
             user_name: user
               ? user.username ||
                 `${user.user_firstname || ""} ${user.user_lastname || ""}`.trim()
-              : "Unknown User",
+              : reportType === "equipment" ? item.name : "Unknown User", // Added check for equipment name
+            status: finalStatus, // Gagamitin ang na-calculate na status
           };
         });
 
@@ -145,7 +154,8 @@ const Staff_GenerateReports : React.FC = () => {
       } else if (reportType === "transactions") {
         row.push(item.user_name, item.amount, item.payment_method, item.status);
       } else if (reportType === "equipment") {
-        row.push(item.name, item.category, item.price, item.status);
+        // ✨ IDINAGDAG ANG QUANTITY SA PDF ROW
+        row.push(item.name, item.category, item.price, item.quantity, item.status); 
       }
       return row;
     });
@@ -153,7 +163,8 @@ const Staff_GenerateReports : React.FC = () => {
     const headers = [["#"]];
     if (reportType === "bookings") headers[0].push("Equipment", "User", "Days", "Start Date", "End Date", "Status");
     if (reportType === "transactions") headers[0].push("User", "Amount", "Payment Method", "Status");
-    if (reportType === "equipment") headers[0].push("Name", "Category", "Price", "Status");
+    // ✨ IDINAGDAG ANG QUANTITY SA PDF HEADER
+    if (reportType === "equipment") headers[0].push("Name", "Category", "Price", "Quantity", "Status"); 
 
     autoTable(doc, { startY: 20, head: headers, body: tableData });
     doc.save(`${reportType}_report.pdf`);
@@ -179,6 +190,8 @@ const Staff_GenerateReports : React.FC = () => {
           row["Name"] = item.name;
           row["Category"] = item.category;
           row["Price"] = item.price;
+          // ✨ IDINAGDAG ANG QUANTITY SA EXCEL
+          row["Quantity"] = item.quantity;
           row["Status"] = item.status;
         }
         return row;
@@ -263,12 +276,11 @@ const Staff_GenerateReports : React.FC = () => {
         </>
       )}
 
-      {/* Original component – wala giusab */}
+      {/* Report Generation Section */}
       {otpVerified && (
         <>
           <IonItem
             style={{
-           
               borderRadius: "12px",
               marginBottom: "16px",
               padding: "6px 10px",
@@ -308,12 +320,16 @@ const Staff_GenerateReports : React.FC = () => {
                   <tr>
                     <th style={headerStyle}>#</th>
                     {reportType === "bookings" && <th style={headerStyle}>Equipment</th>}
-                    <th style={headerStyle}>User</th>
+                    {reportType === "equipment" && <th style={headerStyle}>Name</th>} {/* Changed from 'User' to 'Name' for equipment report */}
+                    {reportType === "transactions" && <th style={headerStyle}>User</th>}
+                    {reportType === "bookings" && <th style={headerStyle}>User</th>}
+
                     {reportType === "bookings" && <th style={headerStyle}>Days</th>}
                     {reportType === "bookings" && <th style={headerStyle}>Start Date</th>}
                     {reportType === "bookings" && <th style={headerStyle}>End Date</th>}
                     {reportType === "equipment" && <th style={headerStyle}>Category</th>}
                     {reportType === "equipment" && <th style={headerStyle}>Price</th>}
+                    {reportType === "equipment" && <th style={headerStyle}>Quantity</th>} {/* ✨ IDINAGDAG */}
                     {reportType === "transactions" && <th style={headerStyle}>Amount</th>}
                     {reportType === "transactions" && <th style={headerStyle}>Payment Method</th>}
                     <th style={headerStyle}>Status</th>
@@ -323,11 +339,13 @@ const Staff_GenerateReports : React.FC = () => {
                   {data.map((item, index) => (
                     <tr
                       key={item.id || index}
-                
                     >
                       <td style={cellStyle}>{index + 1}</td>
                       {reportType === "bookings" && <td style={cellStyle}>{item.equipment_name}</td>}
-                      <td style={cellStyle}>{item.user_name || item.name || "-"}</td>
+                      
+                      {/* Nag-merge ng Equipment Name at User Name display */}
+                      <td style={cellStyle}>{item.user_name || item.name || "-"}</td> 
+                      
                       {reportType === "bookings" && (
                         <>
                           <td style={cellStyle}>{calculateDays(item.start_date, item.end_date)}</td>
@@ -339,6 +357,12 @@ const Staff_GenerateReports : React.FC = () => {
                         <>
                           <td style={cellStyle}>{item.category}</td>
                           <td style={cellStyle}>{item.price ? `₱${item.price.toLocaleString()}` : "-"}</td>
+                          {/* ✨ IDINAGDAG ANG QUANTITY */}
+                          <td style={cellStyle}>
+                            <strong style={{color: item.quantity === 0 ? 'red' : 'green'}}>
+                                {item.quantity !== undefined ? item.quantity : "-"}
+                            </strong>
+                          </td>
                         </>
                       )}
                       {reportType === "transactions" && (

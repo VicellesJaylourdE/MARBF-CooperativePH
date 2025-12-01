@@ -37,15 +37,11 @@
   color: var(--ion-color-secondary);
 }
 
-/* ===============================================
-  KINI ANG IMONG GIPANGAYO PARA MOGAMAY ANG TABS
-===============================================
-*/
 .small-segment-tabs ion-segment-button ion-label {
-  font-size: 0.8rem;    /* Ginamay nga font size */
-  white-space: normal;  /* Mo-wrap ang text kung taas ra */
-  line-height: 1.2;     /* Spacing sa wrapped text */
+  font-size: 0.8rem;   
+  white-space: normal; 
+  line-height: 1.2;   
   padding-top: 2px;
   padding-bottom: 2px;
-  text-transform: none; /* Para dili tanan-uppercase (opsyonal) */
+  text-transform: none;
 }

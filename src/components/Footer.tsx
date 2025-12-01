@@ -41,7 +41,7 @@ const Footer = forwardRef<FooterHandles, FooterProps>((props, ref: Ref<FooterHan
         <div className="footer-column" ref={contactRef}>
           <h3>Customer Support</h3>
           <ul>
-            <li>Email: coopbookid@mail.com</li>
+            <li>Email: coopbookid@gmail.com</li>
             <li>Phone: +63 912 345 6789</li>
           </ul>
         </div>

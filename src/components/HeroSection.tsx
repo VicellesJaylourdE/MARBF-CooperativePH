@@ -23,7 +23,7 @@ const HeroSection: React.FC = () => {
               booking system.
             </p>
             <div className="button-group">
-              <IonButton color="warning" onClick={() => history.push("/")}>
+              <IonButton color="warning" onClick={() => history.push("/login")}>
                 Start Booking
               </IonButton>
               <IonButton fill="outline" color="warning" onClick={() => history.push("/learnmore")}>

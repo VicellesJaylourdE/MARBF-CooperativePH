@@ -30,7 +30,8 @@ const LearnMore: React.FC = () => {
             style={{
               fontWeight: "bold",
               fontSize: "1.05rem",
-              color: isDark ? "black" : "",
+
+              color: isDark ? "white" : "black",
               
             }}
             onClick={() => history.push("/")}

@@ -1,97 +1,78 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import {
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonButton,
   IonIcon,
   IonAvatar,
-  IonLabel,
-  IonSpinner,
   IonBadge,
   IonPopover,
   IonButtons,
   IonMenuButton,
-  IonImg, // ✅ GIDUGANG ANG IonImg
+  IonImg,
+  IonLabel,
+  IonSpinner,
+  IonButton,
 } from "@ionic/react";
 import {
   logOutOutline,
   notificationsOutline,
 } from "ionicons/icons";
-import { supabase } from "../utils/supabaseClient";
+import { supabase } from "../utils/supabaseClient"; // Import sa Supabase client
 
 const Admin_AdminHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
   const [initials, setInitials] = useState<string>("U");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // ✅ GIDUGANG NGA STATE PARA SA AVATAR
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [isLogoutClicked, setIsLogoutClicked] = useState(false);
-
   const history = useHistory();
 
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
-
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) {
         console.error("Auth error:", authError.message);
         setLoading(false);
         return;
       }
-
       if (user) {
         const { data: profile, error: profileError } = await supabase
           .from("users")
-          .select("username, user_avatar_url") // Kini nga select sakto na
+          .select("username, user_avatar_url")
           .eq("user_email", user.email)
           .single();
-
         if (profileError || !profile) {
           setUserName("User");
           setInitials("U");
-          setAvatarUrl(null); // ✅ I-SET SA NULL KUNG WALAY PROFILE
+          setAvatarUrl(null);
         } else {
           const username = profile.username;
           setUserName(username);
-          const init = username
-            .split(" ")
-            .map((n: string) => n[0]?.toUpperCase())
-            .join("");
+          const init = username.split(" ").map((n: string) => n[0]?.toUpperCase()).join("");
           setInitials(init);
-          setAvatarUrl(profile.user_avatar_url || null); // ✅ I-SET ANG AVATAR URL GIKAN SA PROFILE
+          setAvatarUrl(profile.user_avatar_url || null);
         }
       }
-
       setLoading(false);
     };
 
     const fetchNotifications = async () => {
-      const { data } = await supabase
-        .from("notifications")
-        .select("id, title, message, is_read, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
+      const { data } = await supabase.from("notifications").select("id, title, message, is_read, created_at").order("created_at", { ascending: false }).limit(5);
       if (data) setNotifications(data);
     };
-
+    
     fetchUserData();
     fetchNotifications();
 
+    // Realtime notifications
     const channel = supabase
       .channel("admin-notifications-channel")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications" },
-        () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
           fetchNotifications();
         }
       )
@@ -108,45 +89,34 @@ const Admin_AdminHeaderBar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      // Logic para sa activity logs (kung kinahanglan)
       const stored = localStorage.getItem("userInfo");
       if (stored) {
         const user = JSON.parse(stored);
-
-        const { data: lastLog } = await supabase
-          .from("activity_logs")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("date_in", { ascending: false })
-          .limit(1)
-          .single();
-
+        const { data: lastLog } = await supabase.from("activity_logs").select("*").eq("user_id", user.id).order("date_in", { ascending: false }).limit(1).single();
         if (lastLog) {
-          await supabase
-            .from("activity_logs")
-            .update({ date_out: new Date() })
-            .eq("log_id", lastLog.log_id);
+          await supabase.from("activity_logs").update({ date_out: new Date() }).eq("log_id", lastLog.log_id);
         }
       }
-
+      
       await supabase.auth.signOut();
       localStorage.removeItem("userInfo");
-      window.location.href = "/";
+      window.location.href = "/"; // Redirect sa login
     } catch (err) {
       console.error("Logout error:", err);
     }
   };
 
   const handleProfileClick = () => {
-    history.push('/admin/myprofile'); 
+    history.push('/admin/myprofile'); // I-direct sa My Profile page
   };
 
   return (
-    <IonHeader>
-      <IonToolbar color="light">
+    <IonHeader class="ion-no-border">
+      <IonToolbar color="light" class="ion-no-border">
         <IonButtons slot="start">
-          <IonMenuButton autoHide={false} />
+          <IonMenuButton autoHide={false} menu="admin-menu" />
         </IonButtons>
-
         <IonTitle style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
           <div style={{ display: "flex", alignItems: "center" }}>Admin Dashboard</div>
           {!loading && (
@@ -155,110 +125,45 @@ const Admin_AdminHeaderBar: React.FC = () => {
             </IonLabel>
           )}
         </IonTitle>
-
-        <div
-          style={{
-            position: "absolute",
-            right: "1rem",
-            top: "0.3rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.25rem",
-          }}
-        >
-          {loading ? (
-            <IonSpinner name="crescent" />
-          ) : (
+        <div style={{ position: "absolute", right: "1rem", top: "0.3rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+          {loading ? ( <IonSpinner name="crescent" /> ) : (
             <>
-              {/* ✅ GI-UPDATE NGA AVATAR SECTION */}
-              <IonAvatar 
-                style={{ 
-                  width: "35px", 
-                  height: "35px",
-                  cursor: "pointer", // Gipabilin ang cursor
-                }}
-                onClick={handleProfileClick} // Gipabilin ang onClick
-              >
+              <IonAvatar style={{ width: "35px", height: "35px", cursor: "pointer" }} onClick={handleProfileClick}>
                 {avatarUrl ? (
-                  // KUNG NAA'Y PICTURE URL, GAMIT OG IonImg
-                  <IonImg
-                    src={avatarUrl}
-                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
-                  />
+                  <IonImg src={avatarUrl} style={{ width: "100%", height: "100%", borderRadius: "50%" }} />
                 ) : (
-                  // KUNG WALA, GAMIT OG INITIALS (sama sa daan)
-                  <div
-                    style={{
-                      backgroundColor: "#2a62f3",
-                      color: "#fff",
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "bold",
-                    }}
-                  >
+                  <div style={{ backgroundColor: "#2a62f3", color: "#fff", width: "100%", height: "100%", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
                     {initials}
                   </div>
                 )}
               </IonAvatar>
-
               {!isMobile && (
                 <div style={{ textAlign: "right", marginRight: "4px" }}>
-                  <IonLabel style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{userName}</IonLabel>
-                  <br />
-                  <IonLabel color="medium" style={{ fontSize: "0.75rem" }}>
-                    Admin
-                  </IonLabel>
+                  <IonLabel style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{userName}</IonLabel><br />
+                  <IonLabel color="medium" style={{ fontSize: "0.75rem" }}>Admin</IonLabel>
                 </div>
               )}
-
               <IonButton id="admin-notif-btn" fill="clear">
                 <IonIcon icon={notificationsOutline} />
                 {notifications.some((n) => !n.is_read) && (
-                  <IonBadge color="danger">
-                    {notifications.filter((n) => !n.is_read).length}
-                  </IonBadge>
+                  <IonBadge color="danger">{notifications.filter((n) => !n.is_read).length}</IonBadge>
                 )}
               </IonButton>
-
               <IonPopover trigger="admin-notif-btn" triggerAction="click">
                 <div style={{ padding: "10px", minWidth: "250px" }}>
                   <h4>Notifications</h4>
-                  {notifications.length === 0 ? (
-                    <IonLabel>No notifications</IonLabel>
-                  ) : (
+                  {notifications.length === 0 ? ( <IonLabel>No notifications</IonLabel> ) : (
                     notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        style={{
-                          padding: "8px",
-                          border: "1px solid #ddd",
-                          borderRadius: "8px",
-                          background: notif.is_read ? "#f9f9f9" : "#e8f0fe",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        <strong>{notif.title}</strong>
-                        <br />
-                        <IonLabel>{notif.message}</IonLabel>
-                        <br />
-                        <small style={{ color: "#777" }}>
-                          {new Date(notif.created_at).toLocaleString()}
-                        </small>
+                      <div key={notif.id} style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "8px", background: notif.is_read ? "#f9f9f9" : "#e8f0fe", marginBottom: "6px" }}>
+                        <strong>{notif.title}</strong><br />
+                        <IonLabel>{notif.message}</IonLabel><br />
+                        <small style={{ color: "#777" }}>{new Date(notif.created_at).toLocaleString()}</small>
                       </div>
                     ))
                   )}
                 </div>
               </IonPopover>
-
-              <IonButton
-                fill="clear"
-                color={isLogoutClicked ? "warning" : "medium"}
-                onClick={handleLogout}
-              >
+              <IonButton fill="clear" color={isLogoutClicked ? "warning" : "medium"} onClick={handleLogout}>
                 <IonIcon icon={logOutOutline} />
               </IonButton>
             </>

@@ -15,9 +15,6 @@ const CTASection: React.FC = () => {
       <p style={{ maxWidth: "700px", margin: "1rem auto", fontSize: "1rem" }}>
         Join the Mantibugao Agrarian Reform Beneficiaries Farmers Cooperative in embracing digital transformation for better agricultural outcomes.
       </p>
-      <IonButton color="light" onClick={() => history.push("/registerone")}>
-        Register
-      </IonButton>
     </div>
   );
 };

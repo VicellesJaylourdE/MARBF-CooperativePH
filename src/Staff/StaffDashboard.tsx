@@ -78,10 +78,6 @@ import ManageRentalBookings from "./ManageRentalBookings";
 import EquipmentList from "../components/Staff_EquipmentList";
 import Staff_MyProfile from "../components/Staff_MyProfile";
 
-
-// ===================================================================
-// 0. ANG CSS ISIP USA KA COMPONENT (Kopya gikan sa Admin)
-// ===================================================================
 const DashboardStyles: React.FC = () => (
   <style>{`
     /* --- Styling para sa Active Sidebar Item --- */
@@ -99,11 +95,6 @@ const DashboardStyles: React.FC = () => (
     }
     /* --- End sa Sidebar Styling --- */
 
-
-    /* ==================================================
-       PARA MAWALA ANG BORDER/SHADOW SA CARD
-    ==================================================
-    */
     ion-card {
       box-shadow: none !important;
       --border-width: 0px !important;
@@ -121,10 +112,6 @@ const DashboardStyles: React.FC = () => (
   `}</style>
 );
 
-
-// ===================================================================
-// 1. Staff_StaffHeaderBar COMPONENT (Gi-style ug naay Avatar Logic)
-// ===================================================================
 const Staff_StaffHeaderBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("User");
