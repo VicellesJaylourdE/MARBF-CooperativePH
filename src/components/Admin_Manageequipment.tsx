@@ -16,7 +16,8 @@ interface Equipment {
 }
 
 const Admin_ManageEquipment: React.FC = () => {
- 
+
+  // --- State for Adding New Equipment ---
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState<number | null>(null);
@@ -25,17 +26,17 @@ const Admin_ManageEquipment: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  
+  // --- State for Managing Existing Equipment ---
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false); // Used for both Add and Edit Save
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Equipment>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  
+  // --- Data Fetching ---
   const fetchEquipment = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -47,6 +48,7 @@ const Admin_ManageEquipment: React.FC = () => {
     setLoading(false);
   };
 
+  // --- Real-time Subscription ---
   useEffect(() => {
     fetchEquipment();
     const channel = supabase
@@ -63,6 +65,7 @@ const Admin_ManageEquipment: React.FC = () => {
     };
   }, []);
 
+  // --- Image Handlers ---
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -72,6 +75,7 @@ const Admin_ManageEquipment: React.FC = () => {
     }
   };
 
+  // --- Add Equipment Logic ---
   const handleAddEquipment = async () => {
     if (!name || !price || !category || quantity === null || quantity < 0) {
       setAlertMessage("⚠️ Please fill all required fields correctly (quantity must be >= 0)");
@@ -82,9 +86,10 @@ const Admin_ManageEquipment: React.FC = () => {
     setUploading(true);
     let imageUrl: string | null = null;
     
+    // Automatically set status to 'unavailable' if quantity is 0
     const finalStatus = quantity === 0 ? "unavailable" : status;
 
-   
+    // Image upload logic (omitted error handling for brevity, assumed path is correct)
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -125,6 +130,7 @@ const Admin_ManageEquipment: React.FC = () => {
     fetchEquipment();  
   };
 
+  // --- Delete Equipment Logic ---
   const handleDeleteEquipment = async (id: string) => {
     if (!window.confirm("🗑️ Delete this equipment? This cannot be undone.")) return;
     const { error } = await supabase.from("equipment").delete().eq("id", id);
@@ -135,10 +141,12 @@ const Admin_ManageEquipment: React.FC = () => {
     fetchEquipment(); 
   };
 
+  // --- Edit Handlers ---
   const handleEdit = (eq: Equipment) => {
     setEditingId(eq.id);
     setEditData({ ...eq });
-    setImagePreview(eq.image_url || null);
+    // This is set to preview the current/existing image or a new one
+    setImagePreview(eq.image_url || null); 
     setImageFile(null);
   };
 
@@ -152,7 +160,7 @@ const Admin_ManageEquipment: React.FC = () => {
     setUploading(true);
     let imageUrl = editData.image_url;
     
-   
+    // Automatically adjust status if quantity is zero
     const updatedStatus = editData.quantity === 0 ? "unavailable" : editData.status;
 
     if (imageFile) {
@@ -205,56 +213,71 @@ const Admin_ManageEquipment: React.FC = () => {
 
   return (
     <IonPage>
+      <IonHeader>
+        <IonToolbar >
+          <IonTitle>⚙️ Manage Equipment</IonTitle>
+        </IonToolbar>
+      </IonHeader>
       <IonContent className="ion-padding">
         
-        <IonList>
-          <IonItem><IonLabel position="stacked">Name</IonLabel><IonInput value={name} onIonChange={(e) => setName(e.detail.value!)} /></IonItem>
-          <IonItem><IonLabel position="stacked">Category</IonLabel><IonInput value={category} onIonChange={(e) => setCategory(e.detail.value!)} /></IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Price (₱/day)</IonLabel>
-            <IonInput type="number" value={price ?? ""} onIonChange={(e) => setPrice(Number(e.detail.value!))} />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Quantity (Initial Unit)</IonLabel>
-            <IonInput type="number" value={quantity} onIonChange={(e) => setQuantity(Number(e.detail.value!))} min="0" />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Upload Image</IonLabel>
-            <input
-              type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange}
-                />
-            <IonButton expand="block" size="small" onClick={() => fileInputRef.current?.click()} style={{marginTop: '10px'}}>
-              Choose Image
-            </IonButton>
-          </IonItem>
+        {/* --- ADD NEW EQUIPMENT FORM --- */}
+        <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>Add New Equipment</h3>
+          <IonList>
+            <IonItem><IonLabel position="stacked">Name</IonLabel><IonInput value={name} onIonChange={(e) => setName(e.detail.value!)} /></IonItem>
+            <IonItem><IonLabel position="stacked">Category</IonLabel><IonInput value={category} onIonChange={(e) => setCategory(e.detail.value!)} /></IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Price (₱/day)</IonLabel>
+              <IonInput type="number" value={price ?? ""} onIonChange={(e) => setPrice(Number(e.detail.value!))} />
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Quantity (Initial Unit)</IonLabel>
+              <IonInput type="number" value={quantity} onIonChange={(e) => setQuantity(Number(e.detail.value!))} min="0" />
+            </IonItem>
+            
+            {/* Image Upload for New Equipment */}
+            <IonItem>
+              <IonLabel position="stacked">Upload Image</IonLabel>
+              <input
+                type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange}
+                  />
+              <IonButton expand="block" size="small" onClick={() => fileInputRef.current?.click()} style={{marginTop: '10px'}}>
+                Choose Image
+              </IonButton>
+            </IonItem>
 
-          {imagePreview && (
-            <IonRow className="ion-justify-content-center ion-align-items-center">
-              <IonCol className="ion-text-center">
-                <IonImg src={imagePreview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", marginTop: "10px", borderRadius: '4px' }}/>
-              </IonCol>
-            </IonRow>
-          )}
-          
-          <IonButton expand="block" color="warning" onClick={handleAddEquipment} disabled={uploading} style={{marginTop: '20px'}}>
-            {uploading ? (
-                <>
-                    <IonSpinner name="crescent" color="light" style={{marginRight: '8px'}} /> Uploading...
-                </>
-            ) : (
-                "Add Equipment"
+            {imagePreview && (
+              <IonRow className="ion-justify-content-center ion-align-items-center">
+                <IonCol className="ion-text-center">
+                  <IonImg src={imagePreview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", marginTop: "10px", borderRadius: '4px' }}/>
+                </IonCol>
+              </IonRow>
             )}
-          </IonButton>
-        </IonList>
+            
+            <IonButton expand="block" color="warning" onClick={handleAddEquipment} disabled={uploading} style={{marginTop: '20px'}}>
+              {uploading ? (
+                  <>
+                      <IonSpinner name="crescent" color="light" style={{marginRight: '8px'}} /> Uploading...
+                  </>
+              ) : (
+                  "Add Equipment"
+              )}
+            </IonButton>
+          </IonList>
+        </div>
 
-       
+        <hr/>
+        
+        <h3 style={{ marginTop: '20px' }}>Current Inventory ({equipment.length})</h3>
+
+        {/* --- EQUIPMENT LIST / TABLE --- */}
         {loading ? (
           <div className="ion-text-center" style={{padding: '20px'}}>
             <IonSpinner name="dots" /> <p>Loading Equipment...</p>
           </div>
         ) : (
           <>
-          
+            {/* Desktop View Table */}
             <IonGrid className="table-grid ion-hide-sm-down">
               <IonRow style={{ fontWeight: "bold", borderBottom: "2px solid #ccc" }}>
                 <IonCol size-lg="2" size-md="2">Image</IonCol>
@@ -290,6 +313,7 @@ const Admin_ManageEquipment: React.FC = () => {
                     )}
                   </IonCol>
 
+                  {/* Quantity/Unit for Desktop View */}
                   <IonCol size-lg="1" size-md="1">
                     {editingId === eq.id ? (
                       <IonInput 
@@ -297,7 +321,7 @@ const Admin_ManageEquipment: React.FC = () => {
                         value={editData.quantity} 
                         onIonChange={(e) => {
                           const newQuantity = Number(e.detail.value!);
-                        
+                          
                           const newStatus = newQuantity === 0 ? "unavailable" : editData.status;
                           setEditData({ ...editData, quantity: newQuantity, status: newStatus });
                         }} 
@@ -321,9 +345,9 @@ const Admin_ManageEquipment: React.FC = () => {
                       </IonSelect>
                     ) : (
                       
-                       <span style={{ color: eq.quantity === 0 ? 'red' : 'inherit' }}>
-                           {eq.quantity === 0 ? 'unavailable' : eq.status}
-                       </span>
+                        <span style={{ color: eq.quantity === 0 ? 'red' : 'inherit' }}>
+                          {eq.quantity === 0 ? 'unavailable' : eq.status}
+                        </span>
                     )}
                   </IonCol>
 
@@ -346,7 +370,7 @@ const Admin_ManageEquipment: React.FC = () => {
               ))}
             </IonGrid>
 
-           
+            {/* Mobile View List (FIXED THE INPUT ISSUE HERE) */}
             <IonList className="ion-hide-sm-up">
               {equipment.map((eq) => (
                 <IonItem key={eq.id} lines="full" style={{flexWrap: 'wrap', paddingBottom: '10px'}}>
@@ -357,28 +381,41 @@ const Admin_ManageEquipment: React.FC = () => {
                         <IonCol size="9">
                             {editingId === eq.id ? (
                                 <>
-                                    <IonInput value={editData.name} onIonChange={(e) => setEditData({ ...editData, name: e.detail.value! })} placeholder="Name" label="Name"/>
-                                    <IonInput 
-                                      type="number" 
-                                      value={editData.quantity} 
-                                      onIonChange={(e) => {
-                                        const newQuantity = Number(e.detail.value!);
-                                        const newStatus = newQuantity === 0 ? "unavailable" : editData.status;
-                                        setEditData({ ...editData, quantity: newQuantity, status: newStatus });
-                                      }} 
-                                      min="0" 
-                                      label="Stock"
-                                    />
-                                    <IonSelect 
-                                        value={editData.quantity === 0 ? "unavailable" : editData.status} 
-                                        onIonChange={(e) => setEditData({ ...editData, status: e.detail.value })} 
-                                        label="Status"
-                                        disabled={editData.quantity === 0} 
-                                    >
-                                        <IonSelectOption value="available">Available</IonSelectOption>
-                                        <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
-                                        <IonSelectOption value="unavailable">Unavailable</IonSelectOption>
-                                    </IonSelect>
+                                    {/* Name Input FIX */}
+                                    <IonItem lines="none" style={{paddingTop: '5px'}}>
+                                        <IonInput value={editData.name} onIonChange={(e) => setEditData({ ...editData, name: e.detail.value! })} placeholder="Name" label="Name" labelPlacement="stacked"/>
+                                    </IonItem>
+                                    
+                                    {/* Quantity Input FIX (This was the main problem area) */}
+                                    <IonItem lines="none" style={{paddingTop: '5px'}}>
+                                        <IonInput 
+                                            type="number" 
+                                            value={editData.quantity} 
+                                            onIonChange={(e) => {
+                                                const newQuantity = Number(e.detail.value!);
+                                                const newStatus = newQuantity === 0 ? "unavailable" : editData.status;
+                                                setEditData({ ...editData, quantity: newQuantity, status: newStatus });
+                                            }} 
+                                            min="0" 
+                                            label="Stock"
+                                            labelPlacement="stacked" // Makes it clear on mobile
+                                        />
+                                    </IonItem>
+                                    
+                                    {/* Status Select FIX */}
+                                    <IonItem lines="none" style={{paddingTop: '5px'}}>
+                                        <IonSelect 
+                                            value={editData.quantity === 0 ? "unavailable" : editData.status} 
+                                            onIonChange={(e) => setEditData({ ...editData, status: e.detail.value })} 
+                                            label="Status"
+                                            labelPlacement="stacked" // Makes it clear on mobile
+                                            disabled={editData.quantity === 0} 
+                                        >
+                                            <IonSelectOption value="available">Available</IonSelectOption>
+                                            <IonSelectOption value="maintenance">Maintenance</IonSelectOption>
+                                            <IonSelectOption value="unavailable">Unavailable</IonSelectOption>
+                                        </IonSelect>
+                                    </IonItem>
                                 </>
                             ) : (
                                 <div>
