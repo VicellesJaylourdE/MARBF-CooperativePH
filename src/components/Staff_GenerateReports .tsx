@@ -58,9 +58,15 @@ const Staff_GenerateReports : React.FC = () => {
   const [otpVerified, setOtpVerified] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null); // State para sa role checking
 
+  // --- DATA FETCHING (MODIFIED TO INCLUDE ROLE CHECK) ---
   useEffect(() => {
-    if (!otpVerified) return;
+    // I-check kung Staff role lang ang naka-verified
+    if (!otpVerified || userRole !== 'staff') {
+        setLoading(false);
+        return;
+    } 
 
     const fetchData = async () => {
       try {
@@ -83,7 +89,6 @@ const Staff_GenerateReports : React.FC = () => {
         } else if (reportType === "equipment") {
           const res = await supabase
             .from("equipment")
-            // ✨ IDINAGDAG ANG 'quantity'
             .select("name, category, price, status, quantity"); 
           fetchedData = res.data;
           error = res.error;
@@ -102,7 +107,6 @@ const Staff_GenerateReports : React.FC = () => {
 
           const user = usersData?.find((u) => u.user_id === item.user_id);
           
-          // ✨ LOGIC PARA SA EQUIPMENT STATUS: Unavailable kung Quantity ay 0
           let finalStatus = item.status;
           if (reportType === "equipment" && item.quantity !== undefined) {
             finalStatus = item.quantity === 0 ? "unavailable" : item.status;
@@ -113,8 +117,8 @@ const Staff_GenerateReports : React.FC = () => {
             user_name: user
               ? user.username ||
                 `${user.user_firstname || ""} ${user.user_lastname || ""}`.trim()
-              : reportType === "equipment" ? item.name : "Unknown User", // Added check for equipment name
-            status: finalStatus, // Gagamitin ang na-calculate na status
+              : reportType === "equipment" ? item.name : "Unknown User", 
+            status: finalStatus, 
           };
         });
 
@@ -127,8 +131,9 @@ const Staff_GenerateReports : React.FC = () => {
     };
 
     fetchData();
-  }, [reportType, otpVerified]);
+  }, [reportType, otpVerified, userRole]);
 
+  // --- HELPER FUNCTION ---
   const calculateDays = (start?: string, end?: string) => {
     if (!start || !end) return "N/A";
     return (
@@ -136,6 +141,7 @@ const Staff_GenerateReports : React.FC = () => {
     );
   };
 
+  // --- PDF GENERATION ---
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 14, 15);
@@ -154,7 +160,6 @@ const Staff_GenerateReports : React.FC = () => {
       } else if (reportType === "transactions") {
         row.push(item.user_name, item.amount, item.payment_method, item.status);
       } else if (reportType === "equipment") {
-        // ✨ IDINAGDAG ANG QUANTITY SA PDF ROW
         row.push(item.name, item.category, item.price, item.quantity, item.status); 
       }
       return row;
@@ -163,13 +168,13 @@ const Staff_GenerateReports : React.FC = () => {
     const headers = [["#"]];
     if (reportType === "bookings") headers[0].push("Equipment", "User", "Days", "Start Date", "End Date", "Status");
     if (reportType === "transactions") headers[0].push("User", "Amount", "Payment Method", "Status");
-    // ✨ IDINAGDAG ANG QUANTITY SA PDF HEADER
     if (reportType === "equipment") headers[0].push("Name", "Category", "Price", "Quantity", "Status"); 
 
     autoTable(doc, { startY: 20, head: headers, body: tableData });
     doc.save(`${reportType}_report.pdf`);
   };
 
+  // --- EXCEL EXPORT ---
   const generateExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       data.map((item, index) => {
@@ -190,7 +195,6 @@ const Staff_GenerateReports : React.FC = () => {
           row["Name"] = item.name;
           row["Category"] = item.category;
           row["Price"] = item.price;
-          // ✨ IDINAGDAG ANG QUANTITY SA EXCEL
           row["Quantity"] = item.quantity;
           row["Status"] = item.status;
         }
@@ -203,7 +207,7 @@ const Staff_GenerateReports : React.FC = () => {
     XLSX.writeFile(workbook, `${reportType}_report.xlsx`);
   };
 
-  // OTP handlers
+  // --- OTP HANDLERS ---
   const handleSendOtp = async () => {
     if (!email) {
       setToastMessage("Please enter your email.");
@@ -220,25 +224,59 @@ const Staff_GenerateReports : React.FC = () => {
     setShowToast(true);
   };
 
+  // 🔥 CORE LOGIC: Verify OTP and Check for 'staff' Role
   const handleVerifyOtp = async () => {
     if (!otp) {
-      setToastMessage("Please enter OTP.");
-      setShowToast(true);
-      return;
+        setToastMessage("Please enter OTP.");
+        setShowToast(true);
+        return;
     }
 
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
-    if (error) setToastMessage("OTP verification failed: " + error.message);
-    else {
-      setToastMessage("OTP verified! You can now access reports.");
-      setOtpVerified(true);
+    // 1. Verify OTP
+    const { error: otpError } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
+
+    if (otpError) {
+        setToastMessage("OTP verification failed: " + otpError.message);
+        setShowToast(true);
+        return;
     }
+
+    // 2. Fetch the user's role from the 'users' table using the email
+    const { data: userData, error: roleError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("user_email", email)
+        .single();
+
+    if (roleError || !userData) {
+        setToastMessage("User role not found. Access denied.");
+        setShowToast(true);
+        return;
+    }
+
+    // 3. Check the role and grant access ONLY TO STAFF
+    const role = userData.role;
+    setUserRole(role); 
+    
+    if (role === 'staff') {
+        setToastMessage(`OTP verified! Access granted as STAFF.`);
+        setOtpVerified(true);
+    } else {
+        // Access Denied: Mag-sign out ug i-reset ang forms
+        setToastMessage(`Access Denied. Your role is '${role}'. Only STAFF can view reports.`);
+        await supabase.auth.signOut(); 
+        setOtpSent(false); 
+        setOtpVerified(false);
+    }
+
     setShowToast(true);
   };
 
+  // --- RENDER ---
   return (
     <IonContent className="ion-padding">
-      {/* OTP Section */}
+      
+      {/* 🔐 OTP/Verification Section: Makakita ni tanan */}
       {!otpVerified && (
         <>
           <IonItem>
@@ -257,7 +295,7 @@ const Staff_GenerateReports : React.FC = () => {
             </IonButton>
           )}
 
-          {otpSent && (
+          {otpSent && !otpVerified && (
             <>
               <IonItem>
                 <IonLabel position="stacked">Enter OTP</IonLabel>
@@ -276,27 +314,30 @@ const Staff_GenerateReports : React.FC = () => {
         </>
       )}
 
-      {/* Report Generation Section */}
-      {otpVerified && (
+      {/* 📊 Report Generation Section: Makakita LANG ang 'staff' */}
+      {otpVerified && userRole === 'staff' && (
         <>
-          <IonItem
-            style={{
-              borderRadius: "12px",
-              marginBottom: "16px",
-              padding: "6px 10px",
-            }}
-          >
-            <IonLabel>Select Report Type</IonLabel>
-            <IonSelect
-              value={reportType}
-              onIonChange={(e) => setReportType(e.detail.value)}
-              style={{ color: "#fffafaff" }}
-            >
-              <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
-              <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
-              <IonSelectOption value="equipment">Equipment Report</IonSelectOption>
-            </IonSelect>
-          </IonItem>
+          <div style={{ marginBottom: "1rem", display: "flex", gap: "10px", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, color: "#3880ff" }}>Reports Dashboard ({userRole?.toUpperCase()})</h3>
+              <IonItem 
+                style={{
+                  borderRadius: "12px",
+                  padding: "6px 10px",
+                  minWidth: "200px"
+                }}
+              >
+                <IonLabel>Select Report Type</IonLabel>
+                <IonSelect
+                  value={reportType}
+                  onIonChange={(e) => setReportType(e.detail.value)}
+                  style={{ color: "#fffafaff" }}
+                >
+                  <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
+                  <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
+                  <IonSelectOption value="equipment">Equipment Report</IonSelectOption>
+                </IonSelect>
+              </IonItem>
+          </div>
 
           <div style={{ marginBottom: "1rem", display: "flex", gap: "10px" }}>
             <IonButton color="primary" onClick={generatePDF}>
@@ -316,20 +357,19 @@ const Staff_GenerateReports : React.FC = () => {
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
-                <thead style={{ }}>
+                <thead>
                   <tr>
                     <th style={headerStyle}>#</th>
                     {reportType === "bookings" && <th style={headerStyle}>Equipment</th>}
-                    {reportType === "equipment" && <th style={headerStyle}>Name</th>} {/* Changed from 'User' to 'Name' for equipment report */}
-                    {reportType === "transactions" && <th style={headerStyle}>User</th>}
-                    {reportType === "bookings" && <th style={headerStyle}>User</th>}
+                    {reportType === "equipment" && <th style={headerStyle}>Name</th>}
+                    {(reportType === "transactions" || reportType === "bookings") && <th style={headerStyle}>User</th>}
 
                     {reportType === "bookings" && <th style={headerStyle}>Days</th>}
                     {reportType === "bookings" && <th style={headerStyle}>Start Date</th>}
                     {reportType === "bookings" && <th style={headerStyle}>End Date</th>}
                     {reportType === "equipment" && <th style={headerStyle}>Category</th>}
                     {reportType === "equipment" && <th style={headerStyle}>Price</th>}
-                    {reportType === "equipment" && <th style={headerStyle}>Quantity</th>} {/* ✨ IDINAGDAG */}
+                    {reportType === "equipment" && <th style={headerStyle}>Quantity</th>} 
                     {reportType === "transactions" && <th style={headerStyle}>Amount</th>}
                     {reportType === "transactions" && <th style={headerStyle}>Payment Method</th>}
                     <th style={headerStyle}>Status</th>
@@ -343,7 +383,6 @@ const Staff_GenerateReports : React.FC = () => {
                       <td style={cellStyle}>{index + 1}</td>
                       {reportType === "bookings" && <td style={cellStyle}>{item.equipment_name}</td>}
                       
-                      {/* Nag-merge ng Equipment Name at User Name display */}
                       <td style={cellStyle}>{item.user_name || item.name || "-"}</td> 
                       
                       {reportType === "bookings" && (
@@ -357,7 +396,6 @@ const Staff_GenerateReports : React.FC = () => {
                         <>
                           <td style={cellStyle}>{item.category}</td>
                           <td style={cellStyle}>{item.price ? `₱${item.price.toLocaleString()}` : "-"}</td>
-                          {/* ✨ IDINAGDAG ANG QUANTITY */}
                           <td style={cellStyle}>
                             <strong style={{color: item.quantity === 0 ? 'red' : 'green'}}>
                                 {item.quantity !== undefined ? item.quantity : "-"}
@@ -380,6 +418,28 @@ const Staff_GenerateReports : React.FC = () => {
           )}
         </>
       )}
+
+      {/* 🛑 Access Denied Message: Makakita ni kung Verified pero Dili Staff */}
+      {otpVerified && userRole !== 'staff' && (
+          <div style={{ padding: "20px", textAlign: "center", border: "1px solid red", borderRadius: "8px", marginTop: "20px" }}>
+              <h3>🚫 Access Denied</h3>
+              <p>Only **Staff** users are authorized to view this page. Your current role is **{userRole?.toUpperCase()}**.</p>
+              <IonButton 
+                  onClick={() => { 
+                      setOtpVerified(false); 
+                      setOtpSent(false); 
+                      setOtp(''); 
+                      setEmail(''); 
+                      setUserRole(null); 
+                  }} 
+                  color="danger" 
+                  fill="outline"
+              >
+                  Try Another Email
+              </IonButton>
+          </div>
+      )}
+
 
       <IonToast
         isOpen={showToast}

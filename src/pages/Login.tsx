@@ -280,13 +280,12 @@ const Login: React.FC = () => {
         <div className="background-wrapper">
           <div className="overlay">
             <div className="login-layout">
-              {/* --- LEFT PANEL (Para sa Desktop View) --- */}
+           
               <div className="left-panel">
                 <img src={logo} alt="Cooperative Logo" className="coop-logo" />
                 <h2>Mantibugao Agrarian Reform Beneficiaries Farmers’ Cooperative</h2>
               </div>
 
-              {/* --- RIGHT PANEL / MAIN LOGIN FORM --- */}
               <div className="right-panel">
                 <div className="login-box">
                   <IonButton
