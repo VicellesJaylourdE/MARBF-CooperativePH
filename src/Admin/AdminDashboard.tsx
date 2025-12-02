@@ -366,7 +366,7 @@ const AdminDashboard: React.FC = () => {
                             </IonSelect>
                         </IonItem>
                     )}
-                    <IonItem lines="none" style={{ maxWidth: "200px", marginLeft: "auto", marginRight: 0 }}>
+                    <IonItem lines="none" style={{ maxWidth: "250x", marginLeft: "auto", marginRight: 0 }}>
                       <IonLabel>Filter:</IonLabel>
                       <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value as "month" | "year" | "month-weeks")} interface="popover">
                         <IonSelectOption value="month-weeks">Month (Week 1-5)</IonSelectOption>

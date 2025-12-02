@@ -24,7 +24,7 @@ interface BookingModalProps {
 
 // Fixed GCash Account Details
 const GCASH_ACCOUNT = {
-    name: "Jay Lourd",
+    name: "Evilyn B. Rances",
     number: "09639539761",
 };
 
@@ -190,8 +190,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     booking_id: bookingData.id,
                     user_id,
                     amount: totalPrice,
-                    // Status: "pending" for Cash (needs collection/verification) 
-                    // and "unpaid" for GCash (needs proof verification)
+                
                     status: paymentMethod === "cash" ? "pending" : "unpaid", 
                     payment_method: paymentMethod, 
                     proof_url: proofUrl, 

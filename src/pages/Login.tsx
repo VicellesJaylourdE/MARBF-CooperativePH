@@ -17,6 +17,7 @@ import bcrypt from "bcryptjs";
 import { supabase } from "../utils/supabaseClient";
 import logo from "../assets/Gemini_Generated_Image_lh66iclh66iclh66-removebg-preview.png";
 
+// Alert Component (Walay Kaausaban)
 const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({
   message,
   isOpen,
@@ -48,29 +49,105 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // --- Utility Function: 24-Hour Cooldown Check ---
+  const isOtpCooldownActive = (lastSentTimestamp: string | null): boolean => {
+    if (!lastSentTimestamp) return false;
+
+    const lastSentTime = new Date(lastSentTimestamp).getTime();
+    const currentTime = new Date().getTime();
+    // 24 oras = 24 * 60 * 60 * 1000 milliseconds
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+    // True kung ang katapusang pagpadala kay wala pay 24 oras ang milabay
+    return (currentTime - lastSentTime) < TWENTY_FOUR_HOURS;
+  };
+
+  const sendOtp = async (type: "email" | "phone", identifier: string) => {
+    const { error } =
+      type === "email"
+        ? await supabase.auth.signInWithOtp({ email: identifier })
+        : await supabase.auth.signInWithOtp({ phone: identifier });
+        
+    if (error) {
+      setAlertMessage("⚠️ Failed to send OTP: " + error.message);
+      setShowAlert(true);
+    } else {
+      setOtpSent(true);
+      setAlertMessage("📩 OTP gipadala! Palihug i-check ang imong inbox o SMS.");
+      setShowAlert(true);
+      
+      // Update last_otp_sent timestamp in the users table
+      if (type === "email") {
+          await supabase
+            .from("users")
+            .update({ last_otp_sent: new Date().toISOString() })
+            .eq("user_email", identifier);
+      }
+    }
+  };
+
+  // --- Main Login Function (Gi-usab ang OTP Bypass Logic) ---
   const doLogin = async () => {
     if (segment === "email") {
       if (!email || !password) {
-        setAlertMessage("⚠️ Please enter both email and password.");
+        setAlertMessage("⚠️ Palihug i-input ang email ug password.");
         setShowAlert(true);
         return;
       }
       setLoading(true);
+
+      // 1. I-authenticate una ang user gamit ang password
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
       if (error) {
         setLoading(false);
         setAlertMessage("❌ " + error.message);
         setShowAlert(true);
         return;
       }
-      await sendOtp("email");
+
+      // 2. Kuhaon ang user data gikan sa public.users table para sa OTP check
+      const { data: userData, error: fetchError } = await supabase
+        .from("users")
+        .select("last_otp_sent")
+        .eq("user_email", email)
+        .single();
+      
+      if (fetchError || !userData) {
+        // Continue login if error or no data found (fallback, though in production you'd want user data)
+        setAlertMessage("⚠️ Login successful, but could not check for OTP cooldown. Proceeding...");
+        setShowAlert(true);
+        setOtpVerified(true); // Assume successful login without cooldown check leads to dashboard
+        await fetchUser();
+        setLoading(false);
+        return; 
+      }
+
+      // 3. 🔥 IMPLEMENTASYON SA OTP BYPASS 🔥
+      if (isOtpCooldownActive(userData.last_otp_sent)) {
+        setLoading(false);
+        
+        // Gi-bypass ang OTP screen ug direkta nga mo-login
+        setOtpVerified(true);
+        setShowToast(true);
+        setAlertMessage("✅ Welcome back! Login successful (within 24-hour window).");
+        setShowAlert(true);
+        await fetchUser(); // Direkta nga i-redirect
+        return; // Mohunong na ang function
+      }
+
+      // 4. Kung walay active cooldown (sobra na sa 24 oras), i-send ang OTP ug i-update ang timestamp
+      await sendOtp("email", email);
+      
       setLoading(false);
+
     } else {
+      // --- Phone Login (Walay OTP Cooldown) ---
       if (!phone || !password) {
-        setAlertMessage("⚠️ Please enter both phone and password.");
+        setAlertMessage("⚠️ Palihug i-input ang phone ug password.");
         setShowAlert(true);
         return;
       }
@@ -96,42 +173,31 @@ const Login: React.FC = () => {
         setShowAlert(true);
         return;
       }
-
+      // Supabase OTP for Phone
       const { error } = await supabase.auth.signInWithOtp({ phone });
       if (error) {
         setAlertMessage("⚠️ Failed to send OTP: " + error.message);
         setShowAlert(true);
       } else {
         setOtpSent(true);
-        setAlertMessage("📩 OTP sent to your phone.");
+        setAlertMessage("📩 OTP gipadala sa imong phone.");
         setShowAlert(true);
       }
       setLoading(false);
     }
   };
 
-  const sendOtp = async (type: "email" | "phone") => {
-    const { error } =
-      type === "email"
-        ? await supabase.auth.signInWithOtp({ email })
-        : await supabase.auth.signInWithOtp({ phone });
-    if (error) {
-      setAlertMessage("⚠️ Failed to send OTP: " + error.message);
-      setShowAlert(true);
-    } else {
-      setOtpSent(true);
-      setAlertMessage("📩 OTP sent! Please check your inbox or SMS.");
-      setShowAlert(true);
-    }
-  };
-
+  // --- OTP Verification Function (Walay Kaausaban) ---
   const verifyOtp = async () => {
     if (!otp) {
-      setAlertMessage("⚠️ Please enter the OTP.");
+      setAlertMessage("⚠️ Palihug i-enter ang OTP.");
       setShowAlert(true);
       return;
     }
 
+    setLoading(true);
+
+    // Supabase verification
     const { error } = await supabase.auth.verifyOtp(
       segment === "email"
         ? { email, token: otp, type: "email" }
@@ -139,7 +205,8 @@ const Login: React.FC = () => {
     );
 
     if (error) {
-      setAlertMessage("❌ Invalid OTP. Please try again.");
+      setLoading(false);
+      setAlertMessage("❌ Invalid OTP. Palihug sulayi og usab.");
       setShowAlert(true);
       return;
     }
@@ -150,8 +217,10 @@ const Login: React.FC = () => {
     setShowAlert(true);
 
     await fetchUser();
+    setLoading(false);
   };
-
+  
+  // --- User Fetch and Redirection Function (Walay Kaausaban) ---
   const fetchUser = async () => {
     const { data: userData, error: roleError } = await supabase
       .from("users")
@@ -204,17 +273,20 @@ const Login: React.FC = () => {
     }, 1000);
   };
   
+
   return (
     <IonPage>
       <IonContent fullscreen>
         <div className="background-wrapper">
           <div className="overlay">
             <div className="login-layout">
+              {/* --- LEFT PANEL (Para sa Desktop View) --- */}
               <div className="left-panel">
                 <img src={logo} alt="Cooperative Logo" className="coop-logo" />
                 <h2>Mantibugao Agrarian Reform Beneficiaries Farmers’ Cooperative</h2>
               </div>
 
+              {/* --- RIGHT PANEL / MAIN LOGIN FORM --- */}
               <div className="right-panel">
                 <div className="login-box">
                   <IonButton
@@ -323,7 +395,7 @@ const Login: React.FC = () => {
                         )}
                       </IonButton>
 
-                     
+                      
                     </>
                   )}
 
@@ -356,7 +428,7 @@ const Login: React.FC = () => {
 
                       <IonButton
                         fill="clear"
-                        onClick={() => sendOtp(segment)}
+                        onClick={() => segment === "email" ? sendOtp("email", email) : sendOtp("phone", phone)}
                         style={{ marginTop: "8px", color: "#0078d7" }}
                       >
                         Resend OTP
@@ -380,6 +452,7 @@ const Login: React.FC = () => {
         />
       </IonContent>
 
+      {/* CSS STYLES (Gipabilin ang Responsive Two-Panel Design) */}
       <style>{`
         .background-wrapper { position: relative; width: 100%; height: 100vh; background: url('/assets/bg-farm.jpg') no-repeat center center/cover; }
         .overlay { width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
@@ -399,7 +472,7 @@ const Login: React.FC = () => {
         .signup-link { text-align: center; font-size: 13px; color: #333; }
         @media (max-width: 768px) {
           .login-layout { flex-direction: column; width: 90%; height: auto; }
-          .left-panel { display: none; }
+          .left-panel { display: none; } /* Gitago ang left panel sa mobile */
           .right-panel { padding: 25px; border-radius: 12px; }
           .login-box { width: 100%; max-width: 280px; }
         }

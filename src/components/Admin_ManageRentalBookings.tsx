@@ -1,5 +1,15 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { IonContent, IonBadge, IonSpinner, IonButton, IonToast } from "@ionic/react";
+import {
+  IonContent,
+  IonBadge,
+  IonSpinner,
+  IonButton,
+  IonToast,
+  // ADDED: Import IonHeader, IonToolbar, and IonTitle
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+} from "@ionic/react";
 import { supabase } from "../utils/supabaseClient";
 
 interface Booking {
@@ -11,7 +21,13 @@ interface Booking {
   end_date: string;
   location: string | null;
   payment_method: "cash" | "gcash";
-  status: "pending" | "approved" | "in_use" | "declined" | "cancelled" | "returned";
+  status:
+    | "pending"
+    | "approved"
+    | "in_use"
+    | "declined"
+    | "cancelled"
+    | "returned";
   total_price: number | null;
   approved_by: number | null;
   approved_at: string | null;
@@ -131,8 +147,8 @@ const Admin_ManageRentalBookings: React.FC = () => {
       if (updateError) throw updateError;
 
       /** ============================
-       *  FIX: PAYMENT METHOD FOLLOWS BOOKING
-       *  ============================ */
+       *  FIX: PAYMENT METHOD FOLLOWS BOOKING
+       *  ============================ */
       if (newStatus === "approved" && totalPrice && userId) {
         const { data: existingTransactions, error: checkError } = await supabase
           .from("transactions")
@@ -316,8 +332,15 @@ const Admin_ManageRentalBookings: React.FC = () => {
   }, [bookings, searchTerm, sortOrder]);
 
   return (
+    <>
+    
+    <IonHeader>
+      <IonToolbar >
+        <IonTitle>Manage Rental Bookings</IonTitle>
+      </IonToolbar>
+    </IonHeader>
     <IonContent className="ion-padding">
-      {/* Search + Sort */}
+
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <input
           type="text"
@@ -338,6 +361,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
             padding: "6px 10px",
             borderRadius: "6px",
             border: "1px solid #ccc",
+            flexGrow: 0,
           }}
         >
           <option value="latest">Latest Start Date (Soonest)</option>
@@ -523,6 +547,7 @@ const Admin_ManageRentalBookings: React.FC = () => {
         onDidDismiss={() => setToastMessage(null)}
       />
     </IonContent>
+    </>
   );
 };
 
