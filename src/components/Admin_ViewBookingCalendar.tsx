@@ -14,7 +14,6 @@ interface Booking {
   equipment_name: string;
   start_date: string;
   end_date: string;
-
   status: "pending" | "approved" | "in_use" | "declined" | "cancelled" | "returned"; 
   total_price: number;
   quantity: number;
@@ -108,6 +107,12 @@ const Admin_ViewBookingCalendar: React.FC = () => {
     ).getTime();
 
     return bookings.filter((b) => {
+      
+      // 🛑 MODIFICATION: Filter out 'cancelled' and 'returned' bookings
+      if (b.status === "cancelled" || b.status === "returned") {
+          return false;
+      }
+      
       const start = new Date(b.start_date);
       const end = new Date(b.end_date);
       
@@ -137,9 +142,9 @@ const Admin_ViewBookingCalendar: React.FC = () => {
       case "declined":
         return "#dc3545";
       case "cancelled":
-        return "#6c757d"; 
+        return "#6c757d"; // Color still defined, but these items are filtered out of the view
       case "returned":
-        return "#17a2b8"; 
+        return "#17a2b8"; // Color still defined, but these items are filtered out of the view
       default:
         return "#999";
     }
@@ -181,9 +186,11 @@ const Admin_ViewBookingCalendar: React.FC = () => {
               value={selectedDate}
               showWeekNumbers={false}
               tileClassName={({ date }) =>
+                // The calendar now only highlights active/pending bookings
                 getBookingsOnDate(date).length > 0 ? "has-booking" : ""
               }
               tileContent={({ date }) => {
+                // The dots are also based on the filtered list
                 const dayBookings = getBookingsOnDate(date);
                 if (dayBookings.length === 0) return null;
 
@@ -210,7 +217,8 @@ const Admin_ViewBookingCalendar: React.FC = () => {
               {bookingsForSelectedDate.length})
             </h3>
             {bookingsForSelectedDate.length === 0 ? (
-              <p>No bookings found for this date.</p>
+              // Updated message to reflect filtering
+              <p>No active (approved, in use, pending, or declined) bookings found for this date.</p>
             ) : (
               bookingsForSelectedDate.map((b) => (
                 <IonCard

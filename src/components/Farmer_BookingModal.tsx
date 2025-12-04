@@ -81,10 +81,16 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
     const handleQuantityChange = (value: string | null | undefined) => {
         setError(null);
-        const qty = Number(value) || 0;
+       
+        const qty = parseInt(value || "0", 10) || 0; 
+
         setQuantity(qty);
-        if (qty <= 0) setError("Quantity must be greater than zero.");
-        if (qty > maxQuantity) setError(`Cannot book ${qty} units. Only ${maxQuantity} available.`);
+        
+        if (qty <= 0) {
+            setError("Quantity must be greater than zero.");
+        } else if (qty > maxQuantity) {
+            setError(`Cannot book ${qty} units. Only ${maxQuantity} available.`);
+        }
     };
 
     const handleProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +182,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                         total_price: totalPrice,
                         quantity,
                         payment_method: paymentMethod, 
+                        // Note: For cash, payment status is handled below
                     },
                 ])
                 .select("id")
@@ -191,6 +198,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     user_id,
                     amount: totalPrice,
                 
+                    // Cash transactions are pending until paid on delivery/pickup. GCash is 'unpaid' until confirmed by admin.
                     status: paymentMethod === "cash" ? "pending" : "unpaid", 
                     payment_method: paymentMethod, 
                     proof_url: proofUrl, 
@@ -277,6 +285,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                                         type="number"
                                         min="1"
                                         max={maxQuantity}
+                                        step="1" // Added step="1" to enforce integer steps on the UI
                                         value={quantity}
                                         onChange={(e) => handleQuantityChange(e.target.value)}
                                         required

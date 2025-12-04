@@ -100,7 +100,7 @@ const Farmer_CalendarView: React.FC = () => {
     };
   }, []);
 
-  // 🔹 Filter bookings per date
+  
   const getBookingsOnDate = (date: Date) => {
     const selectedDateOnly = new Date(
       date.getFullYear(),
@@ -109,6 +109,11 @@ const Farmer_CalendarView: React.FC = () => {
     ).getTime();
 
     return bookings.filter((b) => {
+      // 🛑 MODIFICATION: Exclude 'returned' AND 'cancelled' bookings from calendar view and list
+      if (b.status === "returned" || b.status === "cancelled") {
+          return false;
+      }
+      
       const start = new Date(b.start_date);
       const end = new Date(b.end_date);
 
@@ -138,9 +143,9 @@ const Farmer_CalendarView: React.FC = () => {
       case "declined":
         return "#dc3545";
       case "cancelled":
-        return "#6c757d";
+        return "#6c757d"; // Unused for calendar/list now
       case "returned":
-        return "#17a2b8";
+        return "#17a2b8"; // Unused for calendar/list now
       default:
         return "#999";
     }
@@ -180,9 +185,11 @@ const Farmer_CalendarView: React.FC = () => {
               value={selectedDate}
               showWeekNumbers={false}
               tileClassName={({ date }) =>
+                // Uses the filtered list: 'returned' and 'cancelled' bookings don't count for highlighting
                 getBookingsOnDate(date).length > 0 ? "has-booking" : ""
               }
               tileContent={({ date }) => {
+                // Uses the filtered list: 'returned' and 'cancelled' bookings won't show dots
                 const dayBookings = getBookingsOnDate(date);
                 if (dayBookings.length === 0) return null;
 
@@ -209,7 +216,8 @@ const Farmer_CalendarView: React.FC = () => {
               {bookingsForSelectedDate.length})
             </h3>
             {bookingsForSelectedDate.length === 0 ? (
-              <p>No bookings found for this date.</p>
+              // The message reflects the filtering of 'returned' and 'cancelled'
+              <p>No active (approved, in use, pending, or declined) bookings found for this date.</p>
             ) : (
               bookingsForSelectedDate.map((b) => (
                 <IonCard key={b.id} style={getCardStyle(b.status)}>

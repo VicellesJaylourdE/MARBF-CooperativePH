@@ -20,17 +20,19 @@ import {
   IonInputPasswordToggle,
   IonListHeader,
 } from "@ionic/react";
-import { useState, useEffect, useRef } from "react"; // Gidugang ang useRef
+import { useState, useEffect, useRef } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "../utils/supabaseClient";
 import HeaderBar from "../components/Farmer_HeaderBar";
 import EquipmentCatalog from "../components/Farmer_EquipmentCatalog";
 import CalendarView from "../components/Farmer_CalendarView";
-import { useHistory } from "react-router-dom"; // --- Gidugang gikan sa MyProfile ---
-import "../theme/UserDashboard.css"; // --- Siguroha nga naa ni ---
+import { useHistory } from "react-router-dom";
+import "../theme/UserDashboard.css";
 
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
+  // ➡️ Bag-o nga State para sa sub-segment sa Bookings
+  const [bookingSubSegment, setBookingSubSegment] = useState("history"); 
 
   // --- States para sa Bookings ---
   const [bookings, setBookings] = useState<any[]>([]);
@@ -38,7 +40,7 @@ const UserDashboard: React.FC = () => {
   const [toastMsg, setToastMsg] = useState("");
 
   // --- States gikan sa MyProfile ---
-  const [profileLoading, setProfileLoading] = useState(true); // Gi-rename para dili mag-conflict
+  const [profileLoading, setProfileLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -95,12 +97,14 @@ const UserDashboard: React.FC = () => {
     if (status === "pending") return "orange";
     if (status === "declined") return "red";
     if (status === "returned") return "blue";
+    if (status === "cancelled") return "gray"; // Gidugang ang 'cancelled'
     return "gray";
   };
 
   const getPaymentColor = (status: string) => {
     if (status === "paid") return "green";
     if (status === "unpaid") return "orange";
+    if (status === "cancelled") return "red"; // Gidugang ang 'cancelled'
     return "red";
   };
 
@@ -306,170 +310,219 @@ const UserDashboard: React.FC = () => {
         {segment === "calendar" && <CalendarView />}
 
         
+        {/* 📑 MY BOOKINGS (Karon naay Sub-Segments) */}
         {segment === "bookings" && (
           <>
+            {/* ⬅️ Bag-ong Sub-Segments dinhi */}
+            <IonSegment
+              value={bookingSubSegment}
+              onIonChange={(e) =>
+                setBookingSubSegment(String(e.detail.value))
+              }
+              className="small-segment-tabs"
+            >
+              <IonSegmentButton value="history">
+                <IonLabel>History (Active/Current)</IonLabel>
+              </IonSegmentButton>
+              <IonSegmentButton value="transaction">
+                <IonLabel>Transaction (Archive/Completed)</IonLabel>
+              </IonSegmentButton>
+            </IonSegment>
+            {/* ⬅️ End sa Bag-ong Sub-Segments */}
+
             {loading ? (
               <div className="ion-text-center ion-padding">
                 <IonSpinner name="crescent" />
               </div>
             ) : bookings.length === 0 ? (
-              <p className="ion-text-center ion-padding">📖 No bookings yet.</p>
+              <p className="ion-text-center ion-padding">
+                📖 No bookings yet.
+              </p>
             ) : (
               <IonList>
-                {bookings.map((b) => {
-                  const transaction = b.transactions?.[0];
-                  const canReturn = (() => {
-                    const now = new Date();
-                    const end = new Date(b.end_date);
-                    return (
-                      b.status === "in_use" &&
-                      (now > end ||
-                        (now.toDateString() === end.toDateString() &&
-                          now.getHours() >= 12)) &&
-                      b.status !== "returned"
-                    );
-                  })();
-
-                  return (
-                    <IonCard key={b.id} className="receipt-card">
-                      <div className="receipt-header">{b.equipment_name}</div>
-                      <div className="receipt-row">
-                        <span className="receipt-label">Start:</span>
-                        <span>{b.start_date}</span>
-                      </div>
-                      <div className="receipt-row">
-                        <span className="receipt-label">End:</span>
-                        <span>{b.end_date}</span>
-                      </div>
-                      <div className="receipt-row">
-                        <span className="receipt-label">Location:</span>
-                        <span>{b.location || "N/A"}</span>
-                      </div>
-                      <div className="receipt-row">
-                        <span className="receipt-label">Status:</span>
-                        <span
-                          style={{
-                            color: getStatusColor(b.status),
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {b.status.toUpperCase().replace("_", " ")}
-                        </span>
-                      </div>
-                      {transaction && (
-                        <>
-                          <div className="receipt-row">
-                            <span className="receipt-label">Payment:</span>
-                            <span
-                              style={{
-                                color: getPaymentColor(transaction.status),
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {transaction.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="receipt-row">
-                            <span className="receipt-label">Method:</span>
-                            <span>
-                              {transaction.payment_method.toUpperCase()}
-                            </span>
-                          </div>
-                          {transaction.gcash_ref_no && (
-                            <div className="receipt-row">
-                              <span className="receipt-label">
-                                GCash Ref #:
-                              </span>
-                              <span>{transaction.gcash_ref_no}</span>
-                            </div>
-                          )}
-                          {transaction.proof_url && (
-                            <div className="receipt-row">
-                              <span className="receipt-label">Proof:</span>
-                              <a
-                                href={transaction.proof_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ textDecoration: "underline" }}
-                              >
-                                View
-                              </a>
-                            </div>
-                          )}
-                          {transaction.paid_at && (
-                            <div className="receipt-row">
-                              <span className="receipt-label">Paid At:</span>
-                              <span>
-                                {new Date(
-                                  transaction.paid_at
-                                ).toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      <div className="receipt-total">
-                        Total: ₱{transaction?.amount || b.total_price || 0}
-                      </div>
-                      {b.status === "pending" && (
-                        <IonButton
-                          color="danger"
-                          className="ion-margin-top"
-                          style={{
-                            marginRight: "auto",
-                            width: "fit-content",
-                          }}
-                          onClick={async () => {
-                            if (!window.confirm("Cancel this booking?")) return;
-                            await supabase
-                              .from("bookings")
-                              .update({ status: "cancelled" })
-                              .eq("id", b.id);
-                            if (
-                              transaction &&
-                              transaction.status === "unpaid"
-                            ) {
-                              await supabase
-                                .from("transactions")
-                                .update({ status: "cancelled" })
-                                .eq("booking_id", b.id);
-                            }
-                            fetchBookings();
-                          }}
-                        >
-                          Cancel Booking
-                        </IonButton>
-                      )}
-                      {canReturn &&
+                {/* ⬅️ Filtering logic base sa sub-segment */}
+                {bookings
+                  .filter((b) => {
+                    const status = b.status;
+                    if (bookingSubSegment === "history") {
+                      // History (Active/Current): Pending, Approved, In Use.
+                      // Base sa imong logic: bookings within the month/ongoing.
+                      return (
+                        status === "pending" ||
+                        status === "approved" ||
+                        status === "in_use"
+                      );
+                    } else if (bookingSubSegment === "transaction") {
+                      // Transaction (Archive/Completed): Returned, Cancelled, Declined.
+                      // Base sa imong logic: nahuman na or gi-cancel.
+                      return (
+                        status === "returned" ||
+                        status === "cancelled" || 
+                        status === "declined" // Gidugang ang Declined sa Archive
+                      );
+                    }
+                    return false;
+                  })
+                  .map((b) => {
+                    const transaction = b.transactions?.[0];
+                    // Logic para sa Return button (dili mausab)
+                    const canReturn = (() => {
+                      const now = new Date();
+                      const end = new Date(b.end_date);
+                      return (
                         b.status === "in_use" &&
-                        transaction?.status === "paid" && (
-                          <IonButton
-                            color="warning"
-                            className="ion-margin-top"
+                        (now > end ||
+                          (now.toDateString() === end.toDateString() &&
+                            now.getHours() >= 12)) &&
+                        b.status !== "returned"
+                      );
+                    })();
+
+                    return (
+                      <IonCard key={b.id} className="receipt-card">
+                        <div className="receipt-header">{b.equipment_name}</div>
+                        <div className="receipt-row">
+                          <span className="receipt-label">Start:</span>
+                          <span>{b.start_date}</span>
+                        </div>
+                        <div className="receipt-row">
+                          <span className="receipt-label">End:</span>
+                          <span>{b.end_date}</span>
+                        </div>
+                        <div className="receipt-row">
+                          <span className="receipt-label">Location:</span>
+                          <span>{b.location || "N/A"}</span>
+                        </div>
+                        <div className="receipt-row">
+                          <span className="receipt-label">Status:</span>
+                          <span
                             style={{
-                              marginRight: "auto",
-                              width: "fit-content",
-                            }}
-                            onClick={async () => {
-                              if (
-                                !window.confirm(
-                                  "Confirm equipment has been returned?"
-                                )
-                              )
-                                return;
-                              await supabase
-                                .from("bookings")
-                                .update({ status: "returned" })
-                                .eq("id", b.id);
-                              fetchBookings();
+                              color: getStatusColor(b.status),
+                              fontWeight: "bold",
                             }}
                           >
-                            Mark as Returned
-                          </IonButton>
+                            {b.status.toUpperCase().replace("_", " ")}
+                          </span>
+                        </div>
+                        {transaction && (
+                          <>
+                            <div className="receipt-row">
+                              <span className="receipt-label">Payment:</span>
+                              <span
+                                style={{
+                                  color: getPaymentColor(transaction.status),
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {transaction.status.toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="receipt-row">
+                              <span className="receipt-label">Method:</span>
+                              <span>
+                                {transaction.payment_method.toUpperCase()}
+                              </span>
+                            </div>
+                            {transaction.gcash_ref_no && (
+                              <div className="receipt-row">
+                                <span className="receipt-label">
+                                  GCash Ref #:
+                                </span>
+                                <span>{transaction.gcash_ref_no}</span>
+                              </div>
+                            )}
+                            {transaction.proof_url && (
+                              <div className="receipt-row">
+                                <span className="receipt-label">Proof:</span>
+                                <a
+                                  href={transaction.proof_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ textDecoration: "underline" }}
+                                >
+                                  View
+                                </a>
+                              </div>
+                            )}
+                            {transaction.paid_at && (
+                              <div className="receipt-row">
+                                <span className="receipt-label">Paid At:</span>
+                                <span>
+                                  {new Date(
+                                    transaction.paid_at
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                          </>
                         )}
-                    </IonCard>
-                  );
-                })}
+                        <div className="receipt-total">
+                          Total: ₱{transaction?.amount || b.total_price || 0}
+                        </div>
+                        {/* ⬅️ Action buttons ra ni sa 'history' segment */}
+                        {bookingSubSegment === "history" && (
+                          <>
+                            {b.status === "pending" && (
+                              <IonButton
+                                color="danger"
+                                className="ion-margin-top"
+                                style={{
+                                  marginRight: "auto",
+                                  width: "fit-content",
+                                }}
+                                onClick={async () => {
+                                  if (!window.confirm("Cancel this booking?")) return;
+                                  await supabase
+                                    .from("bookings")
+                                    .update({ status: "cancelled" })
+                                    .eq("id", b.id);
+                                  if (
+                                    transaction &&
+                                    transaction.status === "unpaid"
+                                  ) {
+                                    await supabase
+                                      .from("transactions")
+                                      .update({ status: "cancelled" })
+                                      .eq("booking_id", b.id);
+                                  }
+                                  fetchBookings();
+                                }}
+                              >
+                                Cancel Booking
+                              </IonButton>
+                            )}
+                            {canReturn &&
+                              b.status === "in_use" &&
+                              transaction?.status === "paid" && (
+                                <IonButton
+                                  color="warning"
+                                  className="ion-margin-top"
+                                  style={{
+                                    marginRight: "auto",
+                                    width: "fit-content",
+                                  }}
+                                  onClick={async () => {
+                                    if (
+                                      !window.confirm(
+                                        "Confirm equipment has been returned?"
+                                      )
+                                    )
+                                      return;
+                                    await supabase
+                                      .from("bookings")
+                                      .update({ status: "returned" })
+                                      .eq("id", b.id);
+                                    fetchBookings();
+                                  }}
+                                >
+                                  Mark as Returned
+                                </IonButton>
+                              )}
+                          </>
+                        )}
+                      </IonCard>
+                    );
+                  })}
               </IonList>
             )}
           </>
@@ -707,7 +760,7 @@ const UserDashboard: React.FC = () => {
                       <IonButton
                         expand="full"
                         shape="round"
-                           color="warning"
+                        color="warning"
                         onClick={handleUpdateProfile}
                         style={{ marginTop: "10px" }}
                       >
