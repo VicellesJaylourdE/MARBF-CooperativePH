@@ -289,7 +289,7 @@ const Farmer_HeaderBar: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center" }}>Member Dashboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
-              Welcome back, **{userName}**
+              Welcome back, {userName}
             </IonLabel>
           )}
         </IonTitle>
