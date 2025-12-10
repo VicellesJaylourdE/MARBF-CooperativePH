@@ -208,7 +208,7 @@ const Admin_AdminHeaderBar: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center" }}>Admin Dashboard</div>
           {!loading && (
             <IonLabel style={{ fontSize: "0.8rem", color: "#555", marginLeft: "24px" }}>
-              Welcome back, **{userName}**
+              Welcome back, {userName}
             </IonLabel>
           )}
         </IonTitle>
