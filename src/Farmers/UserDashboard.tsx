@@ -29,17 +29,66 @@ import CalendarView from "../components/Farmer_CalendarView";
 import { useHistory } from "react-router-dom";
 import "../theme/UserDashboard.css";
 
+// ⚠️ PAHINUMDOM: Ang CSS styles ania sa ubos aron masigurado nga ang 'receipt-row' mo-work.
+// Mas maayo kung ibalhin nimo kini sa ../theme/UserDashboard.css
+const styles = `
+.small-segment-tabs {
+  margin-top: 5px;
+  --background: var(--ion-color-light);
+}
+
+.receipt-card {
+  padding: 15px;
+  margin: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.receipt-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: var(--ion-color-primary, #3880ff);
+  border-bottom: 1px solid var(--ion-color-light);
+  padding-bottom: 5px;
+}
+
+/* ✨ CSS para DILI maglagyo ang text (Flexbox) */
+.receipt-row {
+  display: flex; /* Gihimo siyang flex container */
+  justify-content: space-between; /* Gi-align ang label sa left ug value sa right */
+  align-items: center; 
+  padding: 4px 0; 
+  border-bottom: 1px dotted var(--ion-color-step-150, #d7d7d7); 
+}
+
+.receipt-label {
+  font-weight: 500;
+  color: var(--ion-color-medium, #929a9c); 
+  flex-shrink: 0; 
+  padding-right: 10px; 
+}
+
+.receipt-total {
+  text-align: right;
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--ion-color-dark);
+}
+`;
+
+
 const UserDashboard: React.FC = () => {
   const [segment, setSegment] = useState("catalog");
-  // ➡️ Bag-o nga State para sa sub-segment sa Bookings
-  const [bookingSubSegment, setBookingSubSegment] = useState("history"); 
 
-  // --- States para sa Bookings ---
+  const [bookingSubSegment, setBookingSubSegment] = useState("history");
+
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
-  // --- States gikan sa MyProfile ---
   const [profileLoading, setProfileLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -61,7 +110,9 @@ const UserDashboard: React.FC = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return setBookings([]);
 
       const { data: userData } = await supabase
@@ -73,13 +124,15 @@ const UserDashboard: React.FC = () => {
 
       const { data } = await supabase
         .from("bookings")
-        .select(`
+        .select(
+          `
           *,
           transactions (
             amount, status, payment_method, proof_url, 
             gcash_ref_no, quantity, price_type, paid_at
           )
-        `)
+        `
+        )
         .eq("user_id", userData.user_id)
         .order("created_at", { ascending: false });
 
@@ -104,7 +157,7 @@ const UserDashboard: React.FC = () => {
   const getPaymentColor = (status: string) => {
     if (status === "paid") return "green";
     if (status === "unpaid") return "orange";
-    if (status === "cancelled") return "red"; // Gidugang ang 'cancelled'
+    if (status === "cancelled") return "red";
     return "red";
   };
 
@@ -283,9 +336,10 @@ const UserDashboard: React.FC = () => {
 
   return (
     <IonPage>
+      {/* ⚠️ EMBEDDED STYLE: Ibalhin kini sa CSS file kung dili nimo gusto ania ra. */}
+      <style>{styles}</style>
       <HeaderBar />
       <IonContent fullscreen>
-    
         <IonSegment
           value={segment}
           onIonChange={(e) => setSegment(String(e.detail.value))}
@@ -309,7 +363,7 @@ const UserDashboard: React.FC = () => {
 
         {segment === "calendar" && <CalendarView />}
 
-        
+
         {/* 📑 MY BOOKINGS (Karon naay Sub-Segments) */}
         {segment === "bookings" && (
           <>
@@ -346,7 +400,6 @@ const UserDashboard: React.FC = () => {
                     const status = b.status;
                     if (bookingSubSegment === "history") {
                       // History (Active/Current): Pending, Approved, In Use.
-                      // Base sa imong logic: bookings within the month/ongoing.
                       return (
                         status === "pending" ||
                         status === "approved" ||
@@ -354,10 +407,9 @@ const UserDashboard: React.FC = () => {
                       );
                     } else if (bookingSubSegment === "transaction") {
                       // Transaction (Archive/Completed): Returned, Cancelled, Declined.
-                      // Base sa imong logic: nahuman na or gi-cancel.
                       return (
                         status === "returned" ||
-                        status === "cancelled" || 
+                        status === "cancelled" ||
                         status === "declined" // Gidugang ang Declined sa Archive
                       );
                     }
@@ -379,6 +431,7 @@ const UserDashboard: React.FC = () => {
                     })();
 
                     return (
+                      // 🌟 KINI ANG RECEIPT CARD NGA GI-EDIT ANG STYLE 🌟
                       <IonCard key={b.id} className="receipt-card">
                         <div className="receipt-header">{b.equipment_name}</div>
                         <div className="receipt-row">
@@ -471,7 +524,8 @@ const UserDashboard: React.FC = () => {
                                   width: "fit-content",
                                 }}
                                 onClick={async () => {
-                                  if (!window.confirm("Cancel this booking?")) return;
+                                  if (!window.confirm("Cancel this booking?"))
+                                    return;
                                   await supabase
                                     .from("bookings")
                                     .update({ status: "cancelled" })
@@ -536,7 +590,7 @@ const UserDashboard: React.FC = () => {
               </div>
             ) : (
               <div className="ion-padding">
-                <IonText >
+                <IonText>
                   <h1 style={{ marginBottom: "20px" }}>My Profile</h1>
                 </IonText>
 
