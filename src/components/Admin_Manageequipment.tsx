@@ -16,13 +16,14 @@ interface Equipment {
 }
 
 const Admin_ManageEquipment: React.FC = () => {
-
   // --- State for Adding New Equipment ---
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState<number | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<"available" | "maintenance" | "unavailable">("available");
+  
+  // --- Global Image States (Used by both Add and Edit) ---
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -34,7 +35,7 @@ const Admin_ManageEquipment: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Equipment>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null); // For Add Equipment Form
 
   // --- Data Fetching ---
   const fetchEquipment = async () => {
@@ -66,7 +67,9 @@ const Admin_ManageEquipment: React.FC = () => {
   }, []);
 
   // --- Image Handlers ---
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  
+  // Handler for ADD Equipment Form
+  const handleAddImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
@@ -74,6 +77,20 @@ const Admin_ManageEquipment: React.FC = () => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
+
+  // Handler for EDIT Equipment Form (Since only one equipment is edited at a time, we use global state)
+  const handleImageEditChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+      const newPreviewUrl = URL.createObjectURL(file);
+      setImageFile(file);
+      setImagePreview(newPreviewUrl);
+      // Update editData image_url with the new preview URL
+      setEditData({ ...editData, image_url: newPreviewUrl }); 
+    }
+  };
+
 
   // --- Add Equipment Logic ---
   const handleAddEquipment = async () => {
@@ -89,22 +106,27 @@ const Admin_ManageEquipment: React.FC = () => {
     // Automatically set status to 'unavailable' if quantity is 0
     const finalStatus = quantity === 0 ? "unavailable" : status;
 
-    // Image upload logic (omitted error handling for brevity, assumed path is correct)
+    // Image upload logic
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `user-avatars/${fileName}`;
+      const filePath = `equipment-images/${fileName}`; // Renamed path for clarity
 
       const { error: uploadError } = await supabase.storage
-        .from("user-avatars")
+        .from("user-avatars") // Assuming 'user-avatars' is your storage bucket
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage
-          .from("user-avatars")
-          .getPublicUrl(filePath);
-        imageUrl = urlData?.publicUrl ?? null;
+      if (uploadError) {
+        setAlertMessage(`Error uploading image: ${uploadError.message}`);
+        setShowAlert(true);
+        setUploading(false);
+        return;
       }
+      
+      const { data: urlData } = supabase.storage
+        .from("user-avatars")
+        .getPublicUrl(filePath);
+      imageUrl = urlData?.publicUrl ?? null;
     }
 
     const { error } = await supabase
@@ -117,7 +139,7 @@ const Admin_ManageEquipment: React.FC = () => {
 
     if (!error) {
       setName(""); setCategory(""); setPrice(null); setQuantity(1); setStatus("available");
-      setImageFile(null);  
+      setImageFile(null);  
       if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
       setImagePreview(null);
       setAlertMessage("✅ Equipment added successfully!");
@@ -127,7 +149,7 @@ const Admin_ManageEquipment: React.FC = () => {
 
     setShowAlert(true);
     setUploading(false);
-    fetchEquipment();  
+    fetchEquipment();  
   };
 
   // --- Delete Equipment Logic ---
@@ -145,8 +167,9 @@ const Admin_ManageEquipment: React.FC = () => {
   const handleEdit = (eq: Equipment) => {
     setEditingId(eq.id);
     setEditData({ ...eq });
-    // This is set to preview the current/existing image or a new one
+    // Set existing URL for preview
     setImagePreview(eq.image_url || null); 
+    // Clear imageFile so a new one can be selected
     setImageFile(null);
   };
 
@@ -158,7 +181,7 @@ const Admin_ManageEquipment: React.FC = () => {
     }
 
     setUploading(true);
-    let imageUrl = editData.image_url;
+    let imageUrl = editData.image_url; // Use existing URL if no new file is uploaded
     
     // Automatically adjust status if quantity is zero
     const updatedStatus = editData.quantity === 0 ? "unavailable" : editData.status;
@@ -166,18 +189,23 @@ const Admin_ManageEquipment: React.FC = () => {
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `user-avatars/${fileName}`;
+      const filePath = `equipment-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("user-avatars")
         .upload(filePath, imageFile, { cacheControl: "3600", upsert: true });
 
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage
-          .from("user-avatars")
-          .getPublicUrl(filePath);
-        imageUrl = urlData?.publicUrl ?? null;
+      if (uploadError) {
+        setAlertMessage(`Error uploading image: ${uploadError.message}`);
+        setShowAlert(true);
+        setUploading(false);
+        return;
       }
+
+      const { data: urlData } = supabase.storage
+        .from("user-avatars")
+        .getPublicUrl(filePath);
+      imageUrl = urlData?.publicUrl ?? null;
     }
 
     const { error } = await supabase
@@ -200,7 +228,7 @@ const Admin_ManageEquipment: React.FC = () => {
     if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
     setShowAlert(true);
-    fetchEquipment();  
+    fetchEquipment();  
   };
   
   const handleCancelEdit = () => {
@@ -239,14 +267,14 @@ const Admin_ManageEquipment: React.FC = () => {
             <IonItem>
               <IonLabel position="stacked">Upload Image</IonLabel>
               <input
-                type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange}
+                type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleAddImageChange}
                   />
               <IonButton expand="block" size="small" onClick={() => fileInputRef.current?.click()} style={{marginTop: '10px'}}>
                 Choose Image
               </IonButton>
             </IonItem>
 
-            {imagePreview && (
+            {imagePreview && !editingId && ( // Only show preview if not in Edit mode for the list
               <IonRow className="ion-justify-content-center ion-align-items-center">
                 <IonCol className="ion-text-center">
                   <IonImg src={imagePreview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", marginTop: "10px", borderRadius: '4px' }}/>
@@ -290,9 +318,34 @@ const Admin_ManageEquipment: React.FC = () => {
 
               {equipment.map((eq) => (
                 <IonRow key={eq.id} style={{ borderBottom: "1px solid #ccc", alignItems: 'center' }}>
+                  
+                  {/* Image Column - EDIT LOGIC APPLIED HERE */}
                   <IonCol size-lg="2" size-md="2">
-                    <IonImg src={editingId === eq.id && editData.image_url ? editData.image_url : eq.image_url || "https://via.placeholder.com/50"} style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: '4px' }}/>
+                    <IonImg 
+                        src={editingId === eq.id ? editData.image_url || "https://via.placeholder.com/50" : eq.image_url || "https://via.placeholder.com/50"} 
+                        style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: '4px' }}
+                    />
+                    {editingId === eq.id && (
+                        <>
+                            <input
+                                type="file"
+                                id={`edit-file-input-${eq.id}`}
+                                style={{ display: "none" }}
+                                accept="image/*"
+                                onChange={handleImageEditChange}
+                            />
+                            <IonButton 
+                                fill="clear" 
+                                size="small" 
+                                onClick={() => document.getElementById(`edit-file-input-${eq.id}`)?.click()}
+                            >
+                                Change Image
+                            </IonButton>
+                        </>
+                    )}
                   </IonCol>
+                  {/* End Image Column */}
+
 
                   <IonCol size-lg="3" size-md="3">
                     {editingId === eq.id ? (
@@ -370,13 +423,16 @@ const Admin_ManageEquipment: React.FC = () => {
               ))}
             </IonGrid>
 
-            {/* Mobile View List (FIXED THE INPUT ISSUE HERE) */}
+            {/* Mobile View List */}
             <IonList className="ion-hide-sm-up">
               {equipment.map((eq) => (
                 <IonItem key={eq.id} lines="full" style={{flexWrap: 'wrap', paddingBottom: '10px'}}>
                     <IonRow className="ion-align-items-center" style={{width: '100%'}}>
                         <IonCol size="3">
-                            <IonImg src={eq.image_url || "https://via.placeholder.com/50"} style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: '4px' }}/>
+                            <IonImg 
+                                src={editingId === eq.id ? editData.image_url || "https://via.placeholder.com/60" : eq.image_url || "https://via.placeholder.com/60"} 
+                                style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: '4px' }}
+                            />
                         </IonCol>
                         <IonCol size="9">
                             {editingId === eq.id ? (
@@ -386,7 +442,31 @@ const Admin_ManageEquipment: React.FC = () => {
                                         <IonInput value={editData.name} onIonChange={(e) => setEditData({ ...editData, name: e.detail.value! })} placeholder="Name" label="Name" labelPlacement="stacked"/>
                                     </IonItem>
                                     
-                                    {/* Quantity Input FIX (This was the main problem area) */}
+                                    {/* Price Input */}
+                                    <IonItem lines="none" style={{paddingTop: '5px'}}>
+                                        <IonInput type="number" value={editData.price} onIonChange={(e) => setEditData({ ...editData, price: Number(e.detail.value!) })} label="Price (₱/day)" labelPlacement="stacked"/>
+                                    </IonItem>
+
+                                    {/* Image Uploader and button sa Edit mode para sa Mobile */}
+                                    <IonItem lines="none" style={{paddingTop: '5px'}}>
+                                        <IonLabel position="stacked">Change Image</IonLabel>
+                                        <input
+                                            type="file"
+                                            id={`mobile-edit-file-input-${eq.id}`} // Unique ID
+                                            style={{ display: "none" }}
+                                            accept="image/*"
+                                            onChange={handleImageEditChange}
+                                        />
+                                        <IonButton 
+                                            expand="block"
+                                            size="small" 
+                                            onClick={() => document.getElementById(`mobile-edit-file-input-${eq.id}`)?.click()}
+                                        >
+                                            Choose New Image
+                                        </IonButton>
+                                    </IonItem>
+                                    
+                                    {/* Quantity Input FIX */}
                                     <IonItem lines="none" style={{paddingTop: '5px'}}>
                                         <IonInput 
                                             type="number" 
@@ -398,7 +478,7 @@ const Admin_ManageEquipment: React.FC = () => {
                                             }} 
                                             min="0" 
                                             label="Stock"
-                                            labelPlacement="stacked" // Makes it clear on mobile
+                                            labelPlacement="stacked"
                                         />
                                     </IonItem>
                                     
@@ -408,7 +488,7 @@ const Admin_ManageEquipment: React.FC = () => {
                                             value={editData.quantity === 0 ? "unavailable" : editData.status} 
                                             onIonChange={(e) => setEditData({ ...editData, status: e.detail.value })} 
                                             label="Status"
-                                            labelPlacement="stacked" // Makes it clear on mobile
+                                            labelPlacement="stacked"
                                             disabled={editData.quantity === 0} 
                                         >
                                             <IonSelectOption value="available">Available</IonSelectOption>
@@ -420,9 +500,9 @@ const Admin_ManageEquipment: React.FC = () => {
                             ) : (
                                 <div>
                                     <strong>{eq.name} ({eq.category})</strong> <br/>
-                                    <span style={{fontSize: '0.9em'}}>Price: ₱{eq.price} | Unit: <strong style={{color: eq.quantity <= 0 ? 'red' : 'green'}}>{eq.quantity}</strong></span> <br/>
+                                    <span style={{fontSize: '0.9em'}}>Price: ₱{eq.price} | Stock: <strong style={{color: eq.quantity <= 0 ? 'red' : 'green'}}>{eq.quantity}</strong></span> <br/>
                                     <span style={{fontSize: '0.8em', color: eq.quantity === 0 ? 'red' : '#666'}}>
-                                      Status: {eq.quantity === 0 ? 'unavailable' : eq.status}
+                                        Status: {eq.quantity === 0 ? 'unavailable' : eq.status}
                                     </span>
                                 </div>
                             )}
