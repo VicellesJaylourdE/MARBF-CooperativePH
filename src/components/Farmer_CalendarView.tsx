@@ -246,23 +246,6 @@ const Farmer_CalendarView: React.FC = () => {
                         {b.status.toUpperCase().replace("_", " ")}
                       </span>
                     </div>
-
-                    <p style={{ margin: "3px 0", fontSize: "0.9em" }}>
-                      👤 Booked By:{" "}
-                      <code
-                        style={{
-                          backgroundColor: "#f0f0f0",
-                          padding: "2px 5px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {b.user_name || `User ID: ${b.user_id}`}
-                      </code>
-                      <span style={{ marginLeft: "20px" }}>
-                        📦 Equipment: {b.quantity}
-                      </span>
-                    </p>
-
                     <p
                       style={{
                         margin: "3px 0",

@@ -487,7 +487,7 @@ const Admin_GenerateReports: React.FC = () => {
                             <IonSelect
                                 value={reportType}
                                 onIonChange={(e) => setReportType(e.detail.value)}
-                                style={{ color: "#fffafaff" }}
+                             
                             >
                                 <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
                                 <IonSelectOption value="transactions">Transactions Report</IonSelectOption>

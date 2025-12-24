@@ -482,16 +482,15 @@ const Staff_GenerateReports : React.FC = () => {
                                 minWidth: "200px"
                             }}
                         >
-                            <IonLabel>Select Report Type</IonLabel>
+                            <IonLabel>Select Report Type </IonLabel>
                             <IonSelect
                                 value={reportType}
                                 onIonChange={(e) => setReportType(e.detail.value)}
-                                style={{ color: "#fffafaff" }}
                             >
-                                <IonSelectOption value="bookings">Bookings Report</IonSelectOption>
-                                <IonSelectOption value="transactions">Transactions Report</IonSelectOption>
-                                <IonSelectOption value="equipment">Equipment Report</IonSelectOption>
-                                <IonSelectOption value="revenue">Revenue by Equipment</IonSelectOption> {/* ADDED */}
+                                <IonSelectOption value="bookings"> Bookings Report</IonSelectOption>
+                                <IonSelectOption value="transactions"> Transactions Report</IonSelectOption>
+                                <IonSelectOption value="equipment"> Equipment Report</IonSelectOption>
+                                <IonSelectOption value="revenue"> Revenue by Equipment</IonSelectOption> {/* ADDED */}
                             </IonSelect>
                         </IonItem>
                     </div>
