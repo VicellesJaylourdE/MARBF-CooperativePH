@@ -1,4 +1,4 @@
-
+import React, { useEffect } from "react";
 import { Redirect, Route, Switch, useLocation } from "react-router-dom";
 import {
   IonApp,
@@ -37,15 +37,35 @@ import VerifyOtp from "./pages/VerifyOtp";
 import Registerphone from "./pages/Registerphone";
 import RegisterOne from "./pages/RegisterOne";
 
+// Gidugang para sa push notifications
+import { saveDeviceToken } from "./utils/pushUtils"; 
+
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <MainRouter />
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+  // Gidugang nga logic para sa device registration
+  useEffect(() => {
+    const userData = localStorage.getItem("user_data"); 
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user && user.user_id) {
+          saveDeviceToken(user.user_id, user.role); 
+        }
+      } catch (error) {
+        console.error("Error parsing user data for push notifications", error);
+      }
+    }
+  }, []);
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <MainRouter />
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 
 const MainRouter: React.FC = () => {
   const location = useLocation();
@@ -69,11 +89,11 @@ const MainRouter: React.FC = () => {
       <Switch>
         <Route exact path="/login" component={Login} />
         <Route path="/forgot-password" component={ForgotPassword} exact />
-       <Route path="/verify-otp" component={VerifyOtp} exact />
+        <Route path="/verify-otp" component={VerifyOtp} exact />
         <Route exact path="/register" component={Register} />
-          <Route exact path="/registerone" component={RegisterOne} />
-         <Route exact path="/registerall" component={RegisterAll} />
-         <Route exact path="/registerphone" component={Registerphone} />
+        <Route exact path="/registerone" component={RegisterOne} />
+        <Route exact path="/registerall" component={RegisterAll} />
+        <Route exact path="/registerphone" component={Registerphone} />
         <Route exact path="/learnmore" component={LearnMore} />
         <Route path="/MARBF-CooperativePH/app" component={Menu} />
         <Route exact path="/admin-dashboard" component={AdminDashboard} />

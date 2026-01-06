@@ -1,46 +1,96 @@
-import express from 'express';
-import admin from 'firebase-admin';
-import { readFile } from 'fs/promises';
+require('dotenv').config();
+const admin = require('firebase-admin');
+const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 app.use(express.json());
 
-// 1. Pag-load sa imong Service Account Key
-const serviceAccount = JSON.parse(
-  await readFile(new URL('./serviceAccountKey.json', import.meta.url))
+
+const serviceAccount = require('./serviceAccountKey.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY 
 );
 
-// 2. I-initialize ang Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
+// 3. Webhook Route
+app.post('/bookings-webhook', async (req, res) => {
+  const { record, old_record, type } = req.body;
 
-// 3. Ang pultahan para sa Supabase Webhook
-app.post('/webhook', async (req, res) => {
-  const { record } = req.body;
-  console.log('NAAY NADAWAT NGA DATA GIKAN SA SUPABASE:', record);
+  // Maminaw lang kon naay UPDATE sa status
+  if (type === 'UPDATE' && record.status !== old_record.status) {
+    const userId = record.user_id;
+    const newStatus = record.status;
+    const equipName = record.equipment_name;
 
-  try {
-    const message = {
-      notification: {
-        title: '🚨 Bag-ong Booking!',
-        body: `Naay bag-ong abang para sa: ${record.equipment_name || 'Item'}`,
-      },
-      // I-send kini sa 'admin_notifications' topic
-      topic: 'admin_notifications', 
-    };
+    console.log(`Processing ${newStatus} for User ID: ${userId}`);
 
-    const response = await admin.messaging().send(message);
-    console.log('Successfully sent message:', response);
-    res.status(200).send('Success');
-  } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).send('Error');
+    try {
+      // STEP A: Kuhaon ang FCM Token sa specific user
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('fcm_tokens')
+        .select('token')
+        .eq('user_id', userId)
+        .single();
+
+      if (tokenError || !tokenData) {
+        console.error(`❌ No token found for User ${userId}`);
+        return res.status(200).send('No token, no notification sent.');
+      }
+
+      const userToken = tokenData.token;
+
+      // STEP B: I-set ang Mensahe base sa Status
+      let title = "Rental Update";
+      let body = `Your booking for ${equipName} is now ${newStatus}.`;
+
+      switch (newStatus) {
+        case 'approved':
+          title = "✅ Booking Approved!";
+          body = `Approved na imong booking sa ${equipName}. Palihog bayad sa transaction section.`;
+          break;
+        case 'declined':
+          title = "❌ Booking Declined";
+          body = `Pasensya, ang imong booking sa ${equipName} wala madawat.`;
+          break;
+        case 'in_use':
+          title = "🚀 Enjoy your Rental!";
+          body = `Nagsugod na ang imong paggamit sa ${equipName}.`;
+          break;
+        case 'returned':
+          title = "📦 Item Returned";
+          body = `Salamat! Nadawat na namo ang ${equipName}.`;
+          break;
+      }
+
+      // STEP C: I-send ang Notification pinaagi sa Firebase
+      const message = {
+        notification: { title, body },
+        token: userToken,
+        // Optional: I-add ni para mo-pop up bisan naka-background ang app
+        android: {
+          notification: {
+            priority: 'high',
+            sound: 'default'
+          }
+        }
+      };
+
+      const response = await admin.messaging().send(message);
+      console.log('Successfully sent message:', response);
+
+    } catch (err) {
+      console.error('Error in Webhook logic:', err);
+    }
   }
+
+  res.status(200).send('Webhook Processed');
 });
 
-app.listen(3000, () => {
-  console.log('✅ Server is running on port 3000');
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Notification Server running on port ${PORT}`));
