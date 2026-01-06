@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "331506528210",
+    "project_id": "coopabookid-bb480",
+    "storage_bucket": "coopabookid-bb480.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:331506528210:android:cc36c5277a7de3602e620b",
+        "android_client_info": {
+          "package_name": "coopabookid.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCou87aTS3bbc_3QJvm3QVvC_F_QqioCE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
