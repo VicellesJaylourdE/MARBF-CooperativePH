@@ -495,7 +495,7 @@ const Staff_GenerateReports : React.FC = () => {
                         </IonItem>
                     </div>
 
-                    {/* ✨ REVENUE FILTER SECTION */}
+                    {/* REVENUE FILTER SECTION */}
                     {reportType === "revenue" && (
                         <div style={{ marginBottom: "1rem", display: "flex", gap: "10px", alignItems: "center" }}>
                             <IonItem style={{ minWidth: "150px" }}>
